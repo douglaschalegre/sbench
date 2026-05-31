@@ -1,0 +1,6 @@
+vendor,quote_date,unit_price_usd,available_quantity,delivery_date,screen_inches,battery_hours,rugged_case_included,warranty_months,notes
+Northstar,2026-04-24,185,12,2026-05-16,10.1,11,yes,12,"Baseline quote. See any newer vendor-specific updates before deciding."
+Atlas,2026-04-27,168,12,2026-05-18,10.1,12,yes,12,"Lowest baseline price but delivery date is after the need-by date."
+BrightPath,2026-04-26,171,12,2026-05-15,9.7,10,yes,12,"Screen is below the minimum requirement."
+Cobalt,2026-04-25,176,12,2026-05-16,10.1,9,yes,12,"Battery rating is below the minimum requirement."
+Dockside,2026-04-26,182,11,2026-05-14,10.1,13,yes,12,"Only eleven units are available."

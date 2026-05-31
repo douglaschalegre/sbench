@@ -1,0 +1,8 @@
+name,role,on_call_area,shift_start,shift_end,db_prod_access_as_of_2026-05-01,active_incidents,notes
+Asha,SRE,database,2026-05-06 16:00,2026-05-07 00:00,active,2,"Already carrying two active incidents."
+Ben,Database Engineer,database,2026-05-06 16:00,2026-05-07 00:00,pending,1,"Roster access is pending; check newer access updates."
+Carmen,SRE,database,2026-05-06 16:00,2026-05-07 00:00,active,1,"Roster says active access; check newer access updates."
+Deepa,SRE,secondary,2026-05-06 18:00,2026-05-06 23:00,active,0,"Secondary coverage candidate."
+Eli,Incident Manager,database,2026-05-06 16:00,2026-05-07 00:00,active,0,"Incident manager, not a technical responder."
+Farah,Database Engineer,database,2026-05-06 20:00,2026-05-07 04:00,active,0,"Shift starts after incident window begins."
+Gabe,SRE,secondary,2026-05-06 18:00,2026-05-06 22:00,none,0,"No db-prod access in roster."

@@ -1,0 +1,8 @@
+expense_id,date,category,description,claimed_amount_usd
+T-001,2026-05-08,airfare,Round-trip economy airfare,480.00
+T-002,2026-05-08,airfare,Exit-row seat upgrade,45.00
+T-003,2026-05-08,lodging,Hotel stay for two covered nights,510.00
+T-004,2026-05-09,meal,Team dinner with wine,76.00
+T-005,2026-05-09,rideshare,Airport ride-share with tip,70.00
+T-006,2026-05-10,supplies,USB-C adapters purchased during trip,82.00
+T-007,2026-05-10,meal,Breakfast,18.00
