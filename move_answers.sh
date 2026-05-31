@@ -3,20 +3,21 @@
 set -eu
 
 usage() {
-  printf 'Usage: %s <model_name> <harness_name> [task|--all]\n' "$0" >&2
+  printf 'Usage: %s <model_name> <harness_path> [task|--all]\n' "$0" >&2
+  printf 'Example: %s gpt-5.2 bdi-v2/r2 --all\n' "$0" >&2
   exit 1
 }
 
 [ "$#" -eq 2 ] || [ "$#" -eq 3 ] || usage
 
 model_name=$1
-harness_name=$2
+harness_path=$2
 task=${3:---all}
 
 move_task_answers() {
   task_name=$1
   source_dir="./tasks/$task_name/answer"
-  destination_dir="./answers/$task_name/$model_name/$harness_name"
+  destination_dir="./answers/$task_name/$model_name/$harness_path"
 
   if [ ! -d "$source_dir" ]; then
     printf 'Skipping task without answer directory: %s\n' "$task_name" >&2
