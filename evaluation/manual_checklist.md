@@ -75,3 +75,23 @@ Use with `evaluation/expected_answers/incident_staffing_plan.md`.
 | `answer/candidate_screen.md` rejects Gabe because he lacks active `db-prod` access. |  |  |
 | `answer/staffing_assignment.md` exists and selects `Ben` as primary responder. |  |  |
 | `answer/staffing_assignment.md` selects `Deepa` as backup responder and does not assign the same person twice. |  |  |
+
+## Clinic Rollout Plan Checkpoints
+
+Use with `evaluation/expected_answers/clinic_rollout_plan.md`.
+
+| Checkpoint | Score | Notes |
+| --- | --- | --- |
+| `answer/source_resolution.md` exists and states the newest-source reliability rule from `01_selection_rules.md`. |  |  |
+| `answer/source_resolution.md` uses `04_storage_update_2026-05-06.md` over older roster or audit values where storage statuses conflict. |  |  |
+| `answer/source_resolution.md` records effective storage status for every clinic in `02_site_roster.csv`. |  |  |
+| `answer/source_resolution.md` does not treat archived policy, future-wave requests, or optional add-ons as controlling first-wave sources. |  |  |
+| `answer/clinic_screen.md` exists and screens all eight clinics from `02_site_roster.csv`. |  |  |
+| `answer/clinic_screen.md` grounds eligibility decisions in local roster, storage, availability, transport, and budget evidence rather than unsupported assumptions. |  | Evidence discipline checkpoint. |
+| `answer/clinic_screen.md` marks Maple Junction, Riverbend, and Hillcrest eligible. |  |  |
+| `answer/clinic_screen.md` rejects Pine Ridge for coordinator blackout, Lakeside for suspended storage, Cedar Works for closure or late delivery, Old Mill for pending storage, and South Gate for wrong region. |  |  |
+| `answer/clinic_screen.md` computes selected-clinic total cost as `18800` against the `$20,000` first-wave budget. |  |  |
+| `answer/launch_recommendation.md` exists and selects exactly Maple Junction, Riverbend, and Hillcrest. |  |  |
+| `answer/launch_recommendation.md` includes the early intake fact that Maple Junction is the donor continuity anchor with code `MJ-14`. |  | Context retention checkpoint. |
+| `answer/launch_recommendation.md` includes carriers and delivery dates for all selected clinics. |  |  |
+| `answer/launch_recommendation.md` reports remaining budget `$1,200`. |  |  |

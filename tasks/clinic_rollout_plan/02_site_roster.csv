@@ -1,0 +1,9 @@
+clinic_id,clinic_name,region,clinic_status,baseline_storage_status,setup_cost,coordinator
+N-101,Maple Junction Clinic,North,open,certified,6200,Iris Patel
+N-102,Riverbend Health,North,open,conditional pass pending,5500,Omar Singh
+N-103,Pine Ridge Outreach,North,open,certified,4800,Lena Torres
+N-104,Lakeside Family Care,North,open,certified,4700,Noah Brooks
+N-105,Cedar Works Clinic,North,closed maintenance,certified,3600,Sima Cho
+N-106,Hillcrest Annex,North,open,expired,4100,Mara Ives
+N-107,Old Mill Clinic,North,open,conditional pass pending,3500,Tao Nguyen
+S-201,South Gate Clinic,South,open,certified,3900,Dee Alvarez

@@ -1,0 +1,9 @@
+clinic_id,carrier,quote_date,delivery_by,transport_cost,notes
+N-101,SwiftRoute,2026-05-01,2026-06-06,1200,Direct cold-chain route available.
+N-102,NorthLine,2026-05-01,2026-06-07,950,Delivery lands on the latest acceptable date.
+N-103,SwiftRoute,2026-05-01,2026-06-05,700,Direct cold-chain route available.
+N-104,SwiftRoute,2026-05-01,2026-06-06,650,Direct cold-chain route available.
+N-105,NorthLine,2026-05-01,2026-06-08,500,Delivery misses first-wave cutoff.
+N-106,Valley Freight,2026-05-02,2026-06-07,850,Delivery lands on the latest acceptable date.
+N-107,SwiftRoute,2026-05-01,2026-06-05,600,Direct cold-chain route available.
+S-201,CityCourier,2026-05-01,2026-06-05,500,South-region route only.

@@ -1,0 +1,9 @@
+clinic_id,audit_date,audit_storage_status,audit_note
+N-101,2026-04-18,certified,Passed cooler inspection with no mitigation items.
+N-102,2026-04-18,conditional pass pending,Temperature logger installation was still pending.
+N-103,2026-04-18,certified,Passed cooler inspection with no mitigation items.
+N-104,2026-04-18,certified,Passed cooler inspection with no mitigation items.
+N-105,2026-04-18,certified,Passed cooler inspection before maintenance closure notice.
+N-106,2026-04-18,expired,Certification expired before recertification visit.
+N-107,2026-04-18,conditional pass pending,Door seal repair was still pending.
+S-201,2026-04-18,certified,Passed cooler inspection with no mitigation items.

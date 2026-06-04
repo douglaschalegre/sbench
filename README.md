@@ -10,10 +10,22 @@ SBench is a local-file smoke suite for comparing agent frameworks on small opera
 - `templates/`: reusable result capture documents.
 - `issues/`: local implementation issue specs.
 
-## Initial Tasks
+## Benchmark Tracks
 
-- `vendor_selection`
-- `travel_reimbursement_audit`
-- `incident_staffing_plan`
+SBench currently has these tracks:
 
-For strict comparison runs, follow `protocol/strict_fair_run_protocol.md` and record each run with `templates/result_capture_template.md`.
+- `smoke`: the baseline local operations smoke track. It uses the existing short tasks under strict fresh-session rules.
+- `long_context`: a local operations track with larger evidence sets, distractors, early facts that must be used late, and context-retention scoring.
+
+Context-pressure tracks, including `long_context` and future replanning, recovery, or observability runs, should be labeled separately in protocols and result records. Do not compare smoke-track results with context-pressure results as if they used the same pressure mode.
+
+## Track Registry
+
+| Task ID | Track | Task folder |
+| --- | --- | --- |
+| `vendor_selection` | `smoke` | `tasks/vendor_selection` |
+| `travel_reimbursement_audit` | `smoke` | `tasks/travel_reimbursement_audit` |
+| `incident_staffing_plan` | `smoke` | `tasks/incident_staffing_plan` |
+| `clinic_rollout_plan` | `long_context` | `tasks/clinic_rollout_plan` |
+
+For strict smoke comparison runs, follow `protocol/strict_fair_run_protocol.md` and record each run with `templates/result_capture_template.md`.

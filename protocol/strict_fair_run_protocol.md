@@ -2,16 +2,22 @@
 
 Use this protocol to compare `pydantic-ai-bdi`, OpenClaw, Hermes Agent, or another framework on the same SBench task under comparable conditions.
 
+This protocol is the current protocol for the `smoke` baseline track. Future context-pressure tracks should use their own documented run rules or explicitly state how they extend this protocol.
+
+Current `smoke` task IDs are listed in the README track registry. They are `vendor_selection`, `travel_reimbursement_audit`, and `incident_staffing_plan`.
+
 ## Core Rules
 
 - Do not tell the agent it is being evaluated, benchmarked, scored, or compared.
 - Expose only the relevant task folder, such as `tasks/vendor_selection`, to the agent.
 - Do not expose `evaluation/`, `issues/`, `protocol/`, `templates/`, `PRD.to-prd.md`, or hidden expected-deliverable notes during the run.
+- Record the benchmark track for the run. Use `smoke` for the current baseline tasks.
 - Use the same model and comparable model settings across frameworks.
 - Start a fresh session for every framework-task run.
 - Disable persistent memory, retained conversation history, learned skills, or framework-specific long-term context where possible.
 - Use a 10-minute timeout per task.
 - Keep the task local-file only; do not add external web access or extra data unless the task folder explicitly asks for it.
+- Do not compare `smoke` results with future context-pressure results as if they used the same pressure mode.
 
 ## Run Setup
 
@@ -19,6 +25,7 @@ Record setup details before starting:
 
 - Framework name and version, if known.
 - Model name and provider.
+- Benchmark track, such as `smoke`.
 - Task folder path.
 - Whether memory or learned skills were disabled, unavailable, or not applicable.
 - Any framework setup friction before the agent starts the task.
