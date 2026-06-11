@@ -29,3 +29,17 @@ Context-pressure tracks, including `long_context` and future replanning, recover
 | `clinic_rollout_plan` | `long_context` | `tasks/clinic_rollout_plan` |
 
 For strict smoke comparison runs, follow `protocol/strict_fair_run_protocol.md` and record each run with `templates/result_capture_template.md`.
+
+## Benchmark Orchestrator
+
+Inspect the current task and harness matrix without running agents:
+
+```sh
+python -m sbench --list
+```
+
+Preview a planned benchmark matrix without invoking any harness:
+
+```sh
+python -m sbench --dry-run --model gpt-5.2 --track smoke --harness codex,opencode --task vendor_selection
+```
