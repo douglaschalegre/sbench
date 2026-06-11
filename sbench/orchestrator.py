@@ -15,7 +15,7 @@ from typing import Callable, Sequence, TextIO
 
 
 SUPPORTED_HARNESSES = ("bdi", "codex", "opencode")
-CLI_BINARY_BY_HARNESS = {"codex": "codex", "opencode": "opencode"}
+CLI_BINARY_BY_HARNESS = {"bdi": "uv", "codex": "codex", "opencode": "opencode"}
 DEFAULT_TRACK = "smoke"
 DEFAULT_TIMEOUT_SECONDS = 600
 STANDARD_TASK_PROMPT = (
@@ -203,6 +203,14 @@ def path_safe_model_name(model: str) -> str:
     safe = re.sub(r"[^A-Za-z0-9._-]+", "-", safe)
     safe = safe.strip(".-")
     return safe or "model"
+
+
+def command_model_name(harness: str, model: str) -> str:
+    if harness in {"bdi", "codex"}:
+        for prefix in ("openai/", "openai-codex/"):
+            if model.startswith(prefix):
+                return model.removeprefix(prefix)
+    return model
 
 
 def next_run_id(repo_root: Path, task_id: str, model_path: str, harness: str) -> str:
@@ -670,14 +678,15 @@ def build_harness_invocation(
     bdi_output_dir: Path | None = None,
 ) -> HarnessInvocation:
     task_dir_arg = display_path(task_dir, repo_root)
+    command_model = command_model_name(harness, model)
 
     if harness == "codex":
         return HarnessInvocation(
             command=(
                 "codex",
                 "exec",
-                "--model",
-                model,
+                "-m",
+                command_model,
                 "--cd",
                 task_dir_arg,
                 "--sandbox",
@@ -692,10 +701,12 @@ def build_harness_invocation(
             settings={
                 "approval_policy": "never",
                 "binary": "codex",
+                "command_model": command_model,
                 "json_events": True,
                 "sandbox": "workspace-write",
                 "task_directory_scope": task_dir_arg,
             },
+            working_dir=repo_root,
         )
 
     if harness == "opencode":
@@ -703,8 +714,8 @@ def build_harness_invocation(
             command=(
                 "opencode",
                 "run",
-                "--model",
-                model,
+                "-m",
+                command_model,
                 "--dir",
                 task_dir_arg,
                 "--format",
@@ -715,10 +726,12 @@ def build_harness_invocation(
             settings={
                 "auto_approve_permissions": True,
                 "binary": "opencode",
+                "command_model": command_model,
                 "format": "json",
                 "task_directory_scope": task_dir_arg,
                 "writable_scope": "task_directory_only",
             },
+            working_dir=repo_root,
         )
 
     if harness == "bdi":
@@ -727,14 +740,16 @@ def build_harness_invocation(
         output_dir = bdi_output_dir or repo_root / "runs" / "<run-id>" / "bdi" / task_dir.name
         return HarnessInvocation(
             command=(
-                sys.executable,
+                "uv",
+                "run",
+                "python",
                 str(toy_runner),
                 "--sbench-root",
                 str(repo_root),
                 "--tasks",
                 task_dir.name,
                 "--model",
-                model,
+                command_model,
                 "--output-dir",
                 str(output_dir),
                 "--command-timeout-seconds",
@@ -743,6 +758,8 @@ def build_harness_invocation(
             ),
             settings={
                 "bdi_repo": str(actual_bdi_repo),
+                "binary": "uv",
+                "command_model": command_model,
                 "command_timeout_seconds": int(timeout_seconds),
                 "delegation": "pydantic-ai-bdi toy runner",
                 "output_dir": str(output_dir),

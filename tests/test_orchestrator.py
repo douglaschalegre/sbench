@@ -191,7 +191,7 @@ class OrchestratorTest(unittest.TestCase):
 
             invocation = orchestrator.build_harness_invocation(
                 "codex",
-                model="gpt-5.2",
+                model="openai/gpt-5.2",
                 track="smoke",
                 timeout_seconds=600,
                 task_dir=task.path,
@@ -199,10 +199,11 @@ class OrchestratorTest(unittest.TestCase):
             )
 
         self.assertEqual(invocation.command[0:2], ("codex", "exec"))
-        self.assertIn("--model", invocation.command)
+        self.assertIn("-m", invocation.command)
         self.assertIn("gpt-5.2", invocation.command)
+        self.assertNotIn("openai/gpt-5.2", invocation.command)
         self.assertIn("--cd", invocation.command)
-        self.assertIn("tasks/vendor_selection", invocation.command)
+        self.assertEqual(invocation.command[invocation.command.index("--cd") + 1], "tasks/vendor_selection")
         self.assertIn("--sandbox", invocation.command)
         self.assertIn("workspace-write", invocation.command)
         self.assertIn("--config", invocation.command)
@@ -212,7 +213,9 @@ class OrchestratorTest(unittest.TestCase):
         self.assertNotIn("--add-dir", invocation.command)
         self.assertNotIn("evaluation", invocation.command)
         self.assertNotIn(".prd", invocation.command)
+        self.assertEqual(invocation.working_dir, repo_root)
         self.assertEqual(invocation.settings["approval_policy"], "never")
+        self.assertEqual(invocation.settings["command_model"], "gpt-5.2")
         self.assertEqual(invocation.settings["sandbox"], "workspace-write")
         self.assertEqual(invocation.settings["task_directory_scope"], "tasks/vendor_selection")
 
@@ -223,7 +226,7 @@ class OrchestratorTest(unittest.TestCase):
 
             invocation = orchestrator.build_harness_invocation(
                 "opencode",
-                model="gpt-5.2",
+                model="openai/gpt-5.2",
                 track="smoke",
                 timeout_seconds=600,
                 task_dir=task.path,
@@ -231,17 +234,19 @@ class OrchestratorTest(unittest.TestCase):
             )
 
         self.assertEqual(invocation.command[0:2], ("opencode", "run"))
-        self.assertIn("--model", invocation.command)
-        self.assertIn("gpt-5.2", invocation.command)
+        self.assertIn("-m", invocation.command)
+        self.assertIn("openai/gpt-5.2", invocation.command)
         self.assertIn("--dir", invocation.command)
-        self.assertIn("tasks/vendor_selection", invocation.command)
+        self.assertEqual(invocation.command[invocation.command.index("--dir") + 1], "tasks/vendor_selection")
         self.assertIn("--format", invocation.command)
         self.assertIn("json", invocation.command)
         self.assertIn("--dangerously-skip-permissions", invocation.command)
         self.assertNotIn("--add-dir", invocation.command)
         self.assertNotIn("evaluation", invocation.command)
         self.assertNotIn(".prd", invocation.command)
+        self.assertEqual(invocation.working_dir, repo_root)
         self.assertTrue(invocation.settings["auto_approve_permissions"])
+        self.assertEqual(invocation.settings["command_model"], "openai/gpt-5.2")
         self.assertEqual(invocation.settings["format"], "json")
         self.assertEqual(invocation.settings["writable_scope"], "task_directory_only")
         self.assertEqual(invocation.settings["task_directory_scope"], "tasks/vendor_selection")
@@ -249,7 +254,7 @@ class OrchestratorTest(unittest.TestCase):
     def test_missing_cli_binary_detection_reports_selected_agent_binaries(self) -> None:
         missing = orchestrator.find_missing_cli_binaries(
             ["bdi", "codex", "opencode"],
-            which=lambda binary: "/bin/" + binary if binary == "opencode" else None,
+            which=lambda binary: "/bin/" + binary if binary in {"opencode", "uv"} else None,
         )
 
         self.assertEqual(missing, {"codex": "codex"})
@@ -283,7 +288,7 @@ class OrchestratorTest(unittest.TestCase):
 
             invocation = orchestrator.build_harness_invocation(
                 "bdi",
-                model="gpt-5.2",
+                model="openai/gpt-5.2",
                 track="smoke",
                 timeout_seconds=600,
                 task_dir=task.path,
@@ -292,21 +297,24 @@ class OrchestratorTest(unittest.TestCase):
                 bdi_output_dir=repo_root / "runs" / "test-run" / "bdi" / "vendor_selection",
             )
 
-        self.assertEqual(invocation.command[0], sys.executable)
-        self.assertEqual(invocation.command[1], str(bdi_repo.resolve() / "toy.py"))
+        self.assertEqual(invocation.command[0:3], ("uv", "run", "python"))
+        self.assertEqual(invocation.command[3], str(bdi_repo.resolve() / "toy.py"))
         self.assertIn("--sbench-root", invocation.command)
         self.assertIn(str(repo_root), invocation.command)
         self.assertIn("--tasks", invocation.command)
         self.assertIn("vendor_selection", invocation.command)
         self.assertIn("--model", invocation.command)
         self.assertIn("gpt-5.2", invocation.command)
+        self.assertNotIn("openai/gpt-5.2", invocation.command)
         self.assertIn("--output-dir", invocation.command)
         self.assertIn(str(repo_root / "runs" / "test-run" / "bdi" / "vendor_selection"), invocation.command)
         self.assertIn("--command-timeout-seconds", invocation.command)
         self.assertIn("600", invocation.command)
         self.assertIn("--quiet", invocation.command)
         self.assertEqual(invocation.working_dir, bdi_repo.resolve())
+        self.assertEqual(invocation.settings["binary"], "uv")
         self.assertEqual(invocation.settings["bdi_repo"], str(bdi_repo.resolve()))
+        self.assertEqual(invocation.settings["command_model"], "gpt-5.2")
         self.assertEqual(invocation.settings["toy_runner"], str(bdi_repo.resolve() / "toy.py"))
         self.assertEqual(invocation.settings["task_directory_scope"], "tasks/vendor_selection")
 
@@ -424,6 +432,11 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(plan.display_model, "openai/gpt 5.5")
         self.assertEqual(plan.model_path, "openai__gpt-5.5")
         self.assertIn("openai__gpt-5.5", str(plan.archive_dir))
+
+    def test_command_model_name_normalizes_codex_style_harnesses_only(self) -> None:
+        self.assertEqual(orchestrator.command_model_name("codex", "openai/gpt-5.2"), "gpt-5.2")
+        self.assertEqual(orchestrator.command_model_name("bdi", "openai-codex/gpt-5.2"), "gpt-5.2")
+        self.assertEqual(orchestrator.command_model_name("opencode", "openai/gpt-5.2"), "openai/gpt-5.2")
 
     def test_legacy_direct_answer_files_do_not_affect_canonical_run_selection(self) -> None:
         with self.make_repo() as repo:
