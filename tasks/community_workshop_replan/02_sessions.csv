@@ -1,0 +1,4 @@
+session_id,session,attendees,time_block,needs_projector,needs_demo_table,needs_quiet_room,needs_loading_access
+S-101,Safety Orientation,22,morning,yes,no,no,no
+S-102,Inventory Lab,16,afternoon,yes,yes,no,yes
+S-103,Benefits Clinic,12,morning,no,no,yes,no

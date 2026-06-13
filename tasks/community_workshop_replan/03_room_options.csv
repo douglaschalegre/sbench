@@ -1,0 +1,6 @@
+room,capacity,available_time_blocks,projector,demo_table,quiet_room,loading_access,cost
+Harbor Hall,30,morning;afternoon,yes,no,no,no,300
+Bay Workshop,18,afternoon,yes,yes,no,yes,250
+Cedar Room,16,morning;afternoon,no,no,yes,no,150
+Delta Annex,20,afternoon,yes,yes,no,yes,320
+Elm Room,14,morning;afternoon,no,no,yes,no,125

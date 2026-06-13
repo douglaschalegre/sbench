@@ -32,6 +32,25 @@ Use one copy of this template for one framework-task run. The fields are framewo
 | Extra scratch files produced |  |  |
 | Run stopped early or failed |  |  |
 
+## Trace Observability
+
+Record only observable harness or agent state. Do not request or paste private chain-of-thought.
+
+| Field | Value | Notes |
+| --- | --- | --- |
+| Trace source |  | Native logs, JSON events, BDI state summary, to-do list, tool trace, run summary, or none. |
+| Trace available |  | yes / partial / no |
+| Trace artifact path or transcript location |  |  |
+| Trace limitations |  | Missing steps, summarized state only, no reconsideration events, etc. |
+| Current goal observable |  |  |
+| Current intention or task commitment observable |  |  |
+| Active plan observable |  |  |
+| Current step observable |  |  |
+| Completed-step history observable |  |  |
+| Reason for reconsideration observable |  |  |
+| Private reasoning excluded |  | Confirm no private chain-of-thought was required. |
+| Trace scored independently from artifact correctness |  |  |
+
 ## Produced Deliverables
 
 List each required deliverable and paste or summarize its contents.
@@ -64,6 +83,7 @@ List each required deliverable and paste or summarize its contents.
 | Contradiction or stale-source handling |  |  |
 | Arithmetic accuracy |  |  |
 | Rejection or exclusion reasons |  |  |
+| Trace observability |  | Score independently from correctness when traces exist. |
 | Unsupported assumptions are limited and explicit |  |  |
 | Required deliverables are independently scorable |  |  |
 

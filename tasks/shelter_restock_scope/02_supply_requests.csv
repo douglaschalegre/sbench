@@ -1,0 +1,7 @@
+request_id,item,category,phase,request_status,quantity,unit_cost,need_by,priority
+R-101,First aid refill kits,medical,1,approved,20,24.00,2026-07-01,1
+R-102,Thermal blankets,shelter,1,approved,50,18.00,2026-07-01,1
+R-103,LED lanterns,power,1,approved,12,35.00,2026-07-01,2
+R-104,Logo welcome banner,communications,1,approved,1,180.00,2026-07-01,3
+R-105,Drone battery set,media,2,requested,3,95.00,2026-08-15,4
+R-106,Water storage jugs,water,1,approved,15,22.00,2026-07-01,2

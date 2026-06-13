@@ -16,8 +16,13 @@ SBench currently has these tracks:
 
 - `smoke`: the baseline local operations smoke track. It uses the existing short tasks under strict fresh-session rules.
 - `long_context`: a local operations track with larger evidence sets, distractors, early facts that must be used late, and context-retention scoring.
+- `replanning`: a staged local operations track where a visible update changes the best plan while the top-level objective stays stable.
+- `recovery`: a local operations track that starts with partially correct prior artifacts and scores preservation plus correction.
+- `distractor_goal`: a local operations track with a stable core objective and plausible out-of-scope secondary requests.
 
 Context-pressure tracks, including `long_context` and future replanning, recovery, or observability runs, should be labeled separately in protocols and result records. Do not compare smoke-track results with context-pressure results as if they used the same pressure mode.
+
+Trace observability can be scored after any run when native harness logs, BDI state summaries, to-do lists, tool traces, or comparable records are available. Trace observability is recorded separately from final answer correctness.
 
 ## Track Registry
 
@@ -27,6 +32,9 @@ Context-pressure tracks, including `long_context` and future replanning, recover
 | `travel_reimbursement_audit` | `smoke` | `tasks/travel_reimbursement_audit` |
 | `incident_staffing_plan` | `smoke` | `tasks/incident_staffing_plan` |
 | `clinic_rollout_plan` | `long_context` | `tasks/clinic_rollout_plan` |
+| `community_workshop_replan` | `replanning` | `tasks/community_workshop_replan` |
+| `grant_closeout_recovery` | `recovery` | `tasks/grant_closeout_recovery` |
+| `shelter_restock_scope` | `distractor_goal` | `tasks/shelter_restock_scope` |
 
 For strict smoke comparison runs, follow `protocol/strict_fair_run_protocol.md` and record each run with `templates/result_capture_template.md`.
 

@@ -1,0 +1,7 @@
+expense_id,date,description,category,amount,receipt_on_file,ledger_note
+G-001,2026-05-02,Seedling starter kits,garden supplies,980.00,yes,invoice from GreenSpade
+G-002,2026-05-04,Volunteer setup refreshments,volunteer refreshments,145.00,yes,event refreshments
+G-003,2026-05-07,Braille outreach flyers,accessibility printing,420.00,yes,accessible flyer run
+G-004,2026-05-09,Staff thank-you gift cards,staff gifts,160.00,yes,staff appreciation
+G-005,2026-05-10,Neighborhood posters,public outreach printing,310.00,no,poster invoice missing
+G-006,2026-05-12,Final report postage,public outreach postage,68.00,no,postal ledger entry under receipt threshold
