@@ -2,7 +2,7 @@
 title: Label The Smoke Baseline Track
 labels:
   - needs-triage
-status: draft
+status: completed
 type: AFK
 user_stories_covered: 1, 27-29, 37, 50-51
 ---
@@ -13,12 +13,12 @@ Make the existing smoke suite explicitly identifiable as the `smoke` baseline tr
 
 ## Acceptance criteria
 
-- [ ] The existing smoke task folders remain unchanged in behavior and deliverable expectations.
-- [ ] The suite documentation identifies the current tasks as the `smoke` baseline track.
-- [ ] The strict fair-run protocol records the selected benchmark track for each run.
-- [ ] The result capture template includes a track field that can distinguish `smoke` from future context-pressure tracks.
-- [ ] The documentation warns not to conflate strict smoke results with expanded context-pressure results.
-- [ ] The change does not move hidden expected answers into any agent-facing task folder.
+- [x] The existing smoke task folders remain unchanged in behavior and deliverable expectations.
+- [x] The suite documentation identifies the current tasks as the `smoke` baseline track.
+- [x] The strict fair-run protocol records the selected benchmark track for each run.
+- [x] The result capture template includes a track field that can distinguish `smoke` from future context-pressure tracks.
+- [x] The documentation warns not to conflate strict smoke results with expanded context-pressure results.
+- [x] The change does not move hidden expected answers into any agent-facing task folder.
 
 ## Blocked by
 
