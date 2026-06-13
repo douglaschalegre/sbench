@@ -15,7 +15,7 @@ Make the existing smoke suite explicitly identifiable as the `smoke` baseline tr
 
 - [x] The existing smoke task folders remain unchanged in behavior and deliverable expectations.
 - [x] The suite documentation identifies the current tasks as the `smoke` baseline track.
-- [x] The strict fair-run protocol records the selected benchmark track for each run.
+- [x] The strict fair-run protocol records the task-derived benchmark track for each run.
 - [x] The result capture template includes a track field that can distinguish `smoke` from future context-pressure tracks.
 - [x] The documentation warns not to conflate strict smoke results with expanded context-pressure results.
 - [x] The change does not move hidden expected answers into any agent-facing task folder.

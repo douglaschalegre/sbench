@@ -24,6 +24,8 @@ Context-pressure tracks, including `long_context` and future replanning, recover
 
 Trace observability can be scored after any run when native harness logs, BDI state summaries, to-do lists, tool traces, or comparable records are available. Trace observability is recorded separately from final answer correctness.
 
+The orchestrator derives each task's track from this registry. A run that selects all tasks can include multiple tracks, and each per-task result records its own track.
+
 ## Track Registry
 
 | Task ID | Track | Task folder |
@@ -49,5 +51,5 @@ python -m sbench --list
 Preview a planned benchmark matrix without invoking any harness:
 
 ```sh
-python -m sbench --dry-run --model gpt-5.2 --track smoke --harness codex,opencode --task vendor_selection
+python -m sbench --dry-run --model gpt-5.2 --harness codex,opencode --task vendor_selection
 ```

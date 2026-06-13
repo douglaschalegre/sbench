@@ -21,6 +21,8 @@ class OrchestratorTest(unittest.TestCase):
         (repo_root / "tasks" / "travel_reimbursement_audit" / "task.md").write_text(
             "task", encoding="utf-8"
         )
+        (repo_root / "tasks" / "clinic_rollout_plan").mkdir(parents=True)
+        (repo_root / "tasks" / "clinic_rollout_plan" / "task.md").write_text("task", encoding="utf-8")
         (repo_root / "tasks" / "not_a_task").mkdir(parents=True)
         return temp_dir
 
@@ -38,6 +40,7 @@ class OrchestratorTest(unittest.TestCase):
         archive_plan = orchestrator.plan_answer_archive(repo_root, task, model=model, harness=harness)
         return orchestrator.RunPlan(
             task_id=task.id,
+            track=task.track,
             harness=harness,
             task_dir=task.path,
             working_dir=task.path,
@@ -50,7 +53,18 @@ class OrchestratorTest(unittest.TestCase):
         with self.make_repo() as repo:
             tasks = orchestrator.discover_tasks(Path(repo))
 
-        self.assertEqual([task.id for task in tasks], ["travel_reimbursement_audit", "vendor_selection"])
+        self.assertEqual(
+            [task.id for task in tasks],
+            ["clinic_rollout_plan", "travel_reimbursement_audit", "vendor_selection"],
+        )
+        self.assertEqual(
+            {task.id: task.track for task in tasks},
+            {
+                "clinic_rollout_plan": "long_context",
+                "travel_reimbursement_audit": "smoke",
+                "vendor_selection": "smoke",
+            },
+        )
 
     def test_harness_selection_defaults_to_supported_harnesses(self) -> None:
         self.assertEqual(
@@ -87,8 +101,6 @@ class OrchestratorTest(unittest.TestCase):
                 "--dry-run",
                 "--model",
                 "gpt-5.2",
-                "--track",
-                "smoke",
                 "--timeout",
                 "120",
                 "--task",
@@ -100,7 +112,6 @@ class OrchestratorTest(unittest.TestCase):
 
         self.assertTrue(args.dry_run)
         self.assertEqual(args.model, "gpt-5.2")
-        self.assertEqual(args.track, "smoke")
         self.assertEqual(args.timeout, 120)
         self.assertEqual(args.task, ["vendor_selection"])
         self.assertEqual(args.harness, ["codex"])
@@ -116,8 +127,9 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIn("- bdi", rendered)
         self.assertIn("- codex", rendered)
         self.assertIn("- opencode", rendered)
-        self.assertIn("- vendor_selection", rendered)
-        self.assertIn("- travel_reimbursement_audit", rendered)
+        self.assertIn("- vendor_selection [smoke]", rendered)
+        self.assertIn("- travel_reimbursement_audit [smoke]", rendered)
+        self.assertIn("- clinic_rollout_plan [long_context]", rendered)
         self.assertNotIn("command:", rendered)
 
     def test_dry_run_prints_selected_matrix_commands_and_archive_destinations(self) -> None:
@@ -134,8 +146,6 @@ class OrchestratorTest(unittest.TestCase):
                     "--dry-run",
                     "--model",
                     "gpt-5.2",
-                    "--track",
-                    "smoke",
                     "--timeout",
                     "300",
                     "--task",
@@ -149,7 +159,7 @@ class OrchestratorTest(unittest.TestCase):
         rendered = output.getvalue()
         self.assertEqual(exit_code, 0)
         self.assertIn("SBench dry run", rendered)
-        self.assertIn("track: smoke", rendered)
+        self.assertIn("  track: smoke", rendered)
         self.assertIn("model: gpt-5.2", rendered)
         self.assertIn("timeout_seconds: 300", rendered)
         self.assertIn("matrix_entries: 2", rendered)
@@ -167,7 +177,6 @@ class OrchestratorTest(unittest.TestCase):
             codex = orchestrator.build_command_shape(
                 "codex",
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=600,
                 task_dir=task.path,
                 repo_root=repo_root,
@@ -175,7 +184,6 @@ class OrchestratorTest(unittest.TestCase):
             opencode = orchestrator.build_command_shape(
                 "opencode",
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=600,
                 task_dir=task.path,
                 repo_root=repo_root,
@@ -192,7 +200,6 @@ class OrchestratorTest(unittest.TestCase):
             invocation = orchestrator.build_harness_invocation(
                 "codex",
                 model="openai/gpt-5.2",
-                track="smoke",
                 timeout_seconds=600,
                 task_dir=task.path,
                 repo_root=repo_root,
@@ -227,7 +234,6 @@ class OrchestratorTest(unittest.TestCase):
             invocation = orchestrator.build_harness_invocation(
                 "opencode",
                 model="openai/gpt-5.2",
-                track="smoke",
                 timeout_seconds=600,
                 task_dir=task.path,
                 repo_root=repo_root,
@@ -289,7 +295,6 @@ class OrchestratorTest(unittest.TestCase):
             invocation = orchestrator.build_harness_invocation(
                 "bdi",
                 model="openai/gpt-5.2",
-                track="smoke",
                 timeout_seconds=600,
                 task_dir=task.path,
                 repo_root=repo_root,
@@ -331,7 +336,6 @@ class OrchestratorTest(unittest.TestCase):
                 tasks=task,
                 harnesses=["bdi"],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=600,
                 bdi_repo=bdi_repo,
                 run_id="bdi-run",
@@ -532,7 +536,6 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [plan],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=5,
                 run_id="success-run",
             )
@@ -576,7 +579,6 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [plan],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=5,
                 run_id="settings-run",
             )
@@ -595,7 +597,6 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [plan],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=5,
                 run_id="incomplete-run",
             )
@@ -615,7 +616,6 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [plan],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=5,
                 run_id="failed-run",
             )
@@ -636,7 +636,6 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [plan],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=0.1,
                 run_id="timeout-run",
             )
@@ -662,13 +661,36 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [first, second],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=5,
                 run_id="continue-run",
             )
 
         self.assertEqual([result.status for result in matrix.results], ["failed", "success"])
         self.assertFalse(matrix.stopped_after_failure)
+
+    def test_run_matrix_summary_groups_task_derived_tracks(self) -> None:
+        command = (
+            sys.executable,
+            "-c",
+            "from pathlib import Path; Path('answer/out.md').write_text('ok')",
+        )
+        with self.make_repo() as repo:
+            repo_root = Path(repo)
+            smoke = self.make_plan(repo_root, task_id="vendor_selection", command=command)
+            long_context = self.make_plan(repo_root, task_id="clinic_rollout_plan", command=command)
+
+            matrix = orchestrator.run_matrix(
+                repo_root,
+                [smoke, long_context],
+                model="gpt-5.2",
+                timeout_seconds=5,
+                run_id="mixed-track-run",
+            )
+            summary = json.loads(matrix.summary_path.read_text(encoding="utf-8"))
+
+        self.assertEqual([result.track for result in matrix.results], ["smoke", "long_context"])
+        self.assertEqual(summary["track_counts"], {"long_context": 1, "smoke": 1})
+        self.assertEqual(summary["planned_track_counts"], {"long_context": 1, "smoke": 1})
 
     def test_run_matrix_can_stop_on_first_failure(self) -> None:
         failed = (sys.executable, "-c", "import sys; sys.exit(1)")
@@ -686,7 +708,6 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [first, second],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=5,
                 run_id="stop-run",
                 stop_on_first_failure=True,
@@ -713,7 +734,6 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [plan],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=5,
                 run_id="json-run",
                 capture_json_events=True,
@@ -740,7 +760,6 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root,
                 [plan],
                 model="gpt-5.2",
-                track="smoke",
                 timeout_seconds=5,
                 run_id="scratch-run",
             )

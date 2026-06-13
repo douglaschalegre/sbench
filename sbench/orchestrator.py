@@ -16,7 +16,16 @@ from typing import Callable, Sequence, TextIO
 
 SUPPORTED_HARNESSES = ("bdi", "codex", "opencode")
 CLI_BINARY_BY_HARNESS = {"bdi": "uv", "codex": "codex", "opencode": "opencode"}
-DEFAULT_TRACK = "smoke"
+TASK_TRACK_BY_ID = {
+    "vendor_selection": "smoke",
+    "travel_reimbursement_audit": "smoke",
+    "incident_staffing_plan": "smoke",
+    "clinic_rollout_plan": "long_context",
+    "community_workshop_replan": "replanning",
+    "grant_closeout_recovery": "recovery",
+    "shelter_restock_scope": "distractor_goal",
+}
+UNREGISTERED_TRACK = "unregistered"
 DEFAULT_TIMEOUT_SECONDS = 600
 STANDARD_TASK_PROMPT = (
     "You are working in the provided folder. Read task.md and the other local "
@@ -37,6 +46,7 @@ class ArchiveError(RuntimeError):
 class Task:
     id: str
     path: Path
+    track: str
 
 
 @dataclass(frozen=True)
@@ -61,6 +71,7 @@ class AnswerArchiveResult:
 @dataclass(frozen=True)
 class RunPlan:
     task_id: str
+    track: str
     harness: str
     task_dir: Path
     working_dir: Path
@@ -144,8 +155,12 @@ def discover_tasks(repo_root: Path) -> list[Task]:
     tasks: list[Task] = []
     for child in sorted(tasks_root.iterdir(), key=lambda path: path.name):
         if child.is_dir() and (child / "task.md").is_file():
-            tasks.append(Task(id=child.name, path=child))
+            tasks.append(Task(id=child.name, path=child, track=task_track(child.name)))
     return tasks
+
+
+def task_track(task_id: str) -> str:
+    return TASK_TRACK_BY_ID.get(task_id, UNREGISTERED_TRACK)
 
 
 def split_requested_values(values: Sequence[str] | None) -> list[str]:
@@ -388,7 +403,6 @@ def execute_run_plan(
     plan: RunPlan,
     *,
     model: str,
-    track: str,
     timeout_seconds: float,
     run_root: Path,
     capture_json_events: bool = False,
@@ -400,7 +414,7 @@ def execute_run_plan(
     metadata_path = record_dir / "metadata.json"
     json_event_log_path = record_dir / "events.jsonl"
     scratch_record_dir = record_dir / "scratch"
-    task = Task(id=plan.task_id, path=plan.task_dir)
+    task = Task(id=plan.task_id, path=plan.task_dir, track=plan.track)
     model_path = path_safe_model_name(model)
 
     clean_answer_dir(task)
@@ -466,7 +480,7 @@ def execute_run_plan(
         harness=plan.harness,
         model=model,
         model_path=model_path,
-        track=track,
+        track=plan.track,
         status=status,
         command=plan.command,
         settings=plan.settings,
@@ -495,7 +509,6 @@ def run_matrix(
     plans: Sequence[RunPlan],
     *,
     model: str,
-    track: str,
     timeout_seconds: float,
     stop_on_first_failure: bool = False,
     run_id: str | None = None,
@@ -512,7 +525,6 @@ def run_matrix(
             repo_root,
             plan,
             model=model,
-            track=track,
             timeout_seconds=timeout_seconds,
             run_root=run_root,
             capture_json_events=capture_json_events,
@@ -530,7 +542,7 @@ def run_matrix(
         results=tuple(results),
         stopped_after_failure=stopped_after_failure,
     )
-    _write_json(summary_path, matrix_result_to_dict(matrix_result, repo_root, plans, model, track, timeout_seconds, stop_on_first_failure))
+    _write_json(summary_path, matrix_result_to_dict(matrix_result, repo_root, plans, model, timeout_seconds, stop_on_first_failure))
     return matrix_result
 
 
@@ -620,13 +632,18 @@ def matrix_result_to_dict(
     repo_root: Path,
     planned: Sequence[RunPlan],
     model: str,
-    track: str,
     timeout_seconds: float,
     stop_on_first_failure: bool,
 ) -> dict[str, object]:
     status_counts: dict[str, int] = {}
+    track_counts: dict[str, int] = {}
     for result in matrix_result.results:
         status_counts[result.status] = status_counts.get(result.status, 0) + 1
+        track_counts[result.track] = track_counts.get(result.track, 0) + 1
+
+    planned_track_counts: dict[str, int] = {}
+    for plan in planned:
+        planned_track_counts[plan.track] = planned_track_counts.get(plan.track, 0) + 1
 
     return {
         "model": model,
@@ -641,7 +658,8 @@ def matrix_result_to_dict(
         "timeout_seconds": timeout_seconds,
         "total_attempted": len(matrix_result.results),
         "total_planned": len(planned),
-        "track": track,
+        "track_counts": track_counts,
+        "planned_track_counts": planned_track_counts,
     }
 
 
@@ -649,7 +667,6 @@ def build_command_shape(
     harness: str,
     *,
     model: str,
-    track: str,
     timeout_seconds: int,
     task_dir: Path,
     repo_root: Path,
@@ -658,7 +675,6 @@ def build_command_shape(
     return build_harness_invocation(
         harness,
         model=model,
-        track=track,
         timeout_seconds=timeout_seconds,
         task_dir=task_dir,
         repo_root=repo_root,
@@ -670,7 +686,6 @@ def build_harness_invocation(
     harness: str,
     *,
     model: str,
-    track: str,
     timeout_seconds: int | float,
     task_dir: Path,
     repo_root: Path,
@@ -815,7 +830,6 @@ def build_run_plans(
     tasks: Sequence[Task],
     harnesses: Sequence[str],
     model: str,
-    track: str,
     timeout_seconds: int,
     bdi_repo: Path | None = None,
     run_id: str | None = None,
@@ -831,7 +845,6 @@ def build_run_plans(
             invocation = build_harness_invocation(
                 harness,
                 model=model,
-                track=track,
                 timeout_seconds=timeout_seconds,
                 task_dir=task.path,
                 repo_root=repo_root,
@@ -841,6 +854,7 @@ def build_run_plans(
             plans.append(
                 RunPlan(
                     task_id=task.id,
+                    track=task.track,
                     harness=harness,
                     task_dir=task.path,
                     working_dir=invocation.working_dir or task.path,
@@ -865,7 +879,7 @@ def render_list(tasks: Sequence[Task]) -> str:
     lines.extend(f"- {harness}" for harness in SUPPORTED_HARNESSES)
     lines.extend(["", "Discovered tasks:"])
     if tasks:
-        lines.extend(f"- {task.id}" for task in tasks)
+        lines.extend(f"- {task.id} [{task.track}]" for task in tasks)
     else:
         lines.append("- none")
     return "\n".join(lines) + "\n"
@@ -876,13 +890,11 @@ def render_dry_run(
     *,
     plans: Sequence[RunPlan],
     model: str,
-    track: str,
     timeout_seconds: int,
 ) -> str:
     lines = [
         "SBench dry run",
         f"repo_root: {repo_root}",
-        f"track: {track}",
         f"model: {model}",
         f"model_path: {path_safe_model_name(model)}",
         f"timeout_seconds: {timeout_seconds}",
@@ -894,6 +906,7 @@ def render_dry_run(
         lines.extend(
             [
                 f"- task: {plan.task_id}",
+                f"  track: {plan.track}",
                 f"  harness: {plan.harness}",
                 f"  task_dir: {display_path(plan.task_dir, repo_root)}",
                 f"  archive: {display_path(plan.archive_dir, repo_root)}",
@@ -945,11 +958,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Harness to include: bdi, codex, or opencode. May be repeated or comma-separated. Defaults to all harnesses.",
     )
     parser.add_argument("--model", help="Model name to record and pass to harness command planning.")
-    parser.add_argument(
-        "--track",
-        default=DEFAULT_TRACK,
-        help=f"Benchmark track label to record. Defaults to {DEFAULT_TRACK}.",
-    )
     parser.add_argument(
         "--timeout",
         type=positive_int,
@@ -1018,7 +1026,6 @@ def main(
         tasks=selected_tasks,
         harnesses=selected_harnesses,
         model=args.model,
-        track=args.track,
         timeout_seconds=args.timeout,
         bdi_repo=args.bdi_repo.resolve(),
         run_id=actual_run_id,
@@ -1029,7 +1036,6 @@ def main(
                 repo_root,
                 plans=plans,
                 model=args.model,
-                track=args.track,
                 timeout_seconds=args.timeout,
             )
         )
@@ -1052,7 +1058,6 @@ def main(
         repo_root,
         plans,
         model=args.model,
-        track=args.track,
         timeout_seconds=args.timeout,
         stop_on_first_failure=args.stop_on_first_failure,
         run_id=actual_run_id,

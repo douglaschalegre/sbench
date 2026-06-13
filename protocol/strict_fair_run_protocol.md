@@ -11,7 +11,7 @@ Current `smoke` task IDs are listed in the README track registry. They are `vend
 - Do not tell the agent it is being evaluated, benchmarked, scored, or compared.
 - Expose only the relevant task folder, such as `tasks/vendor_selection`, to the agent.
 - Do not expose `evaluation/`, `issues/`, `protocol/`, `templates/`, `PRD.to-prd.md`, or hidden expected-deliverable notes during the run.
-- Record the benchmark track for the run. Use `smoke` for the current baseline tasks.
+- Record the benchmark track derived from the task registry. Use `smoke` for the current baseline tasks.
 - Use the same model and comparable model settings across frameworks.
 - Start a fresh session for every framework-task run.
 - Disable persistent memory, retained conversation history, learned skills, or framework-specific long-term context where possible.
@@ -26,7 +26,7 @@ Record setup details before starting:
 
 - Framework name and version, if known.
 - Model name and provider.
-- Benchmark track, such as `smoke`.
+- Task-derived benchmark track, such as `smoke`.
 - Task folder path.
 - Whether memory or learned skills were disabled, unavailable, or not applicable.
 - Trace capture source and destination, if the selected harness can preserve logs, state summaries, event streams, or tool traces.

@@ -23,7 +23,7 @@ Codex and OpenCode should be run through their non-interactive CLIs. Codex shoul
 
 The orchestrator should centralize output archiving. Harnesses should write deliverables into `tasks/<task_id>/answer/` during execution. After each task run, the orchestrator should move or copy those produced deliverables into `answers/<task_id>/<model>/<harness>/rN/`, where `rN` is the next incremental run folder for that exact task, model, and harness. The orchestrator should then clean the task-local `answer/` directory before the next run to prevent cross-harness contamination.
 
-The orchestrator should also create run-level logs and metadata records under a dedicated run record area. Those records should include the selected benchmark track, task ID, harness, model, command invocation, start time, end time, elapsed time, timeout status, exit code, answer archive path, and log paths.
+The orchestrator should also create run-level logs and metadata records under a dedicated run record area. Those records should include the task-derived benchmark track, task ID, harness, model, command invocation, start time, end time, elapsed time, timeout status, exit code, answer archive path, and log paths.
 
 ## User Stories
 
@@ -47,7 +47,7 @@ The orchestrator should also create run-level logs and metadata records under a 
 18. As a benchmark runner, I want timeout status recorded automatically, so that unfinished runs are visible.
 19. As a benchmark runner, I want the configured timeout to be the same across harnesses by default, so that the comparison remains fair.
 20. As a benchmark runner, I want to override timeout from the command line, so that context-pressure tracks can use longer limits when needed.
-21. As a benchmark runner, I want the selected benchmark track recorded, so that smoke and context-pressure results are not conflated.
+21. As a benchmark runner, I want the task-derived benchmark track recorded, so that smoke and context-pressure results are not conflated.
 22. As a benchmark runner, I want Codex to run non-interactively, so that it can be included in unattended benchmark batches.
 23. As a benchmark runner, I want Codex to use the task folder as its working directory, so that it only sees the intended fixture.
 24. As a benchmark runner, I want Codex to run with approval disabled for automation, so that a batch does not stop waiting for manual confirmation.

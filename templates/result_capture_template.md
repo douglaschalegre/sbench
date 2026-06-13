@@ -8,7 +8,7 @@ Use one copy of this template for one framework-task run. The fields are framewo
 | --- | --- |
 | Run ID |  |
 | Date |  |
-| Benchmark track | smoke |
+| Benchmark track | derived from task registry |
 | Framework |  |
 | Framework version or commit |  |
 | Model |  |
