@@ -122,6 +122,13 @@ class OrchestratorTest(unittest.TestCase):
         self.assertTrue(args.progress_preview)
         self.assertIsNone(args.model)
 
+    def test_parse_args_accepts_import_results_without_model(self) -> None:
+        args = orchestrator.parse_args(["--import-results", "--results-db", "custom.sqlite"])
+
+        self.assertTrue(args.import_results)
+        self.assertIsNone(args.model)
+        self.assertEqual(args.results_db, Path("custom.sqlite"))
+
     def test_progress_ui_is_enabled_for_tty_output_only(self) -> None:
         class TtyOutput(io.StringIO):
             def isatty(self) -> bool:
@@ -162,6 +169,28 @@ class OrchestratorTest(unittest.TestCase):
             self.assertEqual(output.getvalue(), "")
             self.assertEqual(stderr.getvalue(), "")
             self.assertFalse((Path(repo) / "runs").exists())
+
+    def test_import_results_runs_importer_without_model_or_harness_planning(self) -> None:
+        with self.make_repo() as repo:
+            output = io.StringIO()
+            with mock.patch.object(
+                cli,
+                "import_run_records",
+                return_value=cli.ImportResult(execution_count=3, warning_count=1),
+            ) as importer:
+                exit_code = orchestrator.main(
+                    ["--repo-root", repo, "--import-results", "--results-db", "custom.sqlite"],
+                    stdout=output,
+                )
+
+            database_path = Path(repo).resolve() / "custom.sqlite"
+            self.assertEqual(exit_code, 0)
+            importer.assert_called_once_with(Path(repo).resolve(), database_path)
+            rendered = output.getvalue()
+            self.assertIn("SBench results import complete", rendered)
+            self.assertIn("database: custom.sqlite", rendered)
+            self.assertIn("executions_imported: 3", rendered)
+            self.assertIn("warnings: 1", rendered)
 
     def test_dry_run_prints_selected_matrix_commands_and_archive_destinations(self) -> None:
         with self.make_repo() as repo:

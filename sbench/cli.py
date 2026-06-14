@@ -22,6 +22,7 @@ from .progress import (
     preview_textual_progress,
     run_matrix_with_textual_progress,
 )
+from .results_importer import ImportResult, import_run_records
 from .runs import (
     MatrixRunResult,
     RunPlan,
@@ -33,6 +34,7 @@ from .tasks import SelectionError, Task, discover_tasks, select_tasks
 
 
 DEFAULT_TIMEOUT_SECONDS = 600
+DEFAULT_RESULTS_DB = "results.sqlite"
 
 
 def render_list(tasks: Sequence[Task]) -> str:
@@ -86,6 +88,16 @@ def render_matrix_result(repo_root: Path, matrix_result: MatrixRunResult) -> str
         f"summary: {display_path(matrix_result.summary_path, repo_root)}",
         f"attempted: {len(matrix_result.results)}",
         f"failed_or_incomplete: {failed_count}",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def render_import_result(repo_root: Path, database_path: Path, result: ImportResult) -> str:
+    lines = [
+        "SBench results import complete",
+        f"database: {display_path(database_path, repo_root)}",
+        f"executions_imported: {result.execution_count}",
+        f"warnings: {result.warning_count}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -147,11 +159,22 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Write stdout to events.jsonl when it is valid JSON Lines output.",
     )
+    parser.add_argument(
+        "--results-db",
+        type=Path,
+        default=Path(DEFAULT_RESULTS_DB),
+        help=f"SQLite database path for --import-results. Defaults to {DEFAULT_RESULTS_DB} under repo root.",
+    )
 
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--list", action="store_true", help="List discovered tasks and supported harnesses.")
     mode.add_argument("--dry-run", action="store_true", help="Print the planned matrix without running agents.")
     mode.add_argument("--run", action="store_true", help="Run the selected harness/task matrix.")
+    mode.add_argument(
+        "--import-results",
+        action="store_true",
+        help="Import existing orchestrator run artifacts into SQLite.",
+    )
     mode.add_argument(
         "--progress-preview",
         action="store_true",
@@ -187,6 +210,14 @@ def main(
         except TextualUnavailableError as error:
             error_output.write(f"{error}\n")
             return 2
+        return 0
+
+    if args.import_results:
+        database_path = args.results_db
+        if not database_path.is_absolute():
+            database_path = repo_root / database_path
+        import_result = import_run_records(repo_root, database_path)
+        output.write(render_import_result(repo_root, database_path, import_result))
         return 0
 
     if (args.dry_run or args.run) and not args.model:
