@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Thread
-from time import monotonic
+from time import monotonic, sleep
 from typing import Sequence
 
 from .runs import MatrixRunResult, RunPlan, RunProgress, run_matrix
@@ -10,6 +12,21 @@ from .runs import MatrixRunResult, RunPlan, RunProgress, run_matrix
 
 class TextualUnavailableError(RuntimeError):
     """Raised when the interactive progress UI cannot be loaded."""
+
+
+class BenchmarkRunCancelledError(RuntimeError):
+    """Raised when the interactive progress UI cancels a benchmark run."""
+
+
+@dataclass(frozen=True)
+class _ProgressDisplay:
+    total: int
+    completed: int
+    succeeded: int
+    failed_or_incomplete: int
+    current_task: str | None
+    last_task: str | None
+    last_status: str | None
 
 
 def run_matrix_with_textual_progress(
@@ -22,6 +39,95 @@ def run_matrix_with_textual_progress(
     run_id: str | None = None,
     capture_json_events: bool = False,
 ) -> MatrixRunResult:
+    planned = tuple(plans)
+
+    def run_benchmark(update: Callable[[_ProgressDisplay], None]) -> MatrixRunResult:
+        return run_matrix(
+            repo_root,
+            planned,
+            model=model,
+            timeout_seconds=timeout_seconds,
+            stop_on_first_failure=stop_on_first_failure,
+            run_id=run_id,
+            capture_json_events=capture_json_events,
+            progress_callback=lambda progress: update(_progress_from_run(progress)),
+        )
+
+    result = _run_progress_app(
+        title="SBench Benchmark Progress",
+        initial_progress=_ProgressDisplay(
+            total=len(planned),
+            completed=0,
+            succeeded=0,
+            failed_or_incomplete=0,
+            current_task=_plan_label(planned[0] if planned else None),
+            last_task=None,
+            last_status=None,
+        ),
+        worker=run_benchmark,
+        require_result=True,
+    )
+    if not isinstance(result, MatrixRunResult):
+        raise RuntimeError("benchmark run did not produce a result")
+    return result
+
+
+def preview_textual_progress() -> None:
+    preview_tasks = (
+        ("vendor_selection", "codex", "success"),
+        ("travel_reimbursement_audit", "opencode", "failed"),
+        ("clinic_rollout_plan", "bdi", "success"),
+        ("grant_closeout_recovery", "codex", "incomplete"),
+    )
+
+    def run_preview(update: Callable[[_ProgressDisplay], None]) -> None:
+        succeeded = 0
+        failed_or_incomplete = 0
+        total = len(preview_tasks)
+        for completed, (task_id, harness, status) in enumerate(preview_tasks, start=1):
+            sleep(1.2)
+            if status == "success":
+                succeeded += 1
+            else:
+                failed_or_incomplete += 1
+
+            next_task = preview_tasks[completed] if completed < total else None
+            update(
+                _ProgressDisplay(
+                    total=total,
+                    completed=completed,
+                    succeeded=succeeded,
+                    failed_or_incomplete=failed_or_incomplete,
+                    current_task=f"{next_task[0]} {next_task[1]}" if next_task else None,
+                    last_task=f"{task_id} {harness}",
+                    last_status=status,
+                )
+            )
+        sleep(2)
+
+    _run_progress_app(
+        title="SBench Progress Preview",
+        initial_progress=_ProgressDisplay(
+            total=len(preview_tasks),
+            completed=0,
+            succeeded=0,
+            failed_or_incomplete=0,
+            current_task=f"{preview_tasks[0][0]} {preview_tasks[0][1]}",
+            last_task=None,
+            last_status=None,
+        ),
+        worker=run_preview,
+        require_result=False,
+    )
+
+
+def _run_progress_app(
+    *,
+    title: str,
+    initial_progress: _ProgressDisplay,
+    worker: Callable[[Callable[[_ProgressDisplay], None]], object],
+    require_result: bool,
+) -> object:
     try:
         from rich.markup import escape
         from textual.app import App, ComposeResult
@@ -34,23 +140,9 @@ def run_matrix_with_textual_progress(
             "running this command."
         ) from error
 
-    planned = tuple(plans)
-    matrix_result: MatrixRunResult | None = None
+    result: object = None
     run_error: BaseException | None = None
-
-    def plan_label(plan: RunPlan | None) -> str:
-        if plan is None:
-            return "-"
-        return f"{plan.task_id} {plan.harness}"
-
-    def format_elapsed(seconds: float) -> str:
-        elapsed = int(seconds)
-        hours, remainder = divmod(elapsed, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        if hours:
-            return f"{hours}:{minutes:02}:{seconds:02}"
-        return f"{minutes}:{seconds:02}"
-
+    cancelled_result = "cancelled"
     border_colors = (
         "#f97316",
         "#fb923c",
@@ -98,10 +190,10 @@ def run_matrix_with_textual_progress(
 
         def compose(self) -> ComposeResult:
             with Vertical(id="panel"):
-                yield Static("SBench Benchmark Progress", id="title")
+                yield Static(title, id="title")
                 with Horizontal(id="progress-row"):
                     yield ProgressBar(
-                        total=max(len(planned), 1),
+                        total=max(initial_progress.total, 1),
                         show_eta=False,
                         id="progress",
                     )
@@ -109,10 +201,10 @@ def run_matrix_with_textual_progress(
                 yield Label("Success: 0", id="success")
                 yield Label("Failed_or_incomplete: 0", id="failed")
                 yield Label("Last executed task: -", id="last")
-                yield Label(
-                    f"Current task: {plan_label(planned[0] if planned else None)}",
-                    id="current",
-                )
+                yield Label("Current task: -", id="current")
+
+        def action_quit(self) -> None:
+            self.exit(cancelled_result)
 
         def on_mount(self) -> None:
             self._started_at = monotonic()
@@ -121,10 +213,8 @@ def run_matrix_with_textual_progress(
             self.set_interval(1, self._render_elapsed)
             self._animate_border()
             self._render_elapsed()
-            worker = Thread(
-                target=self._run_benchmark, name="sbench-progress", daemon=True
-            )
-            worker.start()
+            self._render_progress(initial_progress)
+            Thread(target=self._run_worker, name="sbench-progress", daemon=True).start()
 
         def _animate_border(self) -> None:
             color = border_colors[self._border_frame % len(border_colors)]
@@ -133,31 +223,22 @@ def run_matrix_with_textual_progress(
 
         def _render_elapsed(self) -> None:
             self.query_one("#elapsed", Label).update(
-                f"Elapsed: {format_elapsed(monotonic() - self._started_at)}"
+                f"Elapsed: {_format_elapsed(monotonic() - self._started_at)}"
             )
 
-        def _run_benchmark(self) -> None:
-            nonlocal matrix_result, run_error
+        def _run_worker(self) -> None:
+            nonlocal result, run_error
             try:
-                matrix_result = run_matrix(
-                    repo_root,
-                    planned,
-                    model=model,
-                    timeout_seconds=timeout_seconds,
-                    stop_on_first_failure=stop_on_first_failure,
-                    run_id=run_id,
-                    capture_json_events=capture_json_events,
-                    progress_callback=self._queue_progress_update,
-                )
+                result = worker(self._queue_progress_update)
             except BaseException as error:
                 run_error = error
             finally:
                 self.call_from_thread(self.exit)
 
-        def _queue_progress_update(self, progress: RunProgress) -> None:
+        def _queue_progress_update(self, progress: _ProgressDisplay) -> None:
             self.call_from_thread(self._render_progress, progress)
 
-        def _render_progress(self, progress: RunProgress) -> None:
+        def _render_progress(self, progress: _ProgressDisplay) -> None:
             progress_bar = self.query_one("#progress", ProgressBar)
             progress_bar.update(
                 total=max(progress.total, 1), progress=progress.completed
@@ -167,23 +248,54 @@ def run_matrix_with_textual_progress(
                 f"Failed_or_incomplete: {progress.failed_or_incomplete}"
             )
 
-            if progress.last_result is None:
+            if progress.last_task is None:
                 self.query_one("#last", Label).update("Last executed task: -")
             else:
-                last_label = (
-                    f"{progress.last_result.task_id} {progress.last_result.harness}"
-                )
-                color = "green" if progress.last_result.status == "success" else "red"
+                color = "green" if progress.last_status == "success" else "red"
                 self.query_one("#last", Label).update(
-                    f"Last executed task: [{color}]{escape(last_label)}[/]"
+                    f"Last executed task: [{color}]{escape(progress.last_task)}[/]"
                 )
 
-            current_label = escape(plan_label(progress.current_plan))
-            self.query_one("#current", Label).update(f"Current task: {current_label}")
+            current_task = escape(progress.current_task or "-")
+            self.query_one("#current", Label).update(f"Current task: {current_task}")
 
-    BenchmarkProgressApp().run()
+    app_result = BenchmarkProgressApp().run()
     if run_error is not None:
         raise run_error
-    if matrix_result is None:
-        raise RuntimeError("benchmark run did not produce a result")
-    return matrix_result
+    if require_result and app_result == cancelled_result:
+        raise BenchmarkRunCancelledError("Benchmark run cancelled.")
+    if require_result and result is None:
+        raise BenchmarkRunCancelledError("Benchmark run cancelled.")
+    return result
+
+
+def _progress_from_run(progress: RunProgress) -> _ProgressDisplay:
+    last_task = None
+    last_status = None
+    if progress.last_result is not None:
+        last_task = f"{progress.last_result.task_id} {progress.last_result.harness}"
+        last_status = progress.last_result.status
+    return _ProgressDisplay(
+        total=progress.total,
+        completed=progress.completed,
+        succeeded=progress.succeeded,
+        failed_or_incomplete=progress.failed_or_incomplete,
+        current_task=_plan_label(progress.current_plan),
+        last_task=last_task,
+        last_status=last_status,
+    )
+
+
+def _plan_label(plan: RunPlan | None) -> str | None:
+    if plan is None:
+        return None
+    return f"{plan.task_id} {plan.harness}"
+
+
+def _format_elapsed(seconds: float) -> str:
+    elapsed = int(seconds)
+    hours, remainder = divmod(elapsed, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}:{minutes:02}:{seconds:02}"
+    return f"{minutes}:{seconds:02}"
