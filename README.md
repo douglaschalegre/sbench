@@ -60,6 +60,12 @@ Preview a planned benchmark matrix without invoking any harness:
 uv run sbench --dry-run --model gpt-5.2 --harness codex,opencode --task vendor_selection
 ```
 
+Preview the Textual progress UI with simulated task updates only:
+
+```sh
+uv run sbench --progress-preview
+```
+
 Run the benchmark through uv so it uses the synced project environment:
 
 ```sh
