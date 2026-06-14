@@ -116,6 +116,12 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(args.task, ["vendor_selection"])
         self.assertEqual(args.harness, ["codex"])
 
+    def test_parse_args_accepts_progress_preview_without_model(self) -> None:
+        args = orchestrator.parse_args(["--progress-preview"])
+
+        self.assertTrue(args.progress_preview)
+        self.assertIsNone(args.model)
+
     def test_progress_ui_is_enabled_for_tty_output_only(self) -> None:
         class TtyOutput(io.StringIO):
             def isatty(self) -> bool:
@@ -139,6 +145,23 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIn("- travel_reimbursement_audit [smoke]", rendered)
         self.assertIn("- clinic_rollout_plan [long_context]", rendered)
         self.assertNotIn("command:", rendered)
+
+    def test_progress_preview_runs_without_model_or_run_artifacts(self) -> None:
+        with self.make_repo() as repo:
+            output = io.StringIO()
+            stderr = io.StringIO()
+            with mock.patch.object(cli, "preview_textual_progress") as preview:
+                exit_code = orchestrator.main(
+                    ["--repo-root", repo, "--progress-preview"],
+                    stdout=output,
+                    stderr=stderr,
+                )
+
+            self.assertEqual(exit_code, 0)
+            preview.assert_called_once_with()
+            self.assertEqual(output.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertFalse((Path(repo) / "runs").exists())
 
     def test_dry_run_prints_selected_matrix_commands_and_archive_destinations(self) -> None:
         with self.make_repo() as repo:
@@ -291,6 +314,32 @@ class OrchestratorTest(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             self.assertIn("Missing required CLI binaries", stderr.getvalue())
             self.assertFalse((Path(repo) / "runs").exists())
+
+    def test_run_mode_reports_interactive_progress_cancellation_without_traceback(self) -> None:
+        class TtyOutput(io.StringIO):
+            def isatty(self) -> bool:
+                return True
+
+        with self.make_repo() as repo:
+            stdout = TtyOutput()
+            stderr = io.StringIO()
+            with (
+                mock.patch.object(cli, "find_missing_cli_binaries", return_value={}),
+                mock.patch.object(
+                    cli,
+                    "run_matrix_with_textual_progress",
+                    side_effect=cli.BenchmarkRunCancelledError("Benchmark run cancelled."),
+                ),
+            ):
+                exit_code = orchestrator.main(
+                    ["--repo-root", repo, "--run", "--model", "gpt-5.2", "--harness", "codex"],
+                    stdout=stdout,
+                    stderr=stderr,
+                )
+
+            self.assertEqual(exit_code, 130)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "Benchmark run cancelled.\n")
 
     def test_bdi_invocation_points_to_configured_repo_toy_runner_and_sbench_task(self) -> None:
         with self.make_repo() as repo:
