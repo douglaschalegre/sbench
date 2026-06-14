@@ -1,31 +1,32 @@
-# Source resolution (current vs stale)
+# Source resolution (recency rule)
 
 ## Recency rule (from `requirements.md`)
-If a vendor appears in more than one dated source and values conflict, use the newest dated source for that vendor.
+If a vendor appears in more than one **dated** source and values conflict, use the **newest dated source** for that vendor.
 
-## Vendor-by-vendor source used
+## Sources reviewed
+- `vendor_quotes.csv` (contains vendor rows with `quote_date`)
+- `northstar_update_2026-04-30.md` (explicitly supersedes older Northstar row)
 
-| Vendor | Source(s) present | Source dates | Current/effective source used | Why |
+## Vendor-by-vendor source currency
+| Vendor | Dated sources present | Conflicts? | Effective source used | Why |
 |---|---|---:|---|---|
-| **Northstar** | `vendor_quotes.csv` row; `northstar_update_2026-04-30.md` | 2026-04-24; **2026-04-30** | **`northstar_update_2026-04-30.md`** | Newer dated vendor-specific update; explicitly supersedes CSV where conflicting. |
-| Atlas | `vendor_quotes.csv` row only | 2026-04-27 | `vendor_quotes.csv` | Only source available. |
-| BrightPath | `vendor_quotes.csv` row only | 2026-04-26 | `vendor_quotes.csv` | Only source available. |
-| Cobalt | `vendor_quotes.csv` row only | 2026-04-25 | `vendor_quotes.csv` | Only source available. |
-| Dockside | `vendor_quotes.csv` row only | 2026-04-26 | `vendor_quotes.csv` | Only source available. |
+| Northstar | `vendor_quotes.csv` (2026-04-24) and `northstar_update_2026-04-30.md` (2026-04-30) | yes | `northstar_update_2026-04-30.md` | Newer dated source per recency rule; update explicitly says to use it instead of the older CSV row |
+| Atlas | `vendor_quotes.csv` (2026-04-27) only | no | `vendor_quotes.csv` | Only source |
+| BrightPath | `vendor_quotes.csv` (2026-04-26) only | no | `vendor_quotes.csv` | Only source |
+| Cobalt | `vendor_quotes.csv` (2026-04-25) only | no | `vendor_quotes.csv` | Only source |
+| Dockside | `vendor_quotes.csv` (2026-04-26) only | no | `vendor_quotes.csv` | Only source |
 
-## Required dated facts (Northstar)
-
-- **Stale Northstar CSV row**: `vendor_quotes.csv` Northstar quote dated **2026-04-24**.
-- **Newer Northstar update**: `northstar_update_2026-04-30.md` with source date **2026-04-30**.
+## Required note: stale vs newer Northstar information
+- **Stale Northstar row** in `vendor_quotes.csv` is dated **2026-04-24** (unit price $185).
+- **Newer Northstar update** is `northstar_update_2026-04-30.md` dated **2026-04-30** (unit price $178).
 
 ## Effective Northstar terms used for screening (from `northstar_update_2026-04-30.md`)
-
-| Term | Effective value |
+| Field | Effective value |
 |---|---|
-| Unit price (USD) | **$178** |
+| Unit price | **$178** |
 | Available quantity | **12** |
 | Delivery date | **2026-05-16** |
 | Screen size | **10.1 in** |
 | Battery rating | **11 hours** |
-| Rugged case included | **Yes** |
+| Rugged case included? | **yes** |
 | Warranty | **12 months** |

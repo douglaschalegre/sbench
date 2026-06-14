@@ -1,19 +1,22 @@
-## Checkpoint 3: Reimbursement Summary
+# Checkpoint 3: Reimbursement Summary
+
+## Totals
 
 - Reimbursable total: `$1,056.00`
 - Non-reimbursable total: `$225.00`
 
-### Arithmetic
+## Reimbursable Total Arithmetic
 
-`$480.00 (T-001) + $0.00 (T-002) + $440.00 (T-003) + $58.00 (T-004) + $60.00 (T-005) + $0.00 (T-006) + $18.00 (T-007) = $1,056.00`
+`$480.00 + $0.00 + $440.00 + $58.00 + $60.00 + $0.00 + $18.00 = $1,056.00`
 
-### Decision Buckets
+## Expense Groupings
 
 - Fully approved expense IDs: `T-001`, `T-007`
 - Partially reimbursed or capped expense IDs: `T-003`, `T-004`, `T-005`
 - Rejected expense IDs: `T-002`, `T-006`
 
-### Finance Review Notes
+## Finance Notes
 
-- Current policy dated `2026-04-20` controls because the trip started on `2026-05-08`, after the policy effective date of `2026-05-01`.
-- Main reductions came from the lodging cap, non-reimbursable alcohol, the ride-share tip cap, and missing required receipt support for supplies.
+- Total claimed amount across all expenses: `$1,281.00`
+- Difference between claimed and reimbursable totals: `$1,281.00 - $1,056.00 = $225.00`
+- Main reductions came from the lodging cap, alcohol exclusion, ride-share tip cap, missing required receipt for supplies, and the non-approved seat upgrade.

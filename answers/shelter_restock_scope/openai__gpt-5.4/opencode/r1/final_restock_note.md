@@ -1,9 +1,16 @@
 # Final Restock Note
 
-The Phase 1 North Shelter restock recommendation selects four items: First aid refill kits, Thermal blankets, LED lanterns, and Water storage jugs. Total selected cost is $2,130.00.
+Phase 1 restock selections for the North Shelter are:
 
-Budget status: the recommendation stays within the $2,200.00 Phase 1 restock budget, leaving $70.00 remaining.
+- R-101 First aid refill kits: 20 units for `$480.00`
+- R-102 Thermal blankets: 50 units for `$900.00`
+- R-103 LED lanterns: 12 units for `$420.00`
+- R-106 Water storage jugs: 15 units for `$330.00`
 
-Excluded-request summary: R-104 was excluded because communications items are outside the allowed restock categories, and R-105 was excluded because it is a phase 2, not-approved media request.
+Total selected cost: `$2,130.00`
 
-Deferred-secondary-request summary: the volunteer training agenda was deferred, and the banner design, drone-battery/media question, and phase-two signage plan were recorded as out of scope rather than completed in this packet.
+Budget status: within the `$2,200.00` budget, with `$70.00` remaining.
+
+Excluded-request summary: R-104 was excluded because it is a communications item, and R-105 was excluded because it is a Phase 2 media request with `requested` status rather than `approved`.
+
+Deferred-secondary-request summary: the volunteer training agenda was deferred, and the banner design, drone battery/media question, and phase-two signage plan were recorded as out of scope for this packet.

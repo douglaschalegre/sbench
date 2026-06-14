@@ -1,0 +1,57 @@
+{
+  "archive_path": "answers/grant_closeout_recovery/openai__gpt-5.4/codex/r1",
+  "archived_paths": [
+    "answers/grant_closeout_recovery/openai__gpt-5.4/codex/r1/audit_findings.md",
+    "answers/grant_closeout_recovery/openai__gpt-5.4/codex/r1/corrected_expense_decisions.md",
+    "answers/grant_closeout_recovery/openai__gpt-5.4/codex/r1/final_closeout_summary.md"
+  ],
+  "command": [
+    "codex",
+    "exec",
+    "-m",
+    "gpt-5.4",
+    "--cd",
+    "tasks/grant_closeout_recovery",
+    "--sandbox",
+    "workspace-write",
+    "--config",
+    "approval_policy=\"never\"",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "--json",
+    "You are working in the provided folder. Read task.md and the other local files, then complete the requested work. Create the requested `answer/` folder and put all requested deliverables there."
+  ],
+  "elapsed_seconds": 76.556,
+  "end_time": "2026-06-14T22:21:17Z",
+  "exit_code": 0,
+  "harness": "codex",
+  "incomplete_reason": null,
+  "json_event_log_path": null,
+  "metadata_path": "runs/20260614T221008Z/entries/grant_closeout_recovery/codex/r1/metadata.json",
+  "model": "openai/gpt-5.4",
+  "model_path": "openai__gpt-5.4",
+  "scratch_cleanup": {
+    "created_paths": [],
+    "deleted_paths": [],
+    "modified_paths": [],
+    "policy": "restore_task_files_outside_answer_after_each_run",
+    "record_dir": "runs/20260614T221008Z/entries/grant_closeout_recovery/codex/r1/scratch"
+  },
+  "settings": {
+    "approval_policy": "never",
+    "binary": "codex",
+    "command_model": "gpt-5.4",
+    "json_events": true,
+    "sandbox": "workspace-write",
+    "task_directory_scope": "tasks/grant_closeout_recovery"
+  },
+  "start_time": "2026-06-14T22:20:01Z",
+  "status": "success",
+  "stderr_log_path": "runs/20260614T221008Z/entries/grant_closeout_recovery/codex/r1/stderr.log",
+  "stdout_log_path": "runs/20260614T221008Z/entries/grant_closeout_recovery/codex/r1/stdout.log",
+  "task_id": "grant_closeout_recovery",
+  "timed_out": false,
+  "timeout_seconds": 600,
+  "track": "recovery",
+  "working_dir": "."
+}

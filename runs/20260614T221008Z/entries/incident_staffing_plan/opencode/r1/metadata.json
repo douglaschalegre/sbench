@@ -1,0 +1,53 @@
+{
+  "archive_path": "answers/incident_staffing_plan/openai__gpt-5.4/opencode/r1",
+  "archived_paths": [
+    "answers/incident_staffing_plan/openai__gpt-5.4/opencode/r1/access_resolution.md",
+    "answers/incident_staffing_plan/openai__gpt-5.4/opencode/r1/candidate_screen.md",
+    "answers/incident_staffing_plan/openai__gpt-5.4/opencode/r1/staffing_assignment.md"
+  ],
+  "command": [
+    "opencode",
+    "run",
+    "-m",
+    "openai/gpt-5.4",
+    "--dir",
+    "tasks/incident_staffing_plan",
+    "--format",
+    "json",
+    "--dangerously-skip-permissions",
+    "You are working in the provided folder. Read task.md and the other local files, then complete the requested work. Create the requested `answer/` folder and put all requested deliverables there."
+  ],
+  "elapsed_seconds": 63.593,
+  "end_time": "2026-06-14T22:26:15Z",
+  "exit_code": 0,
+  "harness": "opencode",
+  "incomplete_reason": null,
+  "json_event_log_path": null,
+  "metadata_path": "runs/20260614T221008Z/entries/incident_staffing_plan/opencode/r1/metadata.json",
+  "model": "openai/gpt-5.4",
+  "model_path": "openai__gpt-5.4",
+  "scratch_cleanup": {
+    "created_paths": [],
+    "deleted_paths": [],
+    "modified_paths": [],
+    "policy": "restore_task_files_outside_answer_after_each_run",
+    "record_dir": "runs/20260614T221008Z/entries/incident_staffing_plan/opencode/r1/scratch"
+  },
+  "settings": {
+    "auto_approve_permissions": true,
+    "binary": "opencode",
+    "command_model": "openai/gpt-5.4",
+    "format": "json",
+    "task_directory_scope": "tasks/incident_staffing_plan",
+    "writable_scope": "task_directory_only"
+  },
+  "start_time": "2026-06-14T22:25:11Z",
+  "status": "success",
+  "stderr_log_path": "runs/20260614T221008Z/entries/incident_staffing_plan/opencode/r1/stderr.log",
+  "stdout_log_path": "runs/20260614T221008Z/entries/incident_staffing_plan/opencode/r1/stdout.log",
+  "task_id": "incident_staffing_plan",
+  "timed_out": false,
+  "timeout_seconds": 600,
+  "track": "smoke",
+  "working_dir": "."
+}

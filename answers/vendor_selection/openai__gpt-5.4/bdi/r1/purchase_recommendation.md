@@ -5,26 +5,21 @@
 - **Selected vendor:** Northstar
 - **Quantity:** 12 rugged tablets
 - **Unit price:** $178
-- **Total cost calculation:** 12 × $178 = **$2,136**
-- **Budget result:** Within the $2,200 maximum budget; **$64 under budget**
-- **Delivery date:** 2026-05-16
+- **Total cost calculation:** 12 x $178 = **$2,136**
+- **Budget result:** Within the $2,200 maximum budget by **$64**
+- **Delivery date:** 2026-05-16, which meets the need-by date of 2026-05-17
 
-## Why this vendor was selected
+## Why Northstar is selected
 
-Northstar meets all hard requirements using the newer `northstar_update_2026-04-30.md` source under the recency rule:
+Northstar is the only vendor that meets all hard requirements after applying the recency rule. The newer local source, `northstar_update_2026-04-30.md`, supersedes the older 2026-04-24 CSV row and provides compliant terms: 12 units available, 10.1-inch screen, 11-hour battery, rugged case included, 12-month warranty, and delivery by 2026-05-16.
 
-- 12 units available
-- 10.1-inch screen
-- 11-hour battery rating
-- rugged case included
-- 12-month warranty
-- delivery by 2026-05-16, which meets the 2026-05-17 need-by date
+## Rejected vendor summary
 
-Under the selection rule, among vendors meeting all hard requirements and budget, choose the lowest total cost. Northstar is the **only** vendor that satisfies all hard requirements and the budget, so it is the correct recommendation.
-
-## Short rejected-vendor summary
-
-- **Atlas:** Rejected because delivery date is 2026-05-18, after the 2026-05-17 need-by date.
-- **BrightPath:** Rejected because screen size is 9.7 inches, below the 10.0-inch minimum.
-- **Cobalt:** Rejected because battery rating is 9 hours, below the 10-hour minimum.
+- **Atlas:** Rejected because delivery is 2026-05-18, later than the required 2026-05-17 need-by date.
+- **BrightPath:** Rejected because the screen size is 9.7 inches, below the 10.0-inch minimum.
+- **Cobalt:** Rejected because battery life is 9 hours, below the 10-hour minimum.
 - **Dockside:** Rejected because only 11 units are available, below the required 12.
+
+## Final note for purchasing teammate
+
+Proceed with Northstar using the updated 2026-04-30 terms from `northstar_update_2026-04-30.md`, not the older Northstar row in `vendor_quotes.csv`.

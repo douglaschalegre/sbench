@@ -1,24 +1,20 @@
 # Initial Room Plan
 
-Date basis: initial planning sources through `04_initial_facility_note_2026-06-01.md`.
+## Assignments
 
-## Session Assignments
+| Session ID | Session | Room | Evidence | Cost |
+|---|---|---|---|---:|
+| S-101 | Safety Orientation | Harbor Hall | 22 attendees fits capacity 30; available in morning; projector required and provided; no demo table/quiet room/loading access required | $300 |
+| S-102 | Inventory Lab | Bay Workshop | 16 attendees fits capacity 18; available in afternoon; projector required and provided; demo table required and provided; loading access required and provided | $250 |
+| S-103 | Benefits Clinic | Elm Room | 12 attendees fits capacity 14; available in morning; quiet room required and provided; no projector/demo table/loading access required | $125 |
 
-| Session ID | Session | Selected Room | Evidence for Fit | Cost | Backup / Notes |
-|---|---|---|---|---:|---|
-| S-101 | Safety Orientation | Harbor Hall | Capacity 30 >= 22 attendees; available in **morning**; has **projector** required by session. | $300 | No lower-cost valid option. Cedar Room, Elm Room, Bay Workshop, and Delta Annex fail capacity, time block, or projector needs. |
-| S-102 | Inventory Lab | Bay Workshop | Capacity 18 >= 16 attendees; available in **afternoon**; provides **projector**, **demo table**, and **loading access** required by session. | $250 | **Backup considered:** Delta Annex also fits the afternoon lab requirements (capacity 20, projector, demo table, loading access) but costs more at $320, so Bay Workshop is preferred initially. |
-| S-103 | Benefits Clinic | Elm Room | Capacity 14 >= 12 attendees; available in **morning**; provides **quiet room** trait required by session. | $125 | Cedar Room is also valid (capacity 16, morning, quiet room) but costs more at $150, so Elm Room is preferred. |
+## Cost Summary
 
-## Initial Cost Summary
+- Initial total room cost: **$675**
+- Budget ceiling: **$800**
+- Budget status: **Within budget**, with **$125 remaining**.
 
-- Harbor Hall: $300
-- Bay Workshop: $250
-- Elm Room: $125
-- **Initial total cost: $675**
-- **Budget status:** Within the **$800** ceiling, with **$125 remaining**.
+## Backup / Fragile Assignment Note
 
-## Planning Notes
-
-- Assignments follow `01_planning_rules.md`: every session is assigned exactly one room, all hard requirements are met, and the lowest-cost valid room is used for each session.
-- The most fragile assignment is **S-102 -> Bay Workshop**, because `04_initial_facility_note_2026-06-01.md` explicitly names **Delta Annex** as the backup if availability changes later.
+- The most fragile assignment is **S-102 Inventory Lab -> Bay Workshop** because it is the only lowest-cost valid afternoon room with projector, demo table, and loading access in the initial sources.
+- Backup considered: **Delta Annex**. It is also valid for S-102 because it has capacity 20, afternoon availability, projector, demo table, and loading access, but it costs **$320**, so it was not selected initially because Bay Workshop is the lower-cost valid room.

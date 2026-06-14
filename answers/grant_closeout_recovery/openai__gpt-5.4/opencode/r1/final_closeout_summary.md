@@ -1,24 +1,24 @@
 # Final Closeout Summary
 
-The corrected closeout packet uses the final reimbursement cap of `$1,600.00` from `03_award_update_2026-05-22.md`. This source controls because the local instructions require using the newest dated award document when award-cap sources conflict, and the 2026-05-22 update expressly supersedes the original 2026-04-15 award letter.
+The corrected reimbursement cap is `$1,600.00`, based on `03_award_update_2026-05-22.md`. That newer award update controls because the local rules direct closeout reviewers to use the newest dated award document when award documents conflict.
 
 The corrected reimbursable total is `$1,588.00`, leaving `$12.00` remaining under the cap.
 
-Useful prior work that was preserved:
+Useful prior work was preserved where supported by the current evidence:
 
-- Approval of `G-001` seedling starter kits as eligible garden supplies.
-- Approval of `G-003` Braille outreach flyers as eligible accessibility printing.
-- Rejection of `G-004` staff thank-you gift cards as ineligible staff gifts.
-- Outcome facts that 140 seedling starter kits were distributed and 36 Braille outreach flyers were printed for accessible pickup locations.
+- `G-001` remained approved at `$980.00`.
+- `G-003` remained approved at `$420.00`.
+- `G-004` remained rejected.
+- The prior outcome summary correctly captured 140 seedling starter kits distributed and 36 Braille outreach flyers printed.
 
-Wrong prior work that was corrected:
+Wrong prior work was corrected where the draft relied on stale or incomplete information:
 
-- The prior draft used the stale `$2,000.00` award cap instead of the controlling `$1,600.00` cap from the newer award update.
-- `G-002` volunteer refreshments were reduced from `$145.00` to `$120.00` to apply the event-specific refreshments cap.
-- `G-005` neighborhood posters were changed from approved to rejected because public outreach printing is not listed as an eligible category in the current rules, and the expense is over `$75.00` without a required receipt.
-- The prior draft omitted `G-006` final report postage, which should be approved for `$68.00` because public outreach postage is eligible and the amount is within the no-receipt threshold with a ledger note.
+- The prior cap of `$2,000.00` was replaced with the correct `$1,600.00` cap from the newer award update.
+- `G-002` was reduced from `$145.00` to `$120.00` because volunteer refreshments are capped at `$120.00`.
+- `G-005` was changed from approved to rejected because public outreach printing is not listed as an eligible category in the current rules, and the expense also lacked the required receipt for an amount over `$75.00`.
+- `G-006` final report postage was added after being omitted from the prior draft and approved at `$68.00` because public outreach postage is eligible and the no-receipt exception applies for expenses of `$75.00` or less with a ledger note.
 
-Outcome facts from `05_outcomes.md`:
+Outcome facts from `05_outcomes.md` for the program manager:
 
 - 140 seedling starter kits were distributed.
 - 36 Braille outreach flyers were printed for accessible pickup locations.

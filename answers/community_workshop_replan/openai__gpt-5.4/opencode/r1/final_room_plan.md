@@ -1,15 +1,15 @@
-| Session ID | Session | Final Room Assignment | Final Evidence |
-| --- | --- | --- | --- |
-| S-101 | Safety Orientation | Harbor Hall | Capacity 30 for 22 attendees; available in `morning`; projector `yes`; cost `$300`. |
-| S-102 | Inventory Lab | Delta Annex | Capacity 20 for 16 attendees; available in `afternoon`; projector `yes`, demo table `yes`, loading access `yes`; cost `$320`. |
-| S-103 | Benefits Clinic | Elm Room | Capacity 14 for 12 attendees; available in `morning`; quiet room `yes`; cost `$125`. |
+# Final Room Plan
 
-## Final Cost
+| Session ID | Session | Time Block | Final Room | Key Validation |
+| --- | --- | --- | --- | --- |
+| S-101 | Safety Orientation | morning | Harbor Hall | Capacity 30 for 22 attendees; morning availability; projector `yes`. |
+| S-102 | Inventory Lab | afternoon | Delta Annex | Capacity 20 for 16 attendees; afternoon availability; projector `yes`; demo table `yes`; loading access `yes`. |
+| S-103 | Benefits Clinic | morning | Elm Room | Capacity 14 for 12 attendees; morning availability; quiet room `yes`. |
 
-- Final total room cost: `$745`
-- Remaining budget: `$55`
+Final total room cost: `$745`
 
-## Notes
+Remaining budget: `$55`
 
-- Workshop objective confirmation: all three sessions still have valid rooms, and the plan remains under the `$800` ceiling.
-- Preserved work from the initial plan: `S-101 Safety Orientation -> Harbor Hall` and `S-103 Benefits Clinic -> Elm Room` were unchanged; only the invalid `S-102` assignment was repaired.
+Workshop objective note: The same objective is still covered because all three sessions have valid rooms and the final package stays under the `$800` ceiling.
+
+Preserved work note: The initial assignments for `S-101 -> Harbor Hall` and `S-103 -> Elm Room` were preserved unchanged, and only the invalid `S-102` assignment was repaired.

@@ -1,41 +1,43 @@
 # Launch Recommendation
 
-## Final first-wave recommendation
+## Recommended first-wave clinics
 
-Select these three clinics for the first-wave medication cooler rollout:
+Recommend these three North-region clinics for the 2026-06-10 to 2026-06-14 launch window:
+1. **N-101 Maple Junction Clinic**
+2. **N-102 Riverbend Health**
+3. **N-106 Hillcrest Annex**
 
-1. Maple Junction Clinic (`N-101`)
-2. Riverbend Health (`N-102`)
-3. Hillcrest Annex (`N-106`)
+## Anchor continuity
 
-These are the only clinics that meet all current first-wave requirements for region, open status, accepted storage status, full-window coordinator coverage, delivery by 2026-06-07, and budget fit.
+- Anchor clinic: **Maple Junction Clinic**
+- Donor continuity code: **MJ-14**
 
-## Cost and budget
+Maple Junction Clinic remains eligible, so it should be included as the donor continuity anchor per the intake brief and selection preference.
 
-- Total rollout cost: $18,800
-- First-wave budget: $20,000
-- Remaining budget: $1,200
+## Delivery and carrier plan
 
-## Anchor clinic continuity fact
+| clinic_id | clinic_name | carrier | delivery date | rollout cost |
+| --- | --- | --- | --- | ---: |
+| N-101 | Maple Junction Clinic | SwiftRoute | 2026-06-06 | $7,400 |
+| N-102 | Riverbend Health | NorthLine | 2026-06-07 | $6,450 |
+| N-106 | Hillcrest Annex | Valley Freight | 2026-06-07 | $4,950 |
 
-Maple Junction Clinic remains eligible and should be included as the donor continuity anchor. Donor continuity code: `MJ-14`.
+All three deliveries arrive no later than the required 2026-06-07 cutoff, and all named coordinators are available for the full launch window.
 
-## Delivery plan for selected clinics
+## Budget summary
 
-| Clinic | Carrier | Delivery date | Rollout cost |
-| --- | --- | --- | ---: |
-| Maple Junction Clinic | SwiftRoute | 2026-06-06 | $7,400 |
-| Riverbend Health | NorthLine | 2026-06-07 | $6,450 |
-| Hillcrest Annex | Valley Freight | 2026-06-07 | $4,950 |
+- Total rollout cost: **$18,800**
+- First-wave budget: **$20,000**
+- Remaining budget: **$1,200**
 
-## Rejected-clinic summary
+## Short rejected-clinic summary
 
-- Pine Ridge Outreach (`N-103`): storage and delivery are acceptable, but coordinator Lena Torres is unavailable on 2026-06-12, so the clinic lacks full launch-window coverage.
-- Lakeside Family Care (`N-104`): storage status is suspended after a compressor fault, so it is not accepted for first-wave use.
-- Cedar Works Clinic (`N-105`): clinic status is closed maintenance, and transport delivery is 2026-06-08, which misses the first-wave cutoff.
-- Old Mill Clinic (`N-107`): storage status remains conditional pass pending, which is not accepted for first-wave use.
-- South Gate Clinic (`S-201`): outside the required North region.
+- **N-103 Pine Ridge Outreach** — storage and delivery are acceptable, but coordinator Lena Torres is unavailable on 2026-06-12, so full launch-window coverage is not met.
+- **N-104 Lakeside Family Care** — newer storage update changes status to suspended after a compressor fault; not accepted for first-wave use.
+- **N-105 Cedar Works Clinic** — clinic is closed for maintenance during the launch period and quoted delivery is 2026-06-08, after the cutoff.
+- **N-107 Old Mill Clinic** — storage remains conditional pass pending after delayed door seal repair; not accepted for first-wave use.
+- **S-201 South Gate Clinic** — outside the required North region.
 
-## Launch checkpoint
+## Final recommendation
 
-Recommendation is to proceed with the three-clinic first wave as planned, with Maple Junction Clinic retained as the donor continuity anchor and the rollout staying within budget.
+Proceed with **Maple Junction Clinic, Riverbend Health, and Hillcrest Annex** as the complete first wave. This is the full set of clinics that satisfy all current hard requirements while staying within budget.

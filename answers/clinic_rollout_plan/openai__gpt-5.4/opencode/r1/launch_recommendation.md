@@ -1,30 +1,30 @@
-## Launch Recommendation
+# Checkpoint 3: Launch Recommendation
 
 Recommend launching the first wave with these three clinics:
 
-| Clinic | Carrier | Delivery By | Rollout Cost |
-| --- | --- | --- | ---: |
-| Maple Junction Clinic | SwiftRoute | 2026-06-06 | $7,400 |
-| Riverbend Health | NorthLine | 2026-06-07 | $6,450 |
-| Hillcrest Annex | Valley Freight | 2026-06-07 | $4,950 |
+| Clinic | Clinic ID | Carrier | Delivery date | Rollout cost |
+| --- | --- | --- | --- | ---: |
+| Maple Junction Clinic | N-101 | SwiftRoute | 2026-06-06 | $7,400 |
+| Riverbend Health | N-102 | NorthLine | 2026-06-07 | $6,450 |
+| Hillcrest Annex | N-106 | Valley Freight | 2026-06-07 | $4,950 |
 
-Total rollout cost: `$18,800`.
+## Budget Position
 
-Remaining budget: `$1,200`.
+- Total rollout cost: `$18,800`
+- Remaining budget: `$1,200`
 
-Anchor clinic and donor continuity code:
+## Anchor Continuity
 
-- Maple Junction Clinic remains eligible and should be included as the donor continuity anchor.
-- Donor continuity code: `MJ-14`.
+- Anchor clinic: Maple Junction Clinic
+- Donor continuity code: `MJ-14`
+- The anchor remains eligible, so it should be included per the selection preference in `01_selection_rules.md`.
 
-Why these clinics were selected:
+## Rejected Clinic Summary
 
-- They are the only three clinics that satisfy all hard first-wave requirements: North region, open during the launch window, accepted effective storage status, full coordinator coverage, delivery by 2026-06-07, and total selected cost within budget.
+- Pine Ridge Outreach (`N-103`): rejected because coordinator coverage is not available for the full launch window.
+- Lakeside Family Care (`N-104`): rejected because effective storage status is `suspended`.
+- Cedar Works Clinic (`N-105`): rejected because the clinic is closed for maintenance during launch week and delivery is after the cutoff.
+- Old Mill Clinic (`N-107`): rejected because effective storage status remains `conditional pass pending`.
+- South Gate Clinic (`S-201`): rejected because it is not in the North region.
 
-Rejected-clinic summary:
-
-- Pine Ridge Outreach: not eligible because coordinator coverage is incomplete on 2026-06-12.
-- Lakeside Family Care: not eligible because the newer storage update changed status to `suspended`.
-- Cedar Works Clinic: not eligible because the clinic is closed for maintenance and delivery is late.
-- Old Mill Clinic: not eligible because storage remains `conditional pass pending`.
-- South Gate Clinic: not eligible because it is in the South region.
+These are the only three clinics that satisfy all current first-wave requirements, so no cost tie-break was needed beyond confirming the total stays within budget.

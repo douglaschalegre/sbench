@@ -1,15 +1,15 @@
-# Staffing Assignment
+## Staffing Assignment
 
-Incident ID: `INC-4472`
+Incident ID: INC-4472
 
-Assignment window: `2026-05-06 18:00` to `2026-05-06 22:00`
+Assignment window: 2026-05-06 18:00 to 2026-05-06 22:00
 
 Primary responder: Ben
 
 Backup responder: Deepa
 
-Primary choice: Ben is the only responder who satisfies all primary rules: eligible role, full-window availability, `database` on-call coverage during the full window, fewer than 2 active incidents, and active `db-prod` access after applying the newest access update.
+Primary choice: Ben is the only responder who satisfies all primary rules: role `Database Engineer`, scheduled for `database` on-call during the full window, available for the full window, active `db-prod` access in the newest source, and fewer than 2 active incidents.
 
-Backup choice: Deepa satisfies the backup rules with full-window availability, active `db-prod` access, eligible role, and 0 active incidents. Ben was also backup-eligible before assignment, but backup must be different from the selected primary.
+Backup choice: Deepa is eligible for backup as an `SRE` with full-window availability, active `db-prod` access, and 0 active incidents. Among backup-eligible candidates, Deepa has fewer active incidents than Ben, so Deepa is the required backup selection.
 
-Rejected candidate summary: Asha is blocked by 2 active incidents. Carmen is blocked by suspended access. Eli is blocked by role mismatch. Farah is blocked by partial-window availability. Gabe is blocked by missing access. Deepa is not primary-eligible because she is not on `database` on-call.
+Rejected-candidate summary: Asha is blocked by 2 active incidents. Carmen is blocked by suspended access in the newest access update. Eli is blocked by role mismatch. Farah is blocked by partial-window availability. Gabe is blocked by missing `db-prod` access. Ben was not used as backup because the primary and backup must be different people.

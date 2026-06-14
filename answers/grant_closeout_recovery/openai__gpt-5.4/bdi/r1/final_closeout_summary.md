@@ -1,38 +1,40 @@
 # Final Closeout Summary
 
-## Award cap
+## Award cap and reimbursement status
 
-The correct reimbursement cap is **$1,600.00** from **`03_award_update_2026-05-22.md`**. This source controls because it is newer than **`02_award_letter_2026-04-15.md`** and expressly supersedes the original award cap for closeout purposes.
+- **Correct award cap:** **$1,600.00**
+- **Controlling source:** `03_award_update_2026-05-22.md`
+- **Why this source controls:** it is the newest dated award document and states that it supersedes the original award cap for closeout purposes, consistent with `00_closeout_request.md` and `01_allowability_rules.md`.
+- **Correct reimbursable total:** **$1,588.00**
+- **Remaining amount under the cap:** **$12.00**
 
-## Correct reimbursable total
+## Useful prior work preserved
 
-The corrected reimbursable total is **$1,588.00**.
+The prior analyst completed several items that remain correct and were preserved:
 
-## Remaining amount under cap
+- Approval of **G-001 Seedling starter kits** for **$980.00**.
+- Approval of **G-003 Braille outreach flyers** for **$420.00**.
+- Rejection of **G-004 Staff thank-you gift cards**.
+- Outcome facts already captured in the draft summary:
+  - **140** seedling starter kits were distributed.
+  - **36** Braille outreach flyers were printed for accessible pickup locations.
+- The prior observation that the expense draft omitted final report postage.
 
-Remaining amount under the **$1,600.00** cap: **$12.00**.
+## Wrong prior work corrected
 
-## Preserved useful prior work
+The prior draft also required corrections:
 
-The prior analyst's work usefully identified and can be preserved for:
+- The prior analyst used the stale **$2,000.00** cap from `02_award_letter_2026-04-15.md`; the correct cap is **$1,600.00** from `03_award_update_2026-05-22.md`.
+- **G-002 Volunteer setup refreshments** cannot be fully reimbursed at **$145.00**; the current rule limits volunteer refreshments to **$120.00** for this event.
+- **G-005 Neighborhood posters** cannot be reimbursed because the expense is **over $75.00** and has **no receipt on file**, so it fails the current receipt rule.
+- The prior draft total of **$1,855.00** was therefore incorrect.
 
-- Approval of **G-001** garden supplies.
-- Eligibility of **G-003** accessibility printing.
-- Rejection of **G-004** staff gifts.
-- Outcome facts that **140 seedling starter kits were distributed** and **36 Braille outreach flyers were printed for accessible pickup locations**.
-- Identification that the postage expense decision was missing from the earlier draft.
+## Added missing expense review
 
-## Corrected wrong prior work
+- The prior draft omitted **G-006 Final report postage**.
+- **G-006** is approved for **$68.00** because public outreach postage is eligible, and expenses of **$75.00 or less** may be approved without a receipt when the ledger includes a note.
 
-The prior work required these corrections:
-
-- Award cap corrected from **$2,000.00** to **$1,600.00** based on the newer award update.
-- **G-002** reduced from **$145.00** to **$120.00** because volunteer refreshments are capped at **$120.00**.
-- **G-005** changed from approved to rejected because the **$310.00** expense is over the receipt threshold and no receipt is on file.
-- Added omitted expense **G-006 Final report postage**, approved at **$68.00** because it is eligible and under the no-receipt threshold with a ledger note.
-- Reimbursable total corrected from **$1,855.00** to **$1,588.00**.
-
-## Outcome facts
+## Outcome facts from the local outcome note
 
 From `05_outcomes.md`:
 

@@ -1,27 +1,30 @@
 # Final Room Plan
 
-Date basis: final availability after applying `staged_update/05_facility_update_2026-06-10.md` as the newer facility source.
+## Final Assignments
 
-## Final Session Assignments
-
-| Session ID | Session | Final Room | Evidence for Fit | Cost |
+| Session ID | Session | Final Room | Key fit summary | Cost |
 |---|---|---|---|---:|
-| S-101 | Safety Orientation | Harbor Hall | Capacity 30 >= 22 attendees; available in **morning**; has required **projector**. | $300 |
-| S-102 | Inventory Lab | Delta Annex | Capacity 20 >= 16 attendees; available in **afternoon**; has required **projector**, **demo table**, and **loading access**. | $320 |
-| S-103 | Benefits Clinic | Elm Room | Capacity 14 >= 12 attendees; available in **morning**; has required **quiet room** trait. | $125 |
+| S-101 | Safety Orientation | Harbor Hall | Capacity 30 for 22 attendees; morning availability; projector provided | $300 |
+| S-102 | Inventory Lab | Delta Annex | Capacity 20 for 16 attendees; afternoon availability; projector, demo table, and loading access provided | $320 |
+| S-103 | Benefits Clinic | Elm Room | Capacity 14 for 12 attendees; morning availability; quiet room provided | $125 |
 
-## Final Cost Summary
+## Final Budget
 
-- Harbor Hall: $300
-- Delta Annex: $320
-- Elm Room: $125
-- **Final total cost: $745**
-- **Remaining budget:** $55 under the **$800** ceiling
+- Final total room cost: **$745**
+- Budget ceiling: **$800**
+- Remaining budget: **$55**
 
-## Coverage Note
+## Objective Confirmation
 
-The same workshop objective is still fully covered: all three sessions on **2026-06-18** have valid room assignments at Bayview Civic Center, and the total cost remains within budget.
+The same workshop objective is still covered: all three sessions on 2026-06-18 have valid room assignments that satisfy session requirements and keep total room cost within the **$800** ceiling.
 
-## Preserved Work Note
+## Preserved Work from Initial Plan
 
-Preserved from the initial plan: `S-101 -> Harbor Hall` and `S-103 -> Elm Room` remained valid and were kept unchanged. Only the affected `S-102` assignment was repaired, consistent with the replanning rule.
+Preserved unchanged from the initial plan:
+
+- **S-101 Safety Orientation -> Harbor Hall**
+- **S-103 Benefits Clinic -> Elm Room**
+
+Only the affected assignment was repaired:
+
+- **S-102 Inventory Lab** changed from **Bay Workshop** to **Delta Annex** due to the newer facility update.

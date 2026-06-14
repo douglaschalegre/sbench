@@ -1,32 +1,31 @@
 # Source Resolution
 
-## Recency rule
-Per `requirements.md`: **If a vendor appears in more than one dated source and values conflict, use the newest dated source for that vendor.** Local files only were used.
+Recency rule from `requirements.md`: if a vendor appears in more than one dated source and values conflict, use the newest dated source for that vendor.
 
-## Vendor source determination
+## Vendor source status
 
-| Vendor | Source(s) reviewed | Current source used | Reason |
-|---|---|---|---|
-| Northstar | `vendor_quotes.csv` dated 2026-04-24; `northstar_update_2026-04-30.md` dated 2026-04-30 | `northstar_update_2026-04-30.md` | Newer dated source overrides the stale CSV row under the recency rule. |
-| Atlas | `vendor_quotes.csv` dated 2026-04-27 | `vendor_quotes.csv` | Only local source for Atlas. |
-| BrightPath | `vendor_quotes.csv` dated 2026-04-26 | `vendor_quotes.csv` | Only local source for BrightPath. |
-| Cobalt | `vendor_quotes.csv` dated 2026-04-25 | `vendor_quotes.csv` | Only local source for Cobalt. |
-| Dockside | `vendor_quotes.csv` dated 2026-04-26 | `vendor_quotes.csv` | Only local source for Dockside. |
+| Vendor | Source(s) reviewed | Source date(s) | Current source used | Reason |
+|---|---|---:|---|---|
+| Northstar | `vendor_quotes.csv`; `northstar_update_2026-04-30.md` | 2026-04-24; 2026-04-30 | `northstar_update_2026-04-30.md` | The CSV row is stale and the newer dated Northstar update supersedes it where values conflict. |
+| Atlas | `vendor_quotes.csv` | 2026-04-27 | `vendor_quotes.csv` | Only local source provided for Atlas. |
+| BrightPath | `vendor_quotes.csv` | 2026-04-26 | `vendor_quotes.csv` | Only local source provided for BrightPath. |
+| Cobalt | `vendor_quotes.csv` | 2026-04-25 | `vendor_quotes.csv` | Only local source provided for Cobalt. |
+| Dockside | `vendor_quotes.csv` | 2026-04-26 | `vendor_quotes.csv` | Only local source provided for Dockside. |
 
-## Northstar stale vs. current source
+## Northstar stale vs current source
 
-- Stale Northstar row in `vendor_quotes.csv` is dated **2026-04-24**.
-- Newer Northstar update in `northstar_update_2026-04-30.md` is dated **2026-04-30**.
-- Therefore the 2026-04-30 update is the effective source for screening Northstar.
+- Stale Northstar CSV row date: **2026-04-24** in `vendor_quotes.csv`.
+- Newer Northstar update date: **2026-04-30** in `northstar_update_2026-04-30.md`.
+- Effective Northstar terms used for screening come from the newer update.
 
 ## Effective Northstar terms used for screening
 
-| Field | Effective value | Source |
-|---|---:|---|
-| Unit price | $178 | `northstar_update_2026-04-30.md` |
-| Available quantity | 12 | `northstar_update_2026-04-30.md` |
-| Delivery date | 2026-05-16 | `northstar_update_2026-04-30.md` |
-| Screen size | 10.1 inches | `northstar_update_2026-04-30.md` |
-| Battery rating | 11 hours | `northstar_update_2026-04-30.md` |
-| Rugged case status | included | `northstar_update_2026-04-30.md` |
-| Warranty | 12 months | `northstar_update_2026-04-30.md` |
+| Field | Effective value |
+|---|---|
+| Unit price | $178 |
+| Available quantity | 12 |
+| Delivery date | 2026-05-16 |
+| Screen size | 10.1 inches |
+| Battery rating | 11 hours |
+| Rugged case status | included |
+| Warranty | 12 months |

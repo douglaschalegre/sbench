@@ -2,31 +2,23 @@
 
 ## Preserve From Prior Work
 
-| Prior item | Preserve? | Why | Supporting local evidence |
-| --- | --- | --- | --- |
-| G-001 approved as eligible garden supplies | Yes | Garden supplies are eligible, and the amount has a receipt on file. | `01_allowability_rules.md`, `04_expenses.csv`, `prior_work/draft_expense_decisions.md` |
-| G-003 approved as eligible accessibility printing | Yes | Accessibility printing is eligible, and the amount has a receipt on file. | `01_allowability_rules.md`, `04_expenses.csv`, `prior_work/draft_expense_decisions.md` |
-| G-004 rejected as staff gifts | Yes | Staff gifts are explicitly not eligible. | `01_allowability_rules.md`, `04_expenses.csv`, `prior_work/draft_expense_decisions.md` |
-| Outcome fact: 140 seedling starter kits distributed | Yes | This matches the local outcomes note. | `05_outcomes.md`, `prior_work/draft_closeout_summary.md` |
-| Outcome fact: 36 Braille outreach flyers printed | Yes | This matches the local outcomes note. | `05_outcomes.md`, `prior_work/draft_closeout_summary.md` |
+- `G-001` should stay approved at `$980.00` because garden supplies are eligible and a receipt is on file. Evidence: `04_expenses.csv`, `01_allowability_rules.md`, `prior_work/draft_expense_decisions.md`.
+- `G-003` should stay approved at `$420.00` because accessibility printing is eligible and a receipt is on file. Evidence: `04_expenses.csv`, `01_allowability_rules.md`, `prior_work/draft_expense_decisions.md`.
+- `G-004` should stay rejected because staff gifts are not eligible. Evidence: `04_expenses.csv`, `01_allowability_rules.md`, `prior_work/draft_expense_decisions.md`.
+- The prior summary correctly preserved these outcome facts: 140 seedling starter kits distributed and 36 Braille outreach flyers printed. Evidence: `05_outcomes.md`, `prior_work/draft_closeout_summary.md`.
 
 ## Correct Prior Work
 
-| Prior item | Correction | Why | Supporting local evidence |
-| --- | --- | --- | --- |
-| Award cap of `$2,000.00` | Use `$1,600.00` | The newest dated award document controls, and the 2026-05-22 update supersedes the original 2026-04-15 letter. | `00_closeout_request.md`, `01_allowability_rules.md`, `02_award_letter_2026-04-15.md`, `03_award_update_2026-05-22.md`, `prior_work/draft_closeout_summary.md` |
-| Draft reimbursable total of `$1,855.00` | Correct total is `$1,588.00` | The prior draft over-approved refreshments, approved an ineligible/unreceipted printing expense, and omitted an eligible postage expense. | `01_allowability_rules.md`, `04_expenses.csv`, `prior_work/draft_expense_decisions.md`, `prior_work/draft_closeout_summary.md` |
-| G-002 approved for `$145.00` | Approve only `$120.00` | Volunteer refreshments are eligible only up to the `$120.00` event cap. | `01_allowability_rules.md`, `04_expenses.csv`, `prior_work/draft_expense_decisions.md` |
-| G-005 approved for `$310.00` | Reject | Public outreach printing is not listed as an eligible category in the current rules, and any single expense over `$75.00` also requires a receipt, which is missing here. | `01_allowability_rules.md`, `04_expenses.csv`, `prior_work/draft_expense_decisions.md` |
+- The controlling award cap is `$1,600.00`, not `$2,000.00`, because the newer dated award document controls when award documents conflict. Evidence: `03_award_update_2026-05-22.md`, `02_award_letter_2026-04-15.md`, `00_closeout_request.md`, `01_allowability_rules.md`.
+- `G-002` should be partially approved at `$120.00`, not fully approved at `$145.00`, because volunteer refreshments are capped at `$120.00` for this event. Evidence: `04_expenses.csv`, `01_allowability_rules.md`, `prior_work/draft_expense_decisions.md`.
+- `G-005` should be rejected, not approved at `$310.00`. The current rules list public outreach postage as eligible, but do not list public outreach printing, and this expense is also over `$75.00` without a receipt. Evidence: `04_expenses.csv`, `01_allowability_rules.md`, `prior_work/draft_expense_decisions.md`.
+- The draft reimbursable total of `$1,855.00` is incorrect after applying the refreshed rules and the omitted expense review. The corrected reimbursable total is `$1,588.00`. Evidence: `04_expenses.csv`, `01_allowability_rules.md`, `prior_work/draft_expense_decisions.md`.
 
 ## Omitted Expense
 
-- `G-006` final report postage was omitted from the prior draft.
-- It should be approved for `$68.00` because public outreach postage is eligible, and expenses of `$75.00` or less may be approved without a receipt when the ledger includes a note.
-- Supporting local evidence: `01_allowability_rules.md`, `04_expenses.csv`, `prior_work/draft_closeout_summary.md`
+- `G-006` (final report postage) was omitted from the prior draft. It should be approved at `$68.00` because public outreach postage is eligible and expenses of `$75.00` or less may be approved without a receipt when the ledger includes a note. Evidence: `04_expenses.csv`, `01_allowability_rules.md`, `prior_work/draft_closeout_summary.md`.
 
-## Controlling Award Cap Source
+## Award Cap Source
 
-- Controlling source: `03_award_update_2026-05-22.md`
-- Controlling cap: `$1,600.00`
-- Reason: `00_closeout_request.md` and `01_allowability_rules.md` both direct use of the newest dated award document when award-cap sources conflict, and the 2026-05-22 update expressly supersedes the original award letter.
+- The controlling cap source is `03_award_update_2026-05-22.md`.
+- Reason: `01_allowability_rules.md` says to use the newest dated award document when award documents conflict, and `03_award_update_2026-05-22.md` expressly supersedes the original `02_award_letter_2026-04-15.md` for closeout purposes.
