@@ -1,0 +1,19 @@
+[project]
+name = "sbench"
+version = "0.1.0"
+description = "Local-file smoke suite for comparing agent frameworks on small operations tasks."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "textual>=1.0.0",
+]
+
+[project.scripts]
+sbench = "sbench.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true

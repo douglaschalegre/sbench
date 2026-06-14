@@ -43,6 +43,7 @@ from ..runs import (
     MatrixRunResult as MatrixRunResult,
     RunExecutionResult as RunExecutionResult,
     RunPlan as RunPlan,
+    RunProgress as RunProgress,
     build_run_plans as build_run_plans,
     default_run_id as default_run_id,
     execute_run_plan as execute_run_plan,

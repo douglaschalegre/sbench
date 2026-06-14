@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -68,6 +69,16 @@ class MatrixRunResult:
     summary_path: Path
     results: tuple[RunExecutionResult, ...]
     stopped_after_failure: bool
+
+
+@dataclass(frozen=True)
+class RunProgress:
+    total: int
+    completed: int
+    succeeded: int
+    failed_or_incomplete: int
+    current_plan: RunPlan | None
+    last_result: RunExecutionResult | None
 
 
 def execute_run_plan(
@@ -185,14 +196,33 @@ def run_matrix(
     stop_on_first_failure: bool = False,
     run_id: str | None = None,
     capture_json_events: bool = False,
+    progress_callback: Callable[[RunProgress], None] | None = None,
 ) -> MatrixRunResult:
     actual_run_id = run_id or default_run_id()
     run_root = repo_root / "runs" / actual_run_id
     run_root.mkdir(parents=True, exist_ok=True)
     results: list[RunExecutionResult] = []
     stopped_after_failure = False
+    succeeded = 0
+    failed_or_incomplete = 0
+    last_result: RunExecutionResult | None = None
+
+    def report_progress(current_plan: RunPlan | None) -> None:
+        if progress_callback is None:
+            return
+        progress_callback(
+            RunProgress(
+                total=len(plans),
+                completed=len(results),
+                succeeded=succeeded,
+                failed_or_incomplete=failed_or_incomplete,
+                current_plan=current_plan,
+                last_result=last_result,
+            )
+        )
 
     for plan in plans:
+        report_progress(plan)
         result = execute_run_plan(
             repo_root,
             plan,
@@ -202,9 +232,15 @@ def run_matrix(
             capture_json_events=capture_json_events,
         )
         results.append(result)
+        last_result = result
+        if result.status == "success":
+            succeeded += 1
+        else:
+            failed_or_incomplete += 1
         if stop_on_first_failure and result.status != "success":
             stopped_after_failure = True
             break
+    report_progress(None)
 
     summary_path = run_root / "summary.json"
     matrix_result = MatrixRunResult(

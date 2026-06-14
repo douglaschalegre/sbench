@@ -116,6 +116,14 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(args.task, ["vendor_selection"])
         self.assertEqual(args.harness, ["codex"])
 
+    def test_progress_ui_is_enabled_for_tty_output_only(self) -> None:
+        class TtyOutput(io.StringIO):
+            def isatty(self) -> bool:
+                return True
+
+        self.assertFalse(cli.should_show_progress(io.StringIO()))
+        self.assertTrue(cli.should_show_progress(TtyOutput()))
+
     def test_list_mode_prints_tasks_and_harnesses_without_planning_commands(self) -> None:
         with self.make_repo() as repo:
             output = io.StringIO()
@@ -560,6 +568,52 @@ class OrchestratorTest(unittest.TestCase):
             self.assertEqual(summary["total_planned"], 1)
             self.assertTrue((repo_root / "tasks" / "vendor_selection" / "answer").is_dir())
             self.assertFalse((repo_root / "tasks" / "vendor_selection" / "answer" / "out.md").exists())
+
+    def test_run_matrix_reports_progress_counts_and_current_task(self) -> None:
+        success = (
+            sys.executable,
+            "-c",
+            "from pathlib import Path; Path('answer/out.md').write_text('ok')",
+        )
+        failed = (sys.executable, "-c", "import sys; sys.exit(1)")
+        with self.make_repo() as repo:
+            repo_root = Path(repo)
+            first = self.make_plan(repo_root, task_id="vendor_selection", command=success)
+            second = self.make_plan(repo_root, task_id="travel_reimbursement_audit", command=failed)
+            progress: list[orchestrator.RunProgress] = []
+
+            orchestrator.run_matrix(
+                repo_root,
+                [first, second],
+                model="gpt-5.2",
+                timeout_seconds=5,
+                run_id="progress-run",
+                progress_callback=progress.append,
+            )
+
+        self.assertEqual(len(progress), 3)
+        self.assertEqual(progress[0].total, 2)
+        self.assertEqual(progress[0].completed, 0)
+        self.assertEqual(progress[0].succeeded, 0)
+        self.assertEqual(progress[0].failed_or_incomplete, 0)
+        self.assertEqual(progress[0].current_plan, first)
+        self.assertIsNone(progress[0].last_result)
+
+        self.assertEqual(progress[1].completed, 1)
+        self.assertEqual(progress[1].succeeded, 1)
+        self.assertEqual(progress[1].failed_or_incomplete, 0)
+        self.assertEqual(progress[1].current_plan, second)
+        self.assertIsNotNone(progress[1].last_result)
+        self.assertEqual(progress[1].last_result.task_id, "vendor_selection")
+        self.assertEqual(progress[1].last_result.status, "success")
+
+        self.assertEqual(progress[2].completed, 2)
+        self.assertEqual(progress[2].succeeded, 1)
+        self.assertEqual(progress[2].failed_or_incomplete, 1)
+        self.assertIsNone(progress[2].current_plan)
+        self.assertIsNotNone(progress[2].last_result)
+        self.assertEqual(progress[2].last_result.task_id, "travel_reimbursement_audit")
+        self.assertEqual(progress[2].last_result.status, "failed")
 
     def test_run_metadata_records_harness_settings(self) -> None:
         command = (

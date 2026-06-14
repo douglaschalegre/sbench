@@ -16,6 +16,7 @@ from .harnesses import (
     select_harnesses,
 )
 from .paths import default_bdi_repo, default_repo_root, display_path
+from .progress import TextualUnavailableError, run_matrix_with_textual_progress
 from .runs import (
     MatrixRunResult,
     RunPlan,
@@ -89,6 +90,10 @@ def positive_int(value: str) -> int:
     if parsed <= 0:
         raise argparse.ArgumentTypeError("must be a positive integer")
     return parsed
+
+
+def should_show_progress(output: TextIO) -> bool:
+    return bool(getattr(output, "isatty", lambda: False)())
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -209,14 +214,37 @@ def main(
         error_output.write(render_missing_cli_binaries(missing))
         return 2
 
-    matrix_result = run_matrix(
-        repo_root,
-        plans,
-        model=args.model,
-        timeout_seconds=args.timeout,
-        stop_on_first_failure=args.stop_on_first_failure,
-        run_id=actual_run_id,
-        capture_json_events=args.capture_json_events,
-    )
+    if should_show_progress(output):
+        try:
+            matrix_result = run_matrix_with_textual_progress(
+                repo_root,
+                plans,
+                model=args.model,
+                timeout_seconds=args.timeout,
+                stop_on_first_failure=args.stop_on_first_failure,
+                run_id=actual_run_id,
+                capture_json_events=args.capture_json_events,
+            )
+        except TextualUnavailableError as error:
+            error_output.write(f"{error}\n")
+            matrix_result = run_matrix(
+                repo_root,
+                plans,
+                model=args.model,
+                timeout_seconds=args.timeout,
+                stop_on_first_failure=args.stop_on_first_failure,
+                run_id=actual_run_id,
+                capture_json_events=args.capture_json_events,
+            )
+    else:
+        matrix_result = run_matrix(
+            repo_root,
+            plans,
+            model=args.model,
+            timeout_seconds=args.timeout,
+            stop_on_first_failure=args.stop_on_first_failure,
+            run_id=actual_run_id,
+            capture_json_events=args.capture_json_events,
+        )
     output.write(render_matrix_result(repo_root, matrix_result))
     return 0 if all(result.status == "success" for result in matrix_result.results) else 1

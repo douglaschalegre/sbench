@@ -42,14 +42,28 @@ For strict smoke comparison runs, follow `protocol/strict_fair_run_protocol.md` 
 
 ## Benchmark Orchestrator
 
+Install project dependencies with uv:
+
+```sh
+uv sync
+```
+
 Inspect the current task and harness matrix without running agents:
 
 ```sh
-python -m sbench --list
+uv run sbench --list
 ```
 
 Preview a planned benchmark matrix without invoking any harness:
 
 ```sh
-python -m sbench --dry-run --model gpt-5.2 --harness codex,opencode --task vendor_selection
+uv run sbench --dry-run --model gpt-5.2 --harness codex,opencode --task vendor_selection
 ```
+
+Run the benchmark through uv so it uses the synced project environment:
+
+```sh
+uv run sbench --run --model openai/gpt-5.4
+```
+
+Interactive `--run` executions show a Textual progress UI when stdout is a terminal. Textual is managed by uv through `pyproject.toml` and `uv.lock`.
