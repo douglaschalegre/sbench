@@ -16,7 +16,12 @@ from .harnesses import (
     select_harnesses,
 )
 from .paths import default_bdi_repo, default_repo_root, display_path
-from .progress import TextualUnavailableError, run_matrix_with_textual_progress
+from .progress import (
+    BenchmarkRunCancelledError,
+    TextualUnavailableError,
+    preview_textual_progress,
+    run_matrix_with_textual_progress,
+)
 from .runs import (
     MatrixRunResult,
     RunPlan,
@@ -147,6 +152,11 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--list", action="store_true", help="List discovered tasks and supported harnesses.")
     mode.add_argument("--dry-run", action="store_true", help="Print the planned matrix without running agents.")
     mode.add_argument("--run", action="store_true", help="Run the selected harness/task matrix.")
+    mode.add_argument(
+        "--progress-preview",
+        action="store_true",
+        help="Preview the Textual progress UI with simulated task updates.",
+    )
     return parser
 
 
@@ -169,6 +179,14 @@ def main(
 
     if args.list:
         output.write(render_list(discovered_tasks))
+        return 0
+
+    if args.progress_preview:
+        try:
+            preview_textual_progress()
+        except TextualUnavailableError as error:
+            error_output.write(f"{error}\n")
+            return 2
         return 0
 
     if (args.dry_run or args.run) and not args.model:
@@ -236,6 +254,9 @@ def main(
                 run_id=actual_run_id,
                 capture_json_events=args.capture_json_events,
             )
+        except BenchmarkRunCancelledError as error:
+            error_output.write(f"{error}\n")
+            return 130
     else:
         matrix_result = run_matrix(
             repo_root,
