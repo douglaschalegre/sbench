@@ -396,9 +396,6 @@ def build_run_plans(
     for task in tasks:
         for harness in harnesses:
             archive_plan = plan_answer_archive(repo_root, task, model=model, harness=harness)
-            bdi_output_dir = None
-            if harness == "bdi":
-                bdi_output_dir = repo_root / "runs" / (run_id or "<run-id>") / "bdi" / task.id
             invocation = build_harness_invocation(
                 harness,
                 model=model,
@@ -406,7 +403,6 @@ def build_run_plans(
                 task_dir=task.path,
                 repo_root=repo_root,
                 bdi_repo=bdi_repo,
-                bdi_output_dir=bdi_output_dir,
             )
             plans.append(
                 RunPlan(

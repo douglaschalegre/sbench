@@ -79,7 +79,6 @@ def build_harness_invocation(
     task_dir: Path,
     repo_root: Path,
     bdi_repo: Path | None = None,
-    bdi_output_dir: Path | None = None,
 ) -> HarnessInvocation:
     task_dir_arg = display_path(task_dir, repo_root)
     command_model = command_model_name(harness, model)
@@ -141,7 +140,6 @@ def build_harness_invocation(
     if harness == "bdi":
         actual_bdi_repo = (bdi_repo or default_bdi_repo()).resolve()
         toy_runner = actual_bdi_repo / "toy.py"
-        output_dir = bdi_output_dir or repo_root / "runs" / "<run-id>" / "bdi" / task_dir.name
         return HarnessInvocation(
             command=(
                 "uv",
@@ -154,8 +152,6 @@ def build_harness_invocation(
                 task_dir.name,
                 "--model",
                 command_model,
-                "--output-dir",
-                str(output_dir),
                 "--command-timeout-seconds",
                 str(int(timeout_seconds)),
                 "--quiet",
@@ -166,7 +162,6 @@ def build_harness_invocation(
                 "command_model": command_model,
                 "command_timeout_seconds": int(timeout_seconds),
                 "delegation": "pydantic-ai-bdi toy runner",
-                "output_dir": str(output_dir),
                 "task_directory_scope": task_dir_arg,
                 "toy_runner": str(toy_runner),
             },

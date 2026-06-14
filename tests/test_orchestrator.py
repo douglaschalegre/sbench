@@ -356,7 +356,6 @@ class OrchestratorTest(unittest.TestCase):
                 task_dir=task.path,
                 repo_root=repo_root,
                 bdi_repo=bdi_repo,
-                bdi_output_dir=repo_root / "runs" / "test-run" / "bdi" / "vendor_selection",
             )
 
         self.assertEqual(invocation.command[0:3], ("uv", "run", "python"))
@@ -368,8 +367,7 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIn("--model", invocation.command)
         self.assertIn("gpt-5.2", invocation.command)
         self.assertNotIn("openai/gpt-5.2", invocation.command)
-        self.assertIn("--output-dir", invocation.command)
-        self.assertIn(str(repo_root / "runs" / "test-run" / "bdi" / "vendor_selection"), invocation.command)
+        self.assertNotIn("--output-dir", invocation.command)
         self.assertIn("--command-timeout-seconds", invocation.command)
         self.assertIn("600", invocation.command)
         self.assertIn("--quiet", invocation.command)
@@ -401,7 +399,7 @@ class OrchestratorTest(unittest.TestCase):
 
         self.assertEqual(plan.working_dir, bdi_repo.resolve())
         self.assertEqual(plan.archive_dir, repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "bdi" / "r1")
-        self.assertEqual(plan.settings["output_dir"], str(repo_root / "runs" / "bdi-run" / "bdi" / "vendor_selection"))
+        self.assertNotIn("output_dir", plan.settings)
 
     def test_bdi_missing_repository_path_detection_requires_toy_runner(self) -> None:
         with self.make_repo() as repo:
