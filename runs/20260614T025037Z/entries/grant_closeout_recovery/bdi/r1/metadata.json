@@ -1,0 +1,60 @@
+{
+  "archive_path": "answers/grant_closeout_recovery/openai__gpt-5.4/bdi/r1",
+  "archived_paths": [
+    "answers/grant_closeout_recovery/openai__gpt-5.4/bdi/r1/audit_findings.md",
+    "answers/grant_closeout_recovery/openai__gpt-5.4/bdi/r1/corrected_expense_decisions.md",
+    "answers/grant_closeout_recovery/openai__gpt-5.4/bdi/r1/final_closeout_summary.md"
+  ],
+  "command": [
+    "uv",
+    "run",
+    "python",
+    "/Users/douglas/code/masters/pydantic-ai-bdi/toy.py",
+    "--sbench-root",
+    "/Users/douglas/code/masters/sbench",
+    "--tasks",
+    "grant_closeout_recovery",
+    "--model",
+    "gpt-5.4",
+    "--output-dir",
+    "/Users/douglas/code/masters/sbench/runs/20260614T025037Z/bdi/grant_closeout_recovery",
+    "--command-timeout-seconds",
+    "600",
+    "--quiet"
+  ],
+  "elapsed_seconds": 70.363,
+  "end_time": "2026-06-14T03:00:25Z",
+  "exit_code": 0,
+  "harness": "bdi",
+  "incomplete_reason": null,
+  "json_event_log_path": null,
+  "metadata_path": "runs/20260614T025037Z/entries/grant_closeout_recovery/bdi/r1/metadata.json",
+  "model": "openai/gpt-5.4",
+  "model_path": "openai__gpt-5.4",
+  "scratch_cleanup": {
+    "created_paths": [],
+    "deleted_paths": [],
+    "modified_paths": [],
+    "policy": "restore_task_files_outside_answer_after_each_run",
+    "record_dir": "runs/20260614T025037Z/entries/grant_closeout_recovery/bdi/r1/scratch"
+  },
+  "settings": {
+    "bdi_repo": "/Users/douglas/code/masters/pydantic-ai-bdi",
+    "binary": "uv",
+    "command_model": "gpt-5.4",
+    "command_timeout_seconds": 600,
+    "delegation": "pydantic-ai-bdi toy runner",
+    "output_dir": "/Users/douglas/code/masters/sbench/runs/20260614T025037Z/bdi/grant_closeout_recovery",
+    "task_directory_scope": "tasks/grant_closeout_recovery",
+    "toy_runner": "/Users/douglas/code/masters/pydantic-ai-bdi/toy.py"
+  },
+  "start_time": "2026-06-14T02:59:15Z",
+  "status": "success",
+  "stderr_log_path": "runs/20260614T025037Z/entries/grant_closeout_recovery/bdi/r1/stderr.log",
+  "stdout_log_path": "runs/20260614T025037Z/entries/grant_closeout_recovery/bdi/r1/stdout.log",
+  "task_id": "grant_closeout_recovery",
+  "timed_out": false,
+  "timeout_seconds": 600,
+  "track": "recovery",
+  "working_dir": "/Users/douglas/code/masters/pydantic-ai-bdi"
+}
