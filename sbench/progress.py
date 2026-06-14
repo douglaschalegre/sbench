@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Thread
@@ -8,6 +8,52 @@ from time import monotonic, sleep
 from typing import Sequence
 
 from .runs import MatrixRunResult, RunPlan, RunProgress, run_matrix
+
+try:
+    from rich.console import Group
+    from rich.text import Text
+except ImportError:
+    Group = None
+    Text = None
+
+
+CONTENT_WIDTH = 68
+PANEL_WIDTH = CONTENT_WIDTH + 2
+ANIMATION_INTERVAL_SECONDS = 0.03
+PREVIEW_STEP_SECONDS = 1.2
+PREVIEW_HOLD_SECONDS = 2
+CANCELLED_RESULT = "cancelled"
+TEXTUAL_UNAVAILABLE_MESSAGE = (
+    "Textual is required for the interactive progress UI. Use `uv run sbench ...`, "
+    "activate the project virtualenv, or install Textual into the Python interpreter "
+    "running this command."
+)
+
+TEXT_STYLE = "#e5e7eb"
+TITLE_STYLE = "bold #f5f5f4"
+SUCCESS_STYLE = "#22c55e"
+FAILURE_STYLE = "#ef4444"
+ACTIVE_BAR_STYLE = "#0178d4"
+COMPLETE_BAR_STYLE = "#4ebf71"
+EMPTY_BAR_STYLE = "#303030"
+
+GRADIENT_STOPS = (
+    (234, 88, 12),
+    (249, 115, 22),
+    (251, 146, 60),
+    (253, 186, 116),
+    (255, 237, 213),
+    (253, 186, 116),
+    (251, 146, 60),
+    (249, 115, 22),
+)
+
+PREVIEW_TASKS = (
+    ("vendor_selection", "codex", "success"),
+    ("travel_reimbursement_audit", "opencode", "failed"),
+    ("clinic_rollout_plan", "bdi", "success"),
+    ("grant_closeout_recovery", "codex", "incomplete"),
+)
 
 
 class TextualUnavailableError(RuntimeError):
@@ -21,12 +67,15 @@ class BenchmarkRunCancelledError(RuntimeError):
 @dataclass(frozen=True)
 class _ProgressDisplay:
     total: int
-    completed: int
-    succeeded: int
-    failed_or_incomplete: int
     current_task: str | None
-    last_task: str | None
-    last_status: str | None
+    completed: int = 0
+    succeeded: int = 0
+    failed_or_incomplete: int = 0
+    last_task: str | None = None
+    last_status: str | None = None
+
+
+_ProgressWorker = Callable[[Callable[[_ProgressDisplay], None]], object]
 
 
 def run_matrix_with_textual_progress(
@@ -57,12 +106,7 @@ def run_matrix_with_textual_progress(
         title="SBench Benchmark Progress",
         initial_progress=_ProgressDisplay(
             total=len(planned),
-            completed=0,
-            succeeded=0,
-            failed_or_incomplete=0,
             current_task=_plan_label(planned[0] if planned else None),
-            last_task=None,
-            last_status=None,
         ),
         worker=run_benchmark,
         require_result=True,
@@ -73,48 +117,37 @@ def run_matrix_with_textual_progress(
 
 
 def preview_textual_progress() -> None:
-    preview_tasks = (
-        ("vendor_selection", "codex", "success"),
-        ("travel_reimbursement_audit", "opencode", "failed"),
-        ("clinic_rollout_plan", "bdi", "success"),
-        ("grant_closeout_recovery", "codex", "incomplete"),
-    )
-
     def run_preview(update: Callable[[_ProgressDisplay], None]) -> None:
         succeeded = 0
         failed_or_incomplete = 0
-        total = len(preview_tasks)
-        for completed, (task_id, harness, status) in enumerate(preview_tasks, start=1):
-            sleep(1.2)
+        total = len(PREVIEW_TASKS)
+
+        for completed, task in enumerate(PREVIEW_TASKS, start=1):
+            task_id, harness, status = task
+            sleep(PREVIEW_STEP_SECONDS)
             if status == "success":
                 succeeded += 1
             else:
                 failed_or_incomplete += 1
-
-            next_task = preview_tasks[completed] if completed < total else None
+            next_task = PREVIEW_TASKS[completed] if completed < total else None
             update(
                 _ProgressDisplay(
                     total=total,
                     completed=completed,
                     succeeded=succeeded,
                     failed_or_incomplete=failed_or_incomplete,
-                    current_task=f"{next_task[0]} {next_task[1]}" if next_task else None,
+                    current_task=_preview_label(next_task),
                     last_task=f"{task_id} {harness}",
                     last_status=status,
                 )
             )
-        sleep(2)
+        sleep(PREVIEW_HOLD_SECONDS)
 
     _run_progress_app(
         title="SBench Progress Preview",
         initial_progress=_ProgressDisplay(
-            total=len(preview_tasks),
-            completed=0,
-            succeeded=0,
-            failed_or_incomplete=0,
-            current_task=f"{preview_tasks[0][0]} {preview_tasks[0][1]}",
-            last_task=None,
-            last_status=None,
+            total=len(PREVIEW_TASKS),
+            current_task=_preview_label(PREVIEW_TASKS[0]),
         ),
         worker=run_preview,
         require_result=False,
@@ -125,105 +158,47 @@ def _run_progress_app(
     *,
     title: str,
     initial_progress: _ProgressDisplay,
-    worker: Callable[[Callable[[_ProgressDisplay], None]], object],
+    worker: _ProgressWorker,
     require_result: bool,
 ) -> object:
-    try:
-        from rich.markup import escape
-        from textual.app import App, ComposeResult
-        from textual.containers import Horizontal, Vertical
-        from textual.widgets import Label, ProgressBar, Static
-    except ImportError as error:
-        raise TextualUnavailableError(
-            "Textual is required for the interactive progress UI. Use `uv run sbench ...`, "
-            "activate the project virtualenv, or install Textual into the Python interpreter "
-            "running this command."
-        ) from error
-
+    App, ComposeResult, Static = _load_textual_dependencies()
     result: object = None
     run_error: BaseException | None = None
-    cancelled_result = "cancelled"
-    border_colors = (
-        "#f97316",
-        "#fb923c",
-        "#fdba74",
-        "#fb923c",
-        "#f97316",
-        "#ea580c",
-    )
 
     class BenchmarkProgressApp(App):
-        CSS = """
-        Screen {
+        CSS = f"""
+        Screen {{
             align: center middle;
-        }
+        }}
 
-        #panel {
-            width: 80%;
-            max-width: 100;
+        #panel {{
+            width: {PANEL_WIDTH};
             height: auto;
-            border: round $accent;
-            padding: 1 2;
-        }
-
-        #title {
-            text-style: bold;
-            margin-bottom: 1;
-        }
-
-        #progress-row {
-            height: auto;
-            margin-bottom: 1;
-        }
-
-        #progress {
-            height: auto;
-            width: 1fr;
-        }
-
-        #elapsed {
-            height: auto;
-            width: auto;
-            margin-left: 2;
-        }
+        }}
         """
 
         def compose(self) -> ComposeResult:
-            with Vertical(id="panel"):
-                yield Static(title, id="title")
-                with Horizontal(id="progress-row"):
-                    yield ProgressBar(
-                        total=max(initial_progress.total, 1),
-                        show_eta=False,
-                        id="progress",
-                    )
-                    yield Label("Elapsed: 0:00", id="elapsed")
-                yield Label("Success: 0", id="success")
-                yield Label("Failed_or_incomplete: 0", id="failed")
-                yield Label("Last executed task: -", id="last")
-                yield Label("Current task: -", id="current")
+            yield Static(id="panel")
 
         def action_quit(self) -> None:
-            self.exit(cancelled_result)
+            self.exit(CANCELLED_RESULT)
 
         def on_mount(self) -> None:
             self._started_at = monotonic()
             self._border_frame = 0
-            self.set_interval(0.3, self._animate_border)
-            self.set_interval(1, self._render_elapsed)
-            self._animate_border()
-            self._render_elapsed()
-            self._render_progress(initial_progress)
+            self._progress = initial_progress
+            self.set_interval(ANIMATION_INTERVAL_SECONDS, self._advance_animation)
+            self._render_panel()
             Thread(target=self._run_worker, name="sbench-progress", daemon=True).start()
 
-        def _animate_border(self) -> None:
-            color = border_colors[self._border_frame % len(border_colors)]
-            self.query_one("#panel", Vertical).styles.border = ("round", color)
+        def _advance_animation(self) -> None:
             self._border_frame += 1
+            self._render_panel()
 
-        def _render_elapsed(self) -> None:
-            self.query_one("#elapsed", Label).update(
-                f"Elapsed: {_format_elapsed(monotonic() - self._started_at)}"
+        def _render_panel(self) -> None:
+            elapsed = _format_elapsed(monotonic() - self._started_at)
+            self.query_one("#panel", Static).update(
+                _render_panel(title, self._progress, elapsed, self._border_frame)
             )
 
         def _run_worker(self) -> None:
@@ -236,37 +211,31 @@ def _run_progress_app(
                 self.call_from_thread(self.exit)
 
         def _queue_progress_update(self, progress: _ProgressDisplay) -> None:
-            self.call_from_thread(self._render_progress, progress)
+            self.call_from_thread(self._set_progress, progress)
 
-        def _render_progress(self, progress: _ProgressDisplay) -> None:
-            progress_bar = self.query_one("#progress", ProgressBar)
-            progress_bar.update(
-                total=max(progress.total, 1), progress=progress.completed
-            )
-            self.query_one("#success", Label).update(f"Success: {progress.succeeded}")
-            self.query_one("#failed", Label).update(
-                f"Failed_or_incomplete: {progress.failed_or_incomplete}"
-            )
-
-            if progress.last_task is None:
-                self.query_one("#last", Label).update("Last executed task: -")
-            else:
-                color = "green" if progress.last_status == "success" else "red"
-                self.query_one("#last", Label).update(
-                    f"Last executed task: [{color}]{escape(progress.last_task)}[/]"
-                )
-
-            current_task = escape(progress.current_task or "-")
-            self.query_one("#current", Label).update(f"Current task: {current_task}")
+        def _set_progress(self, progress: _ProgressDisplay) -> None:
+            self._progress = progress
+            self._render_panel()
 
     app_result = BenchmarkProgressApp().run()
     if run_error is not None:
         raise run_error
-    if require_result and app_result == cancelled_result:
+    if require_result and app_result == CANCELLED_RESULT:
         raise BenchmarkRunCancelledError("Benchmark run cancelled.")
     if require_result and result is None:
         raise BenchmarkRunCancelledError("Benchmark run cancelled.")
     return result
+
+
+def _load_textual_dependencies() -> tuple[object, object, object]:
+    if Group is None or Text is None:
+        raise TextualUnavailableError(TEXTUAL_UNAVAILABLE_MESSAGE)
+    try:
+        from textual.app import App, ComposeResult
+        from textual.widgets import Static
+    except ImportError as error:
+        raise TextualUnavailableError(TEXTUAL_UNAVAILABLE_MESSAGE) from error
+    return App, ComposeResult, Static
 
 
 def _progress_from_run(progress: RunProgress) -> _ProgressDisplay:
@@ -284,6 +253,128 @@ def _progress_from_run(progress: RunProgress) -> _ProgressDisplay:
         last_task=last_task,
         last_status=last_status,
     )
+
+
+def _render_panel(
+    title: str, progress: _ProgressDisplay, elapsed: str, frame: int
+) -> object:
+    assert Group is not None and Text is not None
+    content_lines = [
+        _fit_text(Text(title, style=TITLE_STYLE), align="center"),
+        Text(""),
+        _progress_line(progress, elapsed),
+        _status_line("Success: ", str(progress.succeeded)),
+        _status_line("Failed_or_incomplete: ", str(progress.failed_or_incomplete)),
+        _status_line(
+            "Last executed task: ",
+            progress.last_task or "-",
+            _last_status_style(progress.last_status),
+        ),
+        _status_line("Current task: ", progress.current_task or "-"),
+    ]
+    content_height = len(content_lines)
+    perimeter = (PANEL_WIDTH * 2) + (content_height * 2)
+    bottom_start = PANEL_WIDTH + content_height
+    left_start = bottom_start + PANEL_WIDTH
+
+    top = _border_text(
+        "╭" + ("─" * CONTENT_WIDTH) + "╮", range(PANEL_WIDTH), perimeter, frame
+    )
+    body = []
+    for row, content in enumerate(content_lines):
+        line = Text()
+        line.append(
+            "│",
+            style=_border_style(left_start + content_height - row - 1, perimeter, frame),
+        )
+        line.append_text(_fit_text(content))
+        line.append("│", style=_border_style(PANEL_WIDTH + row, perimeter, frame))
+        body.append(line)
+    bottom = _border_text(
+        "╰" + ("─" * CONTENT_WIDTH) + "╯",
+        range(bottom_start + PANEL_WIDTH - 1, bottom_start - 1, -1),
+        perimeter,
+        frame,
+    )
+    return Group(top, *body, bottom)
+
+
+def _fit_text(content: object, *, align: str = "left") -> object:
+    text = content.copy()
+    if text.cell_len > CONTENT_WIDTH:
+        text.truncate(CONTENT_WIDTH, overflow="ellipsis")
+    remaining = CONTENT_WIDTH - text.cell_len
+    if remaining <= 0:
+        return text
+    if align == "center":
+        left = remaining // 2
+        return Text(" " * left) + text + Text(" " * (remaining - left))
+    text.append(" " * remaining)
+    return text
+
+
+def _status_line(prefix: str, value: str, style: str = TEXT_STYLE) -> object:
+    return Text.assemble((prefix, TEXT_STYLE), (value, style))
+
+
+def _progress_line(progress: _ProgressDisplay, elapsed: str) -> object:
+    total = max(progress.total, 1)
+    ratio = min(1.0, max(0.0, progress.completed / total))
+    percent = f"{round(ratio * 100):>3}%"
+    elapsed_label = f"Elapsed: {elapsed}"
+    bar_width = max(12, CONTENT_WIDTH - len(percent) - len(elapsed_label) - 6)
+    filled = min(bar_width, round(bar_width * ratio))
+    empty = bar_width - filled
+    bar_style = (
+        COMPLETE_BAR_STYLE if progress.completed >= progress.total else ACTIVE_BAR_STYLE
+    )
+
+    line = Text()
+    line.append("━" * filled, style=bar_style)
+    if empty:
+        line.append(
+            "╺" if filled else "━", style=bar_style if filled else EMPTY_BAR_STYLE
+        )
+        line.append("━" * (empty - 1), style=EMPTY_BAR_STYLE)
+    line.append(f"  {percent}  {elapsed_label}", style=TEXT_STYLE)
+    return line
+
+
+def _border_text(
+    chars: str, positions: Iterable[int], perimeter: int, frame: int
+) -> object:
+    text = Text()
+    for char, position in zip(chars, positions):
+        text.append(char, style=_border_style(position, perimeter, frame))
+    return text
+
+
+def _border_style(position: int, perimeter: int, frame: int) -> str:
+    return f"bold {_gradient_color((position - frame) / perimeter)}"
+
+
+def _gradient_color(position: float) -> str:
+    scaled = (position % 1.0) * len(GRADIENT_STOPS)
+    index = int(scaled)
+    mix = scaled - index
+    start = GRADIENT_STOPS[index]
+    end = GRADIENT_STOPS[(index + 1) % len(GRADIENT_STOPS)]
+    channels = (round(a + (b - a) * mix) for a, b in zip(start, end))
+    return "#" + "".join(f"{channel:02x}" for channel in channels)
+
+
+def _last_status_style(status: str | None) -> str:
+    if status is None:
+        return TEXT_STYLE
+    if status == "success":
+        return SUCCESS_STYLE
+    return FAILURE_STYLE
+
+
+def _preview_label(task: tuple[str, str, str] | None) -> str | None:
+    if task is None:
+        return None
+    return f"{task[0]} {task[1]}"
 
 
 def _plan_label(plan: RunPlan | None) -> str | None:
