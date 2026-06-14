@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 from pathlib import Path
 
-from sbench import orchestrator
+from sbench import cli, orchestrator
 
 
 class OrchestratorTest(unittest.TestCase):
@@ -270,7 +270,7 @@ class OrchestratorTest(unittest.TestCase):
             stdout = io.StringIO()
             stderr = io.StringIO()
             with mock.patch.object(
-                orchestrator,
+                cli,
                 "find_missing_cli_binaries",
                 return_value={"codex": "codex"},
             ):
