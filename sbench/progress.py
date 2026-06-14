@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from threading import Thread
+from time import monotonic
 from typing import Sequence
 
 from .runs import MatrixRunResult, RunPlan, RunProgress, run_matrix
@@ -24,7 +25,7 @@ def run_matrix_with_textual_progress(
     try:
         from rich.markup import escape
         from textual.app import App, ComposeResult
-        from textual.containers import Vertical
+        from textual.containers import Horizontal, Vertical
         from textual.widgets import Label, ProgressBar, Static
     except ImportError as error:
         raise TextualUnavailableError(
@@ -41,6 +42,14 @@ def run_matrix_with_textual_progress(
         if plan is None:
             return "-"
         return f"{plan.task_id} {plan.harness}"
+
+    def format_elapsed(seconds: float) -> str:
+        elapsed = int(seconds)
+        hours, remainder = divmod(elapsed, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if hours:
+            return f"{hours}:{minutes:02}:{seconds:02}"
+        return f"{minutes}:{seconds:02}"
 
     class BenchmarkProgressApp(App):
         CSS = """
@@ -61,15 +70,30 @@ def run_matrix_with_textual_progress(
             margin-bottom: 1;
         }
 
-        #progress {
+        #progress-row {
             margin-bottom: 1;
+        }
+
+        #progress {
+            width: 1fr;
+        }
+
+        #elapsed {
+            width: auto;
+            margin-left: 2;
         }
         """
 
         def compose(self) -> ComposeResult:
             with Vertical(id="panel"):
                 yield Static("SBench Benchmark Progress", id="title")
-                yield ProgressBar(total=max(len(planned), 1), id="progress")
+                with Horizontal(id="progress-row"):
+                    yield ProgressBar(
+                        total=max(len(planned), 1),
+                        show_eta=False,
+                        id="progress",
+                    )
+                    yield Label("Elapsed: 0:00", id="elapsed")
                 yield Label("Success: 0", id="success")
                 yield Label("Failed_or_incomplete: 0", id="failed")
                 yield Label("Last executed task: -", id="last")
@@ -79,8 +103,16 @@ def run_matrix_with_textual_progress(
                 )
 
         def on_mount(self) -> None:
+            self._started_at = monotonic()
+            self.set_interval(1, self._render_elapsed)
+            self._render_elapsed()
             worker = Thread(target=self._run_benchmark, name="sbench-progress", daemon=True)
             worker.start()
+
+        def _render_elapsed(self) -> None:
+            self.query_one("#elapsed", Label).update(
+                f"Elapsed: {format_elapsed(monotonic() - self._started_at)}"
+            )
 
         def _run_benchmark(self) -> None:
             nonlocal matrix_result, run_error
