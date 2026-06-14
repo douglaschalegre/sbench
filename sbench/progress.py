@@ -51,6 +51,15 @@ def run_matrix_with_textual_progress(
             return f"{hours}:{minutes:02}:{seconds:02}"
         return f"{minutes}:{seconds:02}"
 
+    border_colors = (
+        "#f97316",
+        "#fb923c",
+        "#fdba74",
+        "#fb923c",
+        "#f97316",
+        "#ea580c",
+    )
+
     class BenchmarkProgressApp(App):
         CSS = """
         Screen {
@@ -71,14 +80,17 @@ def run_matrix_with_textual_progress(
         }
 
         #progress-row {
+            height: auto;
             margin-bottom: 1;
         }
 
         #progress {
+            height: auto;
             width: 1fr;
         }
 
         #elapsed {
+            height: auto;
             width: auto;
             margin-left: 2;
         }
@@ -104,10 +116,20 @@ def run_matrix_with_textual_progress(
 
         def on_mount(self) -> None:
             self._started_at = monotonic()
+            self._border_frame = 0
+            self.set_interval(0.3, self._animate_border)
             self.set_interval(1, self._render_elapsed)
+            self._animate_border()
             self._render_elapsed()
-            worker = Thread(target=self._run_benchmark, name="sbench-progress", daemon=True)
+            worker = Thread(
+                target=self._run_benchmark, name="sbench-progress", daemon=True
+            )
             worker.start()
+
+        def _animate_border(self) -> None:
+            color = border_colors[self._border_frame % len(border_colors)]
+            self.query_one("#panel", Vertical).styles.border = ("round", color)
+            self._border_frame += 1
 
         def _render_elapsed(self) -> None:
             self.query_one("#elapsed", Label).update(
@@ -137,7 +159,9 @@ def run_matrix_with_textual_progress(
 
         def _render_progress(self, progress: RunProgress) -> None:
             progress_bar = self.query_one("#progress", ProgressBar)
-            progress_bar.update(total=max(progress.total, 1), progress=progress.completed)
+            progress_bar.update(
+                total=max(progress.total, 1), progress=progress.completed
+            )
             self.query_one("#success", Label).update(f"Success: {progress.succeeded}")
             self.query_one("#failed", Label).update(
                 f"Failed_or_incomplete: {progress.failed_or_incomplete}"
@@ -146,7 +170,9 @@ def run_matrix_with_textual_progress(
             if progress.last_result is None:
                 self.query_one("#last", Label).update("Last executed task: -")
             else:
-                last_label = f"{progress.last_result.task_id} {progress.last_result.harness}"
+                last_label = (
+                    f"{progress.last_result.task_id} {progress.last_result.harness}"
+                )
                 color = "green" if progress.last_result.status == "success" else "red"
                 self.query_one("#last", Label).update(
                     f"Last executed task: [{color}]{escape(last_label)}[/]"
