@@ -1,0 +1,18 @@
+# Policy Application
+
+## Checkpoint 1: Policy Selection
+
+- Trip dates audited: 2026-05-08 to 2026-05-10.
+- Controlling policy source: `current_policy.md`.
+- Current policy date: 2026-04-20.
+- Why it controls: the current policy is effective for trips starting on or after 2026-05-01, and this trip started on 2026-05-08. It also explicitly supersedes older travel policy excerpts when they conflict.
+- Stale excerpt not controlling: `stale_policy_excerpt.md` is dated 2026-03-01 and says it may be stale if a newer policy applies.
+
+## Rules Applied
+
+- Receipt threshold: receipts are required for every expense of $75.00 or more.
+- Seat-upgrade rule: seat upgrades, extra-legroom fees, priority boarding, and similar optional upgrades are not reimbursable unless written preapproval is included in the receipt evidence.
+- Lodging cap calculation basis: lodging is capped at $220.00 per covered night, including room, taxes, and mandatory fees. Covered lodging nights are 2, so the maximum reimbursable lodging amount is $440.00.
+- Meal and alcohol rule: meals are reimbursable at actual cost up to $65.00 per day, and alcohol must be removed from meal receipts.
+- Ride-share tip cap: ride-share tips are reimbursable up to 20% of the base fare; any excess tip is non-reimbursable.
+- Supplies receipt rule: work supplies are reimbursable only when a required receipt is provided and the business purpose is clear.

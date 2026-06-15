@@ -1,0 +1,53 @@
+{
+  "archive_path": "answers/grant_closeout_recovery/openai__gpt-5.4/opencode/r3",
+  "archived_paths": [
+    "answers/grant_closeout_recovery/openai__gpt-5.4/opencode/r3/audit_findings.md",
+    "answers/grant_closeout_recovery/openai__gpt-5.4/opencode/r3/corrected_expense_decisions.md",
+    "answers/grant_closeout_recovery/openai__gpt-5.4/opencode/r3/final_closeout_summary.md"
+  ],
+  "command": [
+    "opencode",
+    "run",
+    "-m",
+    "openai/gpt-5.4",
+    "--dir",
+    "tasks/grant_closeout_recovery",
+    "--format",
+    "json",
+    "--dangerously-skip-permissions",
+    "You are working in the provided folder. Read task.md and the other local files, then complete the requested work. Create the requested `answer/` folder and put all requested deliverables there."
+  ],
+  "elapsed_seconds": 83.164,
+  "end_time": "2026-06-15T22:32:30Z",
+  "exit_code": 0,
+  "harness": "opencode",
+  "incomplete_reason": null,
+  "json_event_log_path": null,
+  "metadata_path": "runs/20260615T221949Z/entries/grant_closeout_recovery/opencode/r3/metadata.json",
+  "model": "openai/gpt-5.4",
+  "model_path": "openai__gpt-5.4",
+  "scratch_cleanup": {
+    "created_paths": [],
+    "deleted_paths": [],
+    "modified_paths": [],
+    "policy": "restore_task_files_outside_answer_after_each_run",
+    "record_dir": "runs/20260615T221949Z/entries/grant_closeout_recovery/opencode/r3/scratch"
+  },
+  "settings": {
+    "auto_approve_permissions": true,
+    "binary": "opencode",
+    "command_model": "openai/gpt-5.4",
+    "format": "json",
+    "task_directory_scope": "tasks/grant_closeout_recovery",
+    "writable_scope": "task_directory_only"
+  },
+  "start_time": "2026-06-15T22:31:06Z",
+  "status": "success",
+  "stderr_log_path": "runs/20260615T221949Z/entries/grant_closeout_recovery/opencode/r3/stderr.log",
+  "stdout_log_path": "runs/20260615T221949Z/entries/grant_closeout_recovery/opencode/r3/stdout.log",
+  "task_id": "grant_closeout_recovery",
+  "timed_out": false,
+  "timeout_seconds": 600,
+  "track": "recovery",
+  "working_dir": "."
+}
