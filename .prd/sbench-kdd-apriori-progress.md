@@ -59,7 +59,6 @@ notebooks/
     kdd_apriori_outputs/
         <execution-id>/
             dataset_summary.json
-            item_support.csv
             frequent_itemsets.csv
             association_rules.csv
             evaluation_notes.md
@@ -76,8 +75,6 @@ The notebook should make it easy to:
 - Inspect the selected dataset before mining.
 - Tune Apriori parameters such as minimum support, confidence, lift, and maximum itemset size.
 - Display frequent itemsets and rules immediately.
-- Inspect item support before mining, including items that are true for every transaction.
-- Optionally exclude high-support items before Apriori so global facts do not dominate the output.
 - Add narrative evaluation notes beside the computed results.
 - Export tables once a useful configuration is found.
 
@@ -100,18 +97,18 @@ notebooks/kdd_apriori_execution.ipynb
 3. Set the mining parameters in the notebook:
 
 ```python
-MIN_SUPPORT = 0.20
-MIN_CONFIDENCE = 0.70
+MIN_SUPPORT = 0.10
+MIN_CONFIDENCE = 0.50
 MIN_LIFT = 1.00
 MAX_ITEMSET_SIZE = 3
+DROP_UNIVERSAL_ITEMS = True
 ```
 
 4. Run the notebook sections in order:
 
 - Load `results.sqlite`.
 - Group `execution_items` by `execution_id` to build transactions.
-- Encode transactions with `mlxtend.preprocessing.TransactionEncoder`.
-- Review item support diagnostics and excluded high-support items.
+- Inspect item support and optionally drop universal items that appear in every transaction.
 - Run Apriori over the transaction sets.
 - Generate association rules from frequent itemsets.
 - Export results and write evaluation notes.
@@ -128,8 +125,6 @@ A KDD execution is complete only when it produces:
 
 - A dataset summary with execution count, item count, harness coverage, and track coverage.
 - The Apriori parameter values used for the run.
-- An item-support diagnostic table.
-- The list of high-support items excluded from mining, if any.
 - A frequent-itemsets output table.
 - An association-rules output table.
 - Evaluation notes explaining which rules are meaningful, trivial, misleading, or inconclusive.
@@ -290,7 +285,7 @@ elapsed:1-5m
 deliverables:present
 archived_files:3-5
 tokens:available
-token_total:>=10k
+token_total:10k-25k
 ```
 
 ### Why the Transformation Is Useful
@@ -304,7 +299,7 @@ Apriori needs transaction items in a consistent vocabulary so it can discover ru
 or:
 
 ```text
-{harness:codex, tokens:available} -> {token_total:>=10k}
+{harness:codex} -> {token_total:50k-100k}
 ```
 
 The `field:value` format is important because it preserves meaning. For example, `status:success` is clearer and safer than the unqualified value `success`.
@@ -313,7 +308,18 @@ Continuous values are bucketed so Apriori does not learn high-cardinality raw nu
 
 - `elapsed_seconds = 144.076` becomes `elapsed:1-5m`.
 - `archived_file_count = 3` becomes `archived_files:3-5`.
-- `token_total = 22480` becomes `token_total:>=10k`.
+- `token_total = 22480` becomes `token_total:10k-25k`.
+
+Current token-total bucket thresholds are:
+
+- `1-999`
+- `1k-10k`
+- `10k-25k`
+- `25k-50k`
+- `50k-100k`
+- `>=100k`
+
+For the current dataset, universal items such as `status:success`, `timeout:false`, and `deliverables:present` are useful quality checks but do not distinguish executions. The notebook therefore drops universal items before running Apriori when `DROP_UNIVERSAL_ITEMS = True`.
 
 Raw numeric values remain available in the `executions` table for later statistical analysis, while Apriori receives categorical items from `execution_items`.
 
@@ -389,7 +395,6 @@ Completed:
 - [x] Verify importer and orchestrator behavior with tests.
 - [x] Add a notebook scaffold for reproducible KDD executions.
 - [x] Add notebook logic using `mlxtend` to load transactions, run Apriori, generate rules, and export outputs.
-- [x] Add notebook diagnostics for item support and high-support item filtering.
 
 Remaining:
 
