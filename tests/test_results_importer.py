@@ -253,6 +253,40 @@ class ResultsImporterTest(unittest.TestCase):
         self.assertIn("llm_calls:1-2", items)
         self.assertNotIn("stale:old", items)
 
+    def test_issue_020_generates_granular_token_total_buckets(self) -> None:
+        with self.make_repo() as repo:
+            repo_root = Path(repo)
+            database_path = repo_root / "results.sqlite"
+            self.write_entry(
+                repo_root,
+                archive_run="r1",
+                stdout=json.dumps({"type": "turn_completed", "usage": {"input_tokens": 10_000, "output_tokens": 5_000}}),
+            )
+            self.write_entry(
+                repo_root,
+                archive_run="r2",
+                stdout=json.dumps({"type": "turn_completed", "usage": {"input_tokens": 20_000, "output_tokens": 10_000}}),
+            )
+            self.write_entry(
+                repo_root,
+                archive_run="r3",
+                stdout=json.dumps({"type": "turn_completed", "usage": {"input_tokens": 50_000, "output_tokens": 25_000}}),
+            )
+            self.write_entry(
+                repo_root,
+                archive_run="r4",
+                stdout=json.dumps({"type": "turn_completed", "usage": {"input_tokens": 100_000, "output_tokens": 25_000}}),
+            )
+
+            results_importer.import_run_records(repo_root, database_path)
+            items = self.item_names(database_path)
+
+        self.assertIn("token_total:10k-25k", items)
+        self.assertIn("token_total:25k-50k", items)
+        self.assertIn("token_total:50k-100k", items)
+        self.assertIn("token_total:>=100k", items)
+        self.assertNotIn("token_total:>=10k", items)
+
     def test_issue_021_records_nonfatal_import_diagnostics_and_replaces_stale_warnings(self) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)

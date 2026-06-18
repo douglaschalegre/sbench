@@ -497,7 +497,13 @@ def token_bucket(value: object) -> str:
         return "1-999"
     if number < 10_000:
         return "1k-10k"
-    return ">=10k"
+    if number < 25_000:
+        return "10k-25k"
+    if number < 50_000:
+        return "25k-50k"
+    if number < 100_000:
+        return "50k-100k"
+    return ">=100k"
 
 
 def upsert_execution(connection: sqlite3.Connection, row: dict[str, object]) -> None:
