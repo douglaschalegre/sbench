@@ -5,6 +5,8 @@ description = "Local-file smoke suite for comparing agent frameworks on small op
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "mlxtend>=0.23.0",
+    "pandas>=2.0.0",
     "textual>=1.0.0",
 ]
 
