@@ -281,7 +281,7 @@ track:long_context
 harness:bdi
 status:success
 timeout:false
-elapsed:1-5m
+elapsed:2-3m
 deliverables:present
 archived_files:3-5
 tokens:available
@@ -293,7 +293,7 @@ token_total:10k-25k
 Apriori needs transaction items in a consistent vocabulary so it can discover rules such as:
 
 ```text
-{track:long_context, harness:opencode} -> {elapsed:1-5m}
+{track:long_context, harness:opencode} -> {elapsed:1.5-2m}
 ```
 
 or:
@@ -306,9 +306,18 @@ The `field:value` format is important because it preserves meaning. For example,
 
 Continuous values are bucketed so Apriori does not learn high-cardinality raw numbers:
 
-- `elapsed_seconds = 144.076` becomes `elapsed:1-5m`.
+- `elapsed_seconds = 144.076` becomes `elapsed:2-3m`.
 - `archived_file_count = 3` becomes `archived_files:3-5`.
 - `token_total = 22480` becomes `token_total:10k-25k`.
+
+Current elapsed-time bucket thresholds are:
+
+- `<1m`
+- `1-1.5m`
+- `1.5-2m`
+- `2-3m`
+- `3-5m`
+- `>=5m`
 
 Current token-total bucket thresholds are:
 

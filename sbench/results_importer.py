@@ -220,11 +220,15 @@ def elapsed_bucket(value: object) -> str:
         return "elapsed:unknown"
     if seconds < 60:
         return "elapsed:<1m"
+    if seconds < 90:
+        return "elapsed:1-1.5m"
+    if seconds < 120:
+        return "elapsed:1.5-2m"
+    if seconds < 180:
+        return "elapsed:2-3m"
     if seconds < 300:
-        return "elapsed:1-5m"
-    if seconds < 600:
-        return "elapsed:5-10m"
-    return "elapsed:>=10m"
+        return "elapsed:3-5m"
+    return "elapsed:>=5m"
 
 
 def detect_deliverables_present(

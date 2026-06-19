@@ -246,12 +246,20 @@ class ResultsImporterTest(unittest.TestCase):
         self.assertIn("harness:codex", items)
         self.assertIn("status:success", items)
         self.assertIn("timeout:false", items)
-        self.assertIn("elapsed:1-5m", items)
+        self.assertIn("elapsed:1-1.5m", items)
         self.assertIn("deliverables:present", items)
         self.assertIn("tokens:available", items)
         self.assertIn("token_total:1k-10k", items)
         self.assertIn("llm_calls:1-2", items)
         self.assertNotIn("stale:old", items)
+
+    def test_issue_020_generates_granular_elapsed_buckets(self) -> None:
+        self.assertEqual(results_importer.elapsed_bucket(30), "elapsed:<1m")
+        self.assertEqual(results_importer.elapsed_bucket(60), "elapsed:1-1.5m")
+        self.assertEqual(results_importer.elapsed_bucket(90), "elapsed:1.5-2m")
+        self.assertEqual(results_importer.elapsed_bucket(120), "elapsed:2-3m")
+        self.assertEqual(results_importer.elapsed_bucket(180), "elapsed:3-5m")
+        self.assertEqual(results_importer.elapsed_bucket(300), "elapsed:>=5m")
 
     def test_issue_020_generates_granular_token_total_buckets(self) -> None:
         with self.make_repo() as repo:
