@@ -1,0 +1,40 @@
+{
+  "deliverables_present_counts": {
+    "1": 63
+  },
+  "dropped_universal_items": [
+    "archived_files:3-5",
+    "status:success",
+    "deliverables:present",
+    "tokens:available",
+    "timeout:false"
+  ],
+  "encoded_item_count": 35,
+  "execution_count": 63,
+  "harness_counts": {
+    "bdi": 21,
+    "codex": 21,
+    "opencode": 21
+  },
+  "mining_item_count": 30,
+  "parameters": {
+    "algorithm": "mlxtend.frequent_patterns.apriori",
+    "drop_universal_items": true,
+    "max_itemset_size": 3,
+    "min_confidence": 0.5,
+    "min_support": 0.1,
+    "transaction_encoder": "mlxtend.preprocessing.TransactionEncoder"
+  },
+  "status_counts": {
+    "success": 63
+  },
+  "track_counts": {
+    "distractor_goal": 9,
+    "long_context": 9,
+    "recovery": 9,
+    "replanning": 9,
+    "smoke": 27
+  },
+  "transaction_count": 63,
+  "transaction_item_count": 735
+}

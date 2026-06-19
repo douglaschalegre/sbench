@@ -1,0 +1,136 @@
+items,size,support_count,support
+cache_tokens:available,1,42,0.6666666666666666
+elapsed:1-1.5m,1,31,0.49206349206349204
+track:smoke,1,27,0.42857142857142855
+token_total:10k-25k,1,26,0.4126984126984127
+harness:bdi,1,21,0.3333333333333333
+harness:codex,1,21,0.3333333333333333
+harness:opencode,1,21,0.3333333333333333
+llm_calls:1-2,1,21,0.3333333333333333
+llm_calls:>5,1,21,0.3333333333333333
+cache_tokens:available | elapsed:1-1.5m,2,21,0.3333333333333333
+cache_tokens:available | harness:bdi,2,21,0.3333333333333333
+cache_tokens:available | harness:codex,2,21,0.3333333333333333
+cache_tokens:available | llm_calls:1-2,2,21,0.3333333333333333
+harness:codex | llm_calls:1-2,2,21,0.3333333333333333
+harness:opencode | llm_calls:>5,2,21,0.3333333333333333
+cache_tokens:available | harness:codex | llm_calls:1-2,3,21,0.3333333333333333
+cache_tokens:available | track:smoke,2,18,0.2857142857142857
+elapsed:1-1.5m | token_total:10k-25k,2,17,0.2698412698412698
+harness:opencode | token_total:10k-25k,2,17,0.2698412698412698
+llm_calls:>5 | token_total:10k-25k,2,17,0.2698412698412698
+harness:opencode | llm_calls:>5 | token_total:10k-25k,3,17,0.2698412698412698
+token_total:25k-50k,1,16,0.25396825396825395
+token_total:50k-100k,1,16,0.25396825396825395
+cache_tokens:available | token_total:50k-100k,2,16,0.25396825396825395
+harness:codex | token_total:50k-100k,2,16,0.25396825396825395
+llm_calls:1-2 | token_total:50k-100k,2,16,0.25396825396825395
+cache_tokens:available | harness:codex | token_total:50k-100k,3,16,0.25396825396825395
+cache_tokens:available | llm_calls:1-2 | token_total:50k-100k,3,16,0.25396825396825395
+harness:codex | llm_calls:1-2 | token_total:50k-100k,3,16,0.25396825396825395
+elapsed:<1m,1,13,0.20634920634920634
+elapsed:1-1.5m | harness:codex,2,13,0.20634920634920634
+elapsed:1-1.5m | llm_calls:1-2,2,13,0.20634920634920634
+cache_tokens:available | elapsed:1-1.5m | harness:codex,3,13,0.20634920634920634
+cache_tokens:available | elapsed:1-1.5m | llm_calls:1-2,3,13,0.20634920634920634
+elapsed:1-1.5m | harness:codex | llm_calls:1-2,3,13,0.20634920634920634
+elapsed:1.5-2m,1,12,0.19047619047619047
+tool_calls:>5,1,12,0.19047619047619047
+cache_tokens:available | token_total:25k-50k,2,12,0.19047619047619047
+cache_tokens:available | tool_calls:>5,2,12,0.19047619047619047
+harness:bdi | token_total:25k-50k,2,12,0.19047619047619047
+harness:bdi | tool_calls:>5,2,12,0.19047619047619047
+cache_tokens:available | harness:bdi | token_total:25k-50k,3,12,0.19047619047619047
+cache_tokens:available | harness:bdi | tool_calls:>5,3,12,0.19047619047619047
+token_total:10k-25k | track:smoke,2,11,0.1746031746031746
+elapsed:1-1.5m | harness:opencode,2,10,0.15873015873015872
+elapsed:1-1.5m | llm_calls:>5,2,10,0.15873015873015872
+elapsed:1-1.5m | track:smoke,2,10,0.15873015873015872
+token_total:25k-50k | tool_calls:>5,2,10,0.15873015873015872
+cache_tokens:available | token_total:25k-50k | tool_calls:>5,3,10,0.15873015873015872
+elapsed:1-1.5m | harness:opencode | llm_calls:>5,3,10,0.15873015873015872
+harness:bdi | token_total:25k-50k | tool_calls:>5,3,10,0.15873015873015872
+task:clinic_rollout_plan,1,9,0.14285714285714285
+task:community_workshop_replan,1,9,0.14285714285714285
+task:grant_closeout_recovery,1,9,0.14285714285714285
+task:incident_staffing_plan,1,9,0.14285714285714285
+task:shelter_restock_scope,1,9,0.14285714285714285
+task:travel_reimbursement_audit,1,9,0.14285714285714285
+task:vendor_selection,1,9,0.14285714285714285
+track:distractor_goal,1,9,0.14285714285714285
+track:long_context,1,9,0.14285714285714285
+track:recovery,1,9,0.14285714285714285
+track:replanning,1,9,0.14285714285714285
+cache_tokens:available | token_total:10k-25k,2,9,0.14285714285714285
+elapsed:1-1.5m | token_total:50k-100k,2,9,0.14285714285714285
+elapsed:1.5-2m | token_total:25k-50k,2,9,0.14285714285714285
+elapsed:<1m | track:smoke,2,9,0.14285714285714285
+harness:bdi | token_total:10k-25k,2,9,0.14285714285714285
+harness:bdi | track:smoke,2,9,0.14285714285714285
+harness:codex | track:smoke,2,9,0.14285714285714285
+harness:opencode | track:smoke,2,9,0.14285714285714285
+llm_calls:1-2 | track:smoke,2,9,0.14285714285714285
+llm_calls:>5 | track:smoke,2,9,0.14285714285714285
+task:clinic_rollout_plan | track:long_context,2,9,0.14285714285714285
+task:community_workshop_replan | track:replanning,2,9,0.14285714285714285
+task:grant_closeout_recovery | track:recovery,2,9,0.14285714285714285
+task:incident_staffing_plan | track:smoke,2,9,0.14285714285714285
+task:shelter_restock_scope | track:distractor_goal,2,9,0.14285714285714285
+task:travel_reimbursement_audit | track:smoke,2,9,0.14285714285714285
+task:vendor_selection | track:smoke,2,9,0.14285714285714285
+token_total:50k-100k | track:smoke,2,9,0.14285714285714285
+cache_tokens:available | elapsed:1-1.5m | token_total:50k-100k,3,9,0.14285714285714285
+cache_tokens:available | harness:bdi | token_total:10k-25k,3,9,0.14285714285714285
+cache_tokens:available | harness:bdi | track:smoke,3,9,0.14285714285714285
+cache_tokens:available | harness:codex | track:smoke,3,9,0.14285714285714285
+cache_tokens:available | llm_calls:1-2 | track:smoke,3,9,0.14285714285714285
+cache_tokens:available | token_total:50k-100k | track:smoke,3,9,0.14285714285714285
+elapsed:1-1.5m | harness:codex | token_total:50k-100k,3,9,0.14285714285714285
+elapsed:1-1.5m | harness:opencode | token_total:10k-25k,3,9,0.14285714285714285
+elapsed:1-1.5m | llm_calls:1-2 | token_total:50k-100k,3,9,0.14285714285714285
+elapsed:1-1.5m | llm_calls:>5 | token_total:10k-25k,3,9,0.14285714285714285
+harness:codex | llm_calls:1-2 | track:smoke,3,9,0.14285714285714285
+harness:codex | token_total:50k-100k | track:smoke,3,9,0.14285714285714285
+harness:opencode | llm_calls:>5 | track:smoke,3,9,0.14285714285714285
+llm_calls:1-2 | token_total:50k-100k | track:smoke,3,9,0.14285714285714285
+tool_calls:3-5,1,8,0.12698412698412698
+cache_tokens:available | elapsed:1.5-2m,2,8,0.12698412698412698
+cache_tokens:available | tool_calls:3-5,2,8,0.12698412698412698
+elapsed:1-1.5m | harness:bdi,2,8,0.12698412698412698
+elapsed:1-1.5m | task:grant_closeout_recovery,2,8,0.12698412698412698
+elapsed:1-1.5m | track:recovery,2,8,0.12698412698412698
+harness:bdi | tool_calls:3-5,2,8,0.12698412698412698
+cache_tokens:available | elapsed:1-1.5m | harness:bdi,3,8,0.12698412698412698
+cache_tokens:available | elapsed:1-1.5m | token_total:10k-25k,3,8,0.12698412698412698
+cache_tokens:available | harness:bdi | tool_calls:3-5,3,8,0.12698412698412698
+elapsed:1-1.5m | harness:bdi | token_total:10k-25k,3,8,0.12698412698412698
+elapsed:1-1.5m | task:grant_closeout_recovery | track:recovery,3,8,0.12698412698412698
+elapsed:1-1.5m | token_total:10k-25k | track:smoke,3,8,0.12698412698412698
+harness:opencode | token_total:10k-25k | track:smoke,3,8,0.12698412698412698
+llm_calls:>5 | token_total:10k-25k | track:smoke,3,8,0.12698412698412698
+cache_tokens:available | elapsed:<1m,2,7,0.1111111111111111
+elapsed:1-1.5m | tool_calls:3-5,2,7,0.1111111111111111
+elapsed:1.5-2m | harness:bdi,2,7,0.1111111111111111
+elapsed:<1m | harness:codex,2,7,0.1111111111111111
+elapsed:<1m | llm_calls:1-2,2,7,0.1111111111111111
+elapsed:<1m | token_total:50k-100k,2,7,0.1111111111111111
+token_total:10k-25k | tool_calls:3-5,2,7,0.1111111111111111
+token_total:25k-50k | track:smoke,2,7,0.1111111111111111
+cache_tokens:available | elapsed:1-1.5m | tool_calls:3-5,3,7,0.1111111111111111
+cache_tokens:available | elapsed:1.5-2m | harness:bdi,3,7,0.1111111111111111
+cache_tokens:available | elapsed:1.5-2m | token_total:25k-50k,3,7,0.1111111111111111
+cache_tokens:available | elapsed:<1m | harness:codex,3,7,0.1111111111111111
+cache_tokens:available | elapsed:<1m | llm_calls:1-2,3,7,0.1111111111111111
+cache_tokens:available | elapsed:<1m | token_total:50k-100k,3,7,0.1111111111111111
+cache_tokens:available | elapsed:<1m | track:smoke,3,7,0.1111111111111111
+cache_tokens:available | token_total:10k-25k | tool_calls:3-5,3,7,0.1111111111111111
+elapsed:1-1.5m | harness:bdi | tool_calls:3-5,3,7,0.1111111111111111
+elapsed:1-1.5m | token_total:10k-25k | tool_calls:3-5,3,7,0.1111111111111111
+elapsed:1.5-2m | harness:bdi | token_total:25k-50k,3,7,0.1111111111111111
+elapsed:<1m | harness:codex | llm_calls:1-2,3,7,0.1111111111111111
+elapsed:<1m | harness:codex | token_total:50k-100k,3,7,0.1111111111111111
+elapsed:<1m | harness:codex | track:smoke,3,7,0.1111111111111111
+elapsed:<1m | llm_calls:1-2 | token_total:50k-100k,3,7,0.1111111111111111
+elapsed:<1m | llm_calls:1-2 | track:smoke,3,7,0.1111111111111111
+elapsed:<1m | token_total:50k-100k | track:smoke,3,7,0.1111111111111111
+harness:bdi | token_total:10k-25k | tool_calls:3-5,3,7,0.1111111111111111
