@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import sqlite3
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -22,6 +24,18 @@ TOKEN_COLUMNS = (
     "token_audio_output",
     "llm_calls",
     "tool_calls",
+)
+
+AUTOMATIC_EVALUATION_COLUMNS = (
+    (
+        "automatic_evaluation_status",
+        "automatic_evaluation_status TEXT NOT NULL DEFAULT 'unavailable'",
+    ),
+    (
+        "automatic_evaluation_issue_count",
+        "automatic_evaluation_issue_count INTEGER NOT NULL DEFAULT 0",
+    ),
+    ("automatic_evaluation_source", "automatic_evaluation_source TEXT"),
 )
 
 
@@ -78,6 +92,20 @@ class ImportContext:
         self.warnings.append((code, message))
 
 
+@dataclass(frozen=True)
+class AutomaticEvaluation:
+    status: str = "unavailable"
+    issue_count: int = 0
+    source: str | None = None
+
+
+@dataclass(frozen=True)
+class AutomaticEvaluator:
+    module: object
+    source: str
+    supported_tasks: frozenset[str]
+
+
 def create_schema(connection: sqlite3.Connection) -> None:
     connection.executescript(
         """
@@ -112,7 +140,10 @@ def create_schema(connection: sqlite3.Connection) -> None:
             token_audio_input INTEGER,
             token_audio_output INTEGER,
             llm_calls INTEGER,
-            tool_calls INTEGER
+            tool_calls INTEGER,
+            automatic_evaluation_status TEXT NOT NULL DEFAULT 'unavailable',
+            automatic_evaluation_issue_count INTEGER NOT NULL DEFAULT 0,
+            automatic_evaluation_source TEXT
         );
 
         CREATE TABLE IF NOT EXISTS execution_items (
@@ -131,17 +162,28 @@ def create_schema(connection: sqlite3.Connection) -> None:
         );
         """
     )
+    ensure_execution_columns(connection)
+
+
+def ensure_execution_columns(connection: sqlite3.Connection) -> None:
+    existing = {
+        str(row[1]) for row in connection.execute("PRAGMA table_info(executions)")
+    }
+    for column, definition in AUTOMATIC_EVALUATION_COLUMNS:
+        if column not in existing:
+            connection.execute(f"ALTER TABLE executions ADD COLUMN {definition}")
 
 
 def import_run_records(repo_root: Path, database_path: Path | str) -> ImportResult:
     repo_root = repo_root.resolve()
     with sqlite3.connect(database_path) as connection:
         create_schema(connection)
+        automatic_evaluator = load_automatic_evaluator(repo_root)
         count = 0
         warnings = 0
         for metadata_path in discover_metadata_files(repo_root):
             context = load_import_context(repo_root, metadata_path)
-            row = build_execution_row(context)
+            row = build_execution_row(context, automatic_evaluator)
             upsert_execution(connection, row)
             replace_items(connection, row["execution_id"], transaction_items(row))
             replace_warnings(connection, row["execution_id"], context.warnings)
@@ -169,7 +211,9 @@ def load_import_context(repo_root: Path, metadata_path: Path) -> ImportContext:
     )
 
 
-def build_execution_row(context: ImportContext) -> dict[str, object]:
+def build_execution_row(
+    context: ImportContext, automatic_evaluator: AutomaticEvaluator | None = None
+) -> dict[str, object]:
     metadata = context.metadata
     archive_path = str(metadata.get("archive_path") or "")
     archive_run = Path(archive_path).name if archive_path else "unknown"
@@ -182,6 +226,9 @@ def build_execution_row(context: ImportContext) -> dict[str, object]:
         context.warn(
             "token_usage_missing", f"No token usage was found for {harness} logs."
         )
+    automatic_evaluation = evaluate_automatic_answer(
+        context, task_id, archive_path, automatic_evaluator
+    )
 
     row: dict[str, object] = {
         "execution_id": execution_id(context.run_id, task_id, harness, archive_run),
@@ -204,10 +251,91 @@ def build_execution_row(context: ImportContext) -> dict[str, object]:
         "deliverables_present": deliverables,
         "token_usage_available": token_usage.available,
         "token_usage_source": token_usage.source,
+        "automatic_evaluation_status": automatic_evaluation.status,
+        "automatic_evaluation_issue_count": automatic_evaluation.issue_count,
+        "automatic_evaluation_source": automatic_evaluation.source,
     }
     for column in TOKEN_COLUMNS:
         row[column] = getattr(token_usage, column)
     return row
+
+
+def load_automatic_evaluator(repo_root: Path) -> AutomaticEvaluator | None:
+    evaluator_path = repo_root / "evaluation" / "automatic_evaluator.py"
+    if not evaluator_path.is_file():
+        return None
+
+    spec = importlib.util.spec_from_file_location(
+        "_sbench_automatic_evaluator", evaluator_path
+    )
+    if spec is None or spec.loader is None:
+        return None
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        sys.modules.pop(spec.name, None)
+        return None
+
+    required_files = getattr(module, "REQUIRED_FILES", None)
+    evaluate_archive = getattr(module, "evaluate_archive", None)
+    if not isinstance(required_files, dict) or not callable(evaluate_archive):
+        return None
+
+    return AutomaticEvaluator(
+        module=module,
+        source=display_path(evaluator_path, repo_root),
+        supported_tasks=frozenset(str(task_id) for task_id in required_files),
+    )
+
+
+def evaluate_automatic_answer(
+    context: ImportContext,
+    task_id: str,
+    archive_path: str,
+    automatic_evaluator: AutomaticEvaluator | None,
+) -> AutomaticEvaluation:
+    if automatic_evaluator is None:
+        return AutomaticEvaluation(
+            source="evaluation/automatic_evaluator.py:unavailable"
+        )
+    if task_id not in automatic_evaluator.supported_tasks:
+        return AutomaticEvaluation(
+            source=f"{automatic_evaluator.source}:unsupported_task"
+        )
+    if not archive_path:
+        return AutomaticEvaluation(
+            source=f"{automatic_evaluator.source}:missing_archive_path"
+        )
+
+    archive_dir = Path(archive_path)
+    if not archive_dir.is_absolute():
+        archive_dir = context.repo_root / archive_dir
+    if not archive_dir.is_dir():
+        return AutomaticEvaluation(
+            source=f"{automatic_evaluator.source}:archive_missing"
+        )
+
+    try:
+        result = automatic_evaluator.module.evaluate_archive(task_id, archive_dir)
+    except Exception:
+        return AutomaticEvaluation(source=f"{automatic_evaluator.source}:error")
+
+    issues = getattr(result, "issues", ())
+    try:
+        issue_count = len(tuple(issues))
+    except TypeError:
+        return AutomaticEvaluation(
+            source=f"{automatic_evaluator.source}:invalid_result"
+        )
+
+    return AutomaticEvaluation(
+        status="pass" if issue_count == 0 else "fail",
+        issue_count=issue_count,
+        source=automatic_evaluator.source,
+    )
 
 
 def execution_id(run_id: str, task_id: str, harness: str, archive_run: str) -> str:
@@ -459,6 +587,11 @@ def transaction_items(row: dict[str, object]) -> set[str]:
         items.add("deliverables:unknown")
     else:
         items.add(f"deliverables:{'present' if deliverables else 'missing'}")
+
+    auto_eval_status = str(row.get("automatic_evaluation_status") or "unavailable")
+    if auto_eval_status not in {"pass", "fail", "unavailable"}:
+        auto_eval_status = "unavailable"
+    items.add(f"auto_eval:{auto_eval_status}")
 
     if row.get("token_usage_available"):
         items.add("tokens:available")
