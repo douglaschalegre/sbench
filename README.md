@@ -48,6 +48,12 @@ Install project dependencies with uv:
 uv sync
 ```
 
+Run the test suite:
+
+```sh
+uv run test
+```
+
 Inspect the current task and harness matrix without running agents:
 
 ```sh

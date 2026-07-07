@@ -7,11 +7,13 @@ requires-python = ">=3.10"
 dependencies = [
     "mlxtend>=0.23.0",
     "pandas>=2.0.0",
+    "pytest>=8.0.0",
     "textual>=1.0.0",
 ]
 
 [project.scripts]
 sbench = "sbench.cli:main"
+test = "pytest:main"
 
 [build-system]
 requires = ["hatchling"]
