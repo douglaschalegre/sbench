@@ -24,4 +24,4 @@ build-backend = "hatchling.build"
 package = true
 
 [tool.pytest.ini_options]
-addopts = "--cov=sbench --cov-branch --cov-report=term"
+addopts = "--cov=sbench --cov-branch --cov-report=term --cov-report=html"
