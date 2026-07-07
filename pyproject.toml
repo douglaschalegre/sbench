@@ -8,6 +8,7 @@ dependencies = [
     "mlxtend>=0.23.0",
     "pandas>=2.0.0",
     "pytest>=8.0.0",
+    "pytest-cov>=7.0.0",
     "textual>=1.0.0",
 ]
 
@@ -21,3 +22,6 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 package = true
+
+[tool.pytest.ini_options]
+addopts = "--cov=sbench --cov-branch --cov-report=term"
