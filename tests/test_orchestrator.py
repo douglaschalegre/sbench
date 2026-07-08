@@ -16,13 +16,17 @@ class OrchestratorTest(unittest.TestCase):
         temp_dir = tempfile.TemporaryDirectory()
         repo_root = Path(temp_dir.name)
         (repo_root / "tasks" / "vendor_selection").mkdir(parents=True)
-        (repo_root / "tasks" / "vendor_selection" / "task.md").write_text("task", encoding="utf-8")
+        (repo_root / "tasks" / "vendor_selection" / "task.md").write_text(
+            "task", encoding="utf-8"
+        )
         (repo_root / "tasks" / "travel_reimbursement_audit").mkdir(parents=True)
         (repo_root / "tasks" / "travel_reimbursement_audit" / "task.md").write_text(
             "task", encoding="utf-8"
         )
         (repo_root / "tasks" / "clinic_rollout_plan").mkdir(parents=True)
-        (repo_root / "tasks" / "clinic_rollout_plan" / "task.md").write_text("task", encoding="utf-8")
+        (repo_root / "tasks" / "clinic_rollout_plan" / "task.md").write_text(
+            "task", encoding="utf-8"
+        )
         (repo_root / "tasks" / "not_a_task").mkdir(parents=True)
         return temp_dir
 
@@ -36,8 +40,12 @@ class OrchestratorTest(unittest.TestCase):
         command: tuple[str, ...],
         settings: dict[str, object] | None = None,
     ) -> orchestrator.RunPlan:
-        task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), [task_id])[0]
-        archive_plan = orchestrator.plan_answer_archive(repo_root, task, model=model, harness=harness)
+        task = orchestrator.select_tasks(
+            orchestrator.discover_tasks(repo_root), [task_id]
+        )[0]
+        archive_plan = orchestrator.plan_answer_archive(
+            repo_root, task, model=model, harness=harness
+        )
         return orchestrator.RunPlan(
             task_id=task.id,
             track=task.track,
@@ -72,7 +80,9 @@ class OrchestratorTest(unittest.TestCase):
             ["bdi", "codex", "opencode"],
         )
 
-    def test_harness_selection_accepts_repeated_and_comma_separated_values(self) -> None:
+    def test_harness_selection_accepts_repeated_and_comma_separated_values(
+        self,
+    ) -> None:
         self.assertEqual(
             orchestrator.select_harnesses(["codex,opencode", "codex"]),
             ["codex", "opencode"],
@@ -100,7 +110,7 @@ class OrchestratorTest(unittest.TestCase):
             [
                 "--dry-run",
                 "--model",
-                "gpt-5.2",
+                "gpt-5.4",
                 "--timeout",
                 "120",
                 "--task",
@@ -111,7 +121,7 @@ class OrchestratorTest(unittest.TestCase):
         )
 
         self.assertTrue(args.dry_run)
-        self.assertEqual(args.model, "gpt-5.2")
+        self.assertEqual(args.model, "gpt-5.4")
         self.assertEqual(args.timeout, 120)
         self.assertEqual(args.task, ["vendor_selection"])
         self.assertEqual(args.harness, ["codex"])
@@ -123,7 +133,9 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIsNone(args.model)
 
     def test_parse_args_accepts_import_results_without_model(self) -> None:
-        args = orchestrator.parse_args(["--import-results", "--results-db", "custom.sqlite"])
+        args = orchestrator.parse_args(
+            ["--import-results", "--results-db", "custom.sqlite"]
+        )
 
         self.assertTrue(args.import_results)
         self.assertIsNone(args.model)
@@ -137,10 +149,14 @@ class OrchestratorTest(unittest.TestCase):
         self.assertFalse(cli.should_show_progress(io.StringIO()))
         self.assertTrue(cli.should_show_progress(TtyOutput()))
 
-    def test_list_mode_prints_tasks_and_harnesses_without_planning_commands(self) -> None:
+    def test_list_mode_prints_tasks_and_harnesses_without_planning_commands(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             output = io.StringIO()
-            exit_code = orchestrator.main(["--repo-root", repo, "--list"], stdout=output)
+            exit_code = orchestrator.main(
+                ["--repo-root", repo, "--list"], stdout=output
+            )
 
         rendered = output.getvalue()
         self.assertEqual(exit_code, 0)
@@ -170,7 +186,9 @@ class OrchestratorTest(unittest.TestCase):
             self.assertEqual(stderr.getvalue(), "")
             self.assertFalse((Path(repo) / "runs").exists())
 
-    def test_import_results_runs_importer_without_model_or_harness_planning(self) -> None:
+    def test_import_results_runs_importer_without_model_or_harness_planning(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             output = io.StringIO()
             with mock.patch.object(
@@ -179,7 +197,13 @@ class OrchestratorTest(unittest.TestCase):
                 return_value=cli.ImportResult(execution_count=3, warning_count=1),
             ) as importer:
                 exit_code = orchestrator.main(
-                    ["--repo-root", repo, "--import-results", "--results-db", "custom.sqlite"],
+                    [
+                        "--repo-root",
+                        repo,
+                        "--import-results",
+                        "--results-db",
+                        "custom.sqlite",
+                    ],
                     stdout=output,
                 )
 
@@ -192,12 +216,14 @@ class OrchestratorTest(unittest.TestCase):
             self.assertIn("executions_imported: 3", rendered)
             self.assertIn("warnings: 1", rendered)
 
-    def test_dry_run_prints_selected_matrix_commands_and_archive_destinations(self) -> None:
+    def test_dry_run_prints_selected_matrix_commands_and_archive_destinations(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            (repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r1").mkdir(
-                parents=True
-            )
+            (
+                repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r1"
+            ).mkdir(parents=True)
             output = io.StringIO()
             exit_code = orchestrator.main(
                 [
@@ -252,10 +278,14 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(codex[-1], orchestrator.STANDARD_TASK_PROMPT)
         self.assertEqual(opencode[-1], orchestrator.STANDARD_TASK_PROMPT)
 
-    def test_codex_invocation_uses_task_scoped_noninteractive_command_and_settings(self) -> None:
+    def test_codex_invocation_uses_task_scoped_noninteractive_command_and_settings(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
 
             invocation = orchestrator.build_harness_invocation(
                 "codex",
@@ -270,7 +300,10 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIn("gpt-5.2", invocation.command)
         self.assertNotIn("openai/gpt-5.2", invocation.command)
         self.assertIn("--cd", invocation.command)
-        self.assertEqual(invocation.command[invocation.command.index("--cd") + 1], "tasks/vendor_selection")
+        self.assertEqual(
+            invocation.command[invocation.command.index("--cd") + 1],
+            "tasks/vendor_selection",
+        )
         self.assertIn("--sandbox", invocation.command)
         self.assertIn("workspace-write", invocation.command)
         self.assertIn("--config", invocation.command)
@@ -284,12 +317,18 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(invocation.settings["approval_policy"], "never")
         self.assertEqual(invocation.settings["command_model"], "gpt-5.2")
         self.assertEqual(invocation.settings["sandbox"], "workspace-write")
-        self.assertEqual(invocation.settings["task_directory_scope"], "tasks/vendor_selection")
+        self.assertEqual(
+            invocation.settings["task_directory_scope"], "tasks/vendor_selection"
+        )
 
-    def test_opencode_invocation_uses_task_scoped_json_autoapproved_command_and_settings(self) -> None:
+    def test_opencode_invocation_uses_task_scoped_json_autoapproved_command_and_settings(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
 
             invocation = orchestrator.build_harness_invocation(
                 "opencode",
@@ -303,7 +342,10 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIn("-m", invocation.command)
         self.assertIn("openai/gpt-5.2", invocation.command)
         self.assertIn("--dir", invocation.command)
-        self.assertEqual(invocation.command[invocation.command.index("--dir") + 1], "tasks/vendor_selection")
+        self.assertEqual(
+            invocation.command[invocation.command.index("--dir") + 1],
+            "tasks/vendor_selection",
+        )
         self.assertIn("--format", invocation.command)
         self.assertIn("json", invocation.command)
         self.assertIn("--dangerously-skip-permissions", invocation.command)
@@ -315,12 +357,16 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(invocation.settings["command_model"], "openai/gpt-5.2")
         self.assertEqual(invocation.settings["format"], "json")
         self.assertEqual(invocation.settings["writable_scope"], "task_directory_only")
-        self.assertEqual(invocation.settings["task_directory_scope"], "tasks/vendor_selection")
+        self.assertEqual(
+            invocation.settings["task_directory_scope"], "tasks/vendor_selection"
+        )
 
     def test_missing_cli_binary_detection_reports_selected_agent_binaries(self) -> None:
         missing = orchestrator.find_missing_cli_binaries(
             ["bdi", "codex", "opencode"],
-            which=lambda binary: "/bin/" + binary if binary in {"opencode", "uv"} else None,
+            which=lambda binary: (
+                "/bin/" + binary if binary in {"opencode", "uv"} else None
+            ),
         )
 
         self.assertEqual(missing, {"codex": "codex"})
@@ -335,7 +381,15 @@ class OrchestratorTest(unittest.TestCase):
                 return_value={"codex": "codex"},
             ):
                 exit_code = orchestrator.main(
-                    ["--repo-root", repo, "--run", "--model", "gpt-5.2", "--harness", "codex"],
+                    [
+                        "--repo-root",
+                        repo,
+                        "--run",
+                        "--model",
+                        "gpt-5.2",
+                        "--harness",
+                        "codex",
+                    ],
                     stdout=stdout,
                     stderr=stderr,
                 )
@@ -344,7 +398,9 @@ class OrchestratorTest(unittest.TestCase):
             self.assertIn("Missing required CLI binaries", stderr.getvalue())
             self.assertFalse((Path(repo) / "runs").exists())
 
-    def test_run_mode_reports_interactive_progress_cancellation_without_traceback(self) -> None:
+    def test_run_mode_reports_interactive_progress_cancellation_without_traceback(
+        self,
+    ) -> None:
         class TtyOutput(io.StringIO):
             def isatty(self) -> bool:
                 return True
@@ -357,11 +413,21 @@ class OrchestratorTest(unittest.TestCase):
                 mock.patch.object(
                     cli,
                     "run_matrix_with_textual_progress",
-                    side_effect=cli.BenchmarkRunCancelledError("Benchmark run cancelled."),
+                    side_effect=cli.BenchmarkRunCancelledError(
+                        "Benchmark run cancelled."
+                    ),
                 ),
             ):
                 exit_code = orchestrator.main(
-                    ["--repo-root", repo, "--run", "--model", "gpt-5.2", "--harness", "codex"],
+                    [
+                        "--repo-root",
+                        repo,
+                        "--run",
+                        "--model",
+                        "gpt-5.2",
+                        "--harness",
+                        "codex",
+                    ],
                     stdout=stdout,
                     stderr=stderr,
                 )
@@ -370,13 +436,17 @@ class OrchestratorTest(unittest.TestCase):
             self.assertEqual(stdout.getvalue(), "")
             self.assertEqual(stderr.getvalue(), "Benchmark run cancelled.\n")
 
-    def test_bdi_invocation_points_to_configured_repo_toy_runner_and_sbench_task(self) -> None:
+    def test_bdi_invocation_points_to_configured_repo_toy_runner_and_sbench_task(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
             bdi_repo = repo_root / "external" / "pydantic-ai-bdi"
             bdi_repo.mkdir(parents=True)
             (bdi_repo / "toy.py").write_text("", encoding="utf-8")
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
 
             invocation = orchestrator.build_harness_invocation(
                 "bdi",
@@ -404,16 +474,24 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(invocation.settings["binary"], "uv")
         self.assertEqual(invocation.settings["bdi_repo"], str(bdi_repo.resolve()))
         self.assertEqual(invocation.settings["command_model"], "gpt-5.2")
-        self.assertEqual(invocation.settings["toy_runner"], str(bdi_repo.resolve() / "toy.py"))
-        self.assertEqual(invocation.settings["task_directory_scope"], "tasks/vendor_selection")
+        self.assertEqual(
+            invocation.settings["toy_runner"], str(bdi_repo.resolve() / "toy.py")
+        )
+        self.assertEqual(
+            invocation.settings["task_directory_scope"], "tasks/vendor_selection"
+        )
 
-    def test_bdi_run_plan_uses_bdi_working_dir_and_canonical_archive_destination(self) -> None:
+    def test_bdi_run_plan_uses_bdi_working_dir_and_canonical_archive_destination(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
             bdi_repo = repo_root / "external" / "pydantic-ai-bdi"
             bdi_repo.mkdir(parents=True)
             (bdi_repo / "toy.py").write_text("", encoding="utf-8")
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )
 
             plans = orchestrator.build_run_plans(
                 repo_root,
@@ -427,7 +505,10 @@ class OrchestratorTest(unittest.TestCase):
             plan = plans[0]
 
         self.assertEqual(plan.working_dir, bdi_repo.resolve())
-        self.assertEqual(plan.archive_dir, repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "bdi" / "r1")
+        self.assertEqual(
+            plan.archive_dir,
+            repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "bdi" / "r1",
+        )
         self.assertNotIn("output_dir", plan.settings)
 
     def test_bdi_missing_repository_path_detection_requires_toy_runner(self) -> None:
@@ -439,11 +520,15 @@ class OrchestratorTest(unittest.TestCase):
             )
             no_toy_repo = repo_root / "bdi-no-toy"
             no_toy_repo.mkdir()
-            no_toy = orchestrator.find_missing_repository_paths(["bdi"], bdi_repo=no_toy_repo)
+            no_toy = orchestrator.find_missing_repository_paths(
+                ["bdi"], bdi_repo=no_toy_repo
+            )
             valid_repo = repo_root / "valid-bdi"
             valid_repo.mkdir()
             (valid_repo / "toy.py").write_text("", encoding="utf-8")
-            valid = orchestrator.find_missing_repository_paths(["bdi"], bdi_repo=valid_repo)
+            valid = orchestrator.find_missing_repository_paths(
+                ["bdi"], bdi_repo=valid_repo
+            )
 
         self.assertEqual(missing, {"bdi": str(Path(repo) / "missing-bdi")})
         self.assertEqual(no_toy, {"bdi": str(Path(repo) / "bdi-no-toy")})
@@ -476,8 +561,12 @@ class OrchestratorTest(unittest.TestCase):
     def test_archive_plan_selects_r1_when_no_canonical_runs_exist(self) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
-            plan = orchestrator.plan_answer_archive(repo_root, task, model="gpt-5.2", harness="codex")
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
+            plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
 
         self.assertEqual(plan.run_id, "r1")
         self.assertEqual(plan.model_path, "gpt-5.2")
@@ -490,26 +579,46 @@ class OrchestratorTest(unittest.TestCase):
     def test_archive_plan_selects_next_canonical_run_per_scope(self) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
-            (repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r1").mkdir(
-                parents=True
-            )
-            (repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r2").mkdir()
-            (repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "opencode" / "r7").mkdir(
-                parents=True
-            )
-            (repo_root / "answers" / "travel_reimbursement_audit" / "gpt-5.2" / "codex" / "r8").mkdir(
-                parents=True
-            )
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
+            (
+                repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r1"
+            ).mkdir(parents=True)
+            (
+                repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r2"
+            ).mkdir()
+            (
+                repo_root
+                / "answers"
+                / "vendor_selection"
+                / "gpt-5.2"
+                / "opencode"
+                / "r7"
+            ).mkdir(parents=True)
+            (
+                repo_root
+                / "answers"
+                / "travel_reimbursement_audit"
+                / "gpt-5.2"
+                / "codex"
+                / "r8"
+            ).mkdir(parents=True)
 
-            plan = orchestrator.plan_answer_archive(repo_root, task, model="gpt-5.2", harness="codex")
+            plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
 
         self.assertEqual(plan.run_id, "r3")
 
-    def test_archive_plan_normalizes_model_path_without_losing_display_model(self) -> None:
+    def test_archive_plan_normalizes_model_path_without_losing_display_model(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
             plan = orchestrator.plan_answer_archive(
                 repo_root,
                 task,
@@ -522,27 +631,46 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIn("openai__gpt-5.5", str(plan.archive_dir))
 
     def test_command_model_name_normalizes_codex_style_harnesses_only(self) -> None:
-        self.assertEqual(orchestrator.command_model_name("codex", "openai/gpt-5.2"), "gpt-5.2")
-        self.assertEqual(orchestrator.command_model_name("bdi", "openai-codex/gpt-5.2"), "gpt-5.2")
-        self.assertEqual(orchestrator.command_model_name("opencode", "openai/gpt-5.2"), "openai/gpt-5.2")
+        self.assertEqual(
+            orchestrator.command_model_name("codex", "openai/gpt-5.2"), "gpt-5.2"
+        )
+        self.assertEqual(
+            orchestrator.command_model_name("bdi", "openai-codex/gpt-5.2"), "gpt-5.2"
+        )
+        self.assertEqual(
+            orchestrator.command_model_name("opencode", "openai/gpt-5.2"),
+            "openai/gpt-5.2",
+        )
 
-    def test_legacy_direct_answer_files_do_not_affect_canonical_run_selection(self) -> None:
+    def test_legacy_direct_answer_files_do_not_affect_canonical_run_selection(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            legacy_dir = repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex"
+            legacy_dir = (
+                repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex"
+            )
             legacy_dir.mkdir(parents=True)
             (legacy_dir / "vendor_screen.md").write_text("legacy", encoding="utf-8")
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
 
-            plan = orchestrator.plan_answer_archive(repo_root, task, model="gpt-5.2", harness="codex")
+            plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
 
             self.assertEqual(plan.run_id, "r1")
             self.assertTrue((legacy_dir / "vendor_screen.md").is_file())
 
-    def test_clean_answer_dir_removes_previous_outputs_and_recreates_directory(self) -> None:
+    def test_clean_answer_dir_removes_previous_outputs_and_recreates_directory(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
             answer_dir = task.path / "answer"
             answer_dir.mkdir()
             (answer_dir / "old.md").write_text("old", encoding="utf-8")
@@ -556,13 +684,17 @@ class OrchestratorTest(unittest.TestCase):
     def test_archive_answer_files_copies_outputs_to_canonical_destination(self) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
             answer_dir = task.path / "answer"
             answer_dir.mkdir()
             (answer_dir / "source_resolution.md").write_text("source", encoding="utf-8")
             (answer_dir / "nested").mkdir()
             (answer_dir / "nested" / "notes.md").write_text("notes", encoding="utf-8")
-            plan = orchestrator.plan_answer_archive(repo_root, task, model="gpt-5.2", harness="codex")
+            plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
 
             result = orchestrator.archive_answer_files(plan)
 
@@ -570,43 +702,67 @@ class OrchestratorTest(unittest.TestCase):
             self.assertIsNone(result.incomplete_reason)
             self.assertTrue((plan.archive_dir / "source_resolution.md").is_file())
             self.assertTrue((plan.archive_dir / "nested" / "notes.md").is_file())
-            self.assertEqual((plan.archive_dir / "source_resolution.md").read_text(encoding="utf-8"), "source")
+            self.assertEqual(
+                (plan.archive_dir / "source_resolution.md").read_text(encoding="utf-8"),
+                "source",
+            )
 
-    def test_archive_answer_files_records_missing_or_empty_answers_as_incomplete(self) -> None:
+    def test_archive_answer_files_records_missing_or_empty_answers_as_incomplete(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
-            missing_plan = orchestrator.plan_answer_archive(repo_root, task, model="gpt-5.2", harness="codex")
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
+            missing_plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
 
             missing_result = orchestrator.archive_answer_files(missing_plan)
             (task.path / "answer").mkdir()
-            empty_plan = orchestrator.plan_answer_archive(repo_root, task, model="gpt-5.2", harness="codex")
+            empty_plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
             empty_result = orchestrator.archive_answer_files(empty_plan)
 
             self.assertEqual(missing_result.status, "incomplete")
-            self.assertEqual(missing_result.incomplete_reason, "missing answer directory")
+            self.assertEqual(
+                missing_result.incomplete_reason, "missing answer directory"
+            )
             self.assertEqual(empty_result.status, "incomplete")
             self.assertEqual(empty_result.incomplete_reason, "empty answer directory")
             self.assertFalse(missing_plan.archive_dir.exists())
             self.assertFalse(empty_plan.archive_dir.exists())
 
-    def test_archive_answer_files_refuses_to_overwrite_existing_run_by_default(self) -> None:
+    def test_archive_answer_files_refuses_to_overwrite_existing_run_by_default(
+        self,
+    ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            task = orchestrator.select_tasks(orchestrator.discover_tasks(repo_root), ["vendor_selection"])[0]
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
             answer_dir = task.path / "answer"
             answer_dir.mkdir()
             (answer_dir / "source_resolution.md").write_text("source", encoding="utf-8")
-            plan = orchestrator.plan_answer_archive(repo_root, task, model="gpt-5.2", harness="codex")
+            plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
             plan.archive_dir.mkdir(parents=True)
             (plan.archive_dir / "existing.md").write_text("existing", encoding="utf-8")
 
             with self.assertRaises(orchestrator.ArchiveError):
                 orchestrator.archive_answer_files(plan)
 
-            self.assertEqual((plan.archive_dir / "existing.md").read_text(encoding="utf-8"), "existing")
+            self.assertEqual(
+                (plan.archive_dir / "existing.md").read_text(encoding="utf-8"),
+                "existing",
+            )
 
-    def test_run_matrix_records_success_logs_metadata_summary_and_archives_answers(self) -> None:
+    def test_run_matrix_records_success_logs_metadata_summary_and_archives_answers(
+        self,
+    ) -> None:
         command = (
             sys.executable,
             "-c",
@@ -630,20 +786,32 @@ class OrchestratorTest(unittest.TestCase):
             self.assertEqual(result.status, "success")
             self.assertEqual(result.exit_code, 0)
             self.assertFalse(result.timed_out)
-            self.assertEqual(result.stdout_log_path.read_text(encoding="utf-8"), "done\n")
+            self.assertEqual(
+                result.stdout_log_path.read_text(encoding="utf-8"), "done\n"
+            )
             self.assertEqual(result.stderr_log_path.read_text(encoding="utf-8"), "")
-            self.assertEqual((plan.archive_dir / "out.md").read_text(encoding="utf-8"), "ok")
+            self.assertEqual(
+                (plan.archive_dir / "out.md").read_text(encoding="utf-8"), "ok"
+            )
             self.assertEqual(metadata["task_id"], "vendor_selection")
             self.assertEqual(metadata["harness"], "codex")
             self.assertEqual(metadata["model"], "gpt-5.2")
             self.assertEqual(metadata["track"], "smoke")
-            self.assertEqual(metadata["archive_path"], "answers/vendor_selection/gpt-5.2/codex/r1")
+            self.assertEqual(
+                metadata["archive_path"], "answers/vendor_selection/gpt-5.2/codex/r1"
+            )
             self.assertEqual(metadata["settings"], {})
             self.assertEqual(summary["status_counts"], {"success": 1})
             self.assertEqual(summary["total_attempted"], 1)
             self.assertEqual(summary["total_planned"], 1)
-            self.assertTrue((repo_root / "tasks" / "vendor_selection" / "answer").is_dir())
-            self.assertFalse((repo_root / "tasks" / "vendor_selection" / "answer" / "out.md").exists())
+            self.assertTrue(
+                (repo_root / "tasks" / "vendor_selection" / "answer").is_dir()
+            )
+            self.assertFalse(
+                (
+                    repo_root / "tasks" / "vendor_selection" / "answer" / "out.md"
+                ).exists()
+            )
 
     def test_run_matrix_reports_progress_counts_and_current_task(self) -> None:
         success = (
@@ -654,8 +822,12 @@ class OrchestratorTest(unittest.TestCase):
         failed = (sys.executable, "-c", "import sys; sys.exit(1)")
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            first = self.make_plan(repo_root, task_id="vendor_selection", command=success)
-            second = self.make_plan(repo_root, task_id="travel_reimbursement_audit", command=failed)
+            first = self.make_plan(
+                repo_root, task_id="vendor_selection", command=success
+            )
+            second = self.make_plan(
+                repo_root, task_id="travel_reimbursement_audit", command=failed
+            )
             progress: list[orchestrator.RunProgress] = []
 
             orchestrator.run_matrix(
@@ -712,7 +884,9 @@ class OrchestratorTest(unittest.TestCase):
                 timeout_seconds=5,
                 run_id="settings-run",
             )
-            metadata = json.loads(matrix.results[0].metadata_path.read_text(encoding="utf-8"))
+            metadata = json.loads(
+                matrix.results[0].metadata_path.read_text(encoding="utf-8")
+            )
 
             self.assertEqual(metadata["settings"]["sandbox"], "workspace-write")
             self.assertEqual(metadata["settings"]["approval_policy"], "never")
@@ -737,7 +911,11 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(result.incomplete_reason, "empty answer directory")
 
     def test_run_matrix_records_nonzero_exit_as_failure(self) -> None:
-        command = (sys.executable, "-c", "import sys; sys.stderr.write('bad\\n'); sys.exit(7)")
+        command = (
+            sys.executable,
+            "-c",
+            "import sys; sys.stderr.write('bad\\n'); sys.exit(7)",
+        )
         with self.make_repo() as repo:
             repo_root = Path(repo)
             plan = self.make_plan(repo_root, command=command)
@@ -754,7 +932,9 @@ class OrchestratorTest(unittest.TestCase):
             self.assertEqual(result.status, "failed")
             self.assertEqual(result.exit_code, 7)
             self.assertFalse(result.timed_out)
-            self.assertEqual(result.stderr_log_path.read_text(encoding="utf-8"), "bad\n")
+            self.assertEqual(
+                result.stderr_log_path.read_text(encoding="utf-8"), "bad\n"
+            )
 
     def test_run_matrix_records_timeout_distinctly(self) -> None:
         command = (sys.executable, "-c", "import time; time.sleep(2)")
@@ -784,8 +964,12 @@ class OrchestratorTest(unittest.TestCase):
         )
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            first = self.make_plan(repo_root, task_id="vendor_selection", command=failed)
-            second = self.make_plan(repo_root, task_id="travel_reimbursement_audit", command=success)
+            first = self.make_plan(
+                repo_root, task_id="vendor_selection", command=failed
+            )
+            second = self.make_plan(
+                repo_root, task_id="travel_reimbursement_audit", command=success
+            )
 
             matrix = orchestrator.run_matrix(
                 repo_root,
@@ -795,7 +979,9 @@ class OrchestratorTest(unittest.TestCase):
                 run_id="continue-run",
             )
 
-        self.assertEqual([result.status for result in matrix.results], ["failed", "success"])
+        self.assertEqual(
+            [result.status for result in matrix.results], ["failed", "success"]
+        )
         self.assertFalse(matrix.stopped_after_failure)
 
     def test_run_matrix_summary_groups_task_derived_tracks(self) -> None:
@@ -806,8 +992,12 @@ class OrchestratorTest(unittest.TestCase):
         )
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            smoke = self.make_plan(repo_root, task_id="vendor_selection", command=command)
-            long_context = self.make_plan(repo_root, task_id="clinic_rollout_plan", command=command)
+            smoke = self.make_plan(
+                repo_root, task_id="vendor_selection", command=command
+            )
+            long_context = self.make_plan(
+                repo_root, task_id="clinic_rollout_plan", command=command
+            )
 
             matrix = orchestrator.run_matrix(
                 repo_root,
@@ -818,9 +1008,13 @@ class OrchestratorTest(unittest.TestCase):
             )
             summary = json.loads(matrix.summary_path.read_text(encoding="utf-8"))
 
-        self.assertEqual([result.track for result in matrix.results], ["smoke", "long_context"])
+        self.assertEqual(
+            [result.track for result in matrix.results], ["smoke", "long_context"]
+        )
         self.assertEqual(summary["track_counts"], {"long_context": 1, "smoke": 1})
-        self.assertEqual(summary["planned_track_counts"], {"long_context": 1, "smoke": 1})
+        self.assertEqual(
+            summary["planned_track_counts"], {"long_context": 1, "smoke": 1}
+        )
 
     def test_run_matrix_can_stop_on_first_failure(self) -> None:
         failed = (sys.executable, "-c", "import sys; sys.exit(1)")
@@ -831,8 +1025,12 @@ class OrchestratorTest(unittest.TestCase):
         )
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            first = self.make_plan(repo_root, task_id="vendor_selection", command=failed)
-            second = self.make_plan(repo_root, task_id="travel_reimbursement_audit", command=success)
+            first = self.make_plan(
+                repo_root, task_id="vendor_selection", command=failed
+            )
+            second = self.make_plan(
+                repo_root, task_id="travel_reimbursement_audit", command=success
+            )
 
             matrix = orchestrator.run_matrix(
                 repo_root,
@@ -850,7 +1048,9 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(summary["total_attempted"], 1)
         self.assertEqual(summary["total_planned"], 2)
 
-    def test_run_matrix_captures_json_event_logs_when_stdout_is_json_lines(self) -> None:
+    def test_run_matrix_captures_json_event_logs_when_stdout_is_json_lines(
+        self,
+    ) -> None:
         command = (
             sys.executable,
             "-c",
@@ -872,7 +1072,10 @@ class OrchestratorTest(unittest.TestCase):
 
             self.assertIsNotNone(result.json_event_log_path)
             assert result.json_event_log_path is not None
-            self.assertEqual(result.json_event_log_path.read_text(encoding="utf-8"), '{"event":"done"}\n')
+            self.assertEqual(
+                result.json_event_log_path.read_text(encoding="utf-8"),
+                '{"event":"done"}\n',
+            )
 
     def test_run_matrix_records_and_cleans_task_local_scratch_files(self) -> None:
         command = (
@@ -900,8 +1103,12 @@ class OrchestratorTest(unittest.TestCase):
             self.assertFalse((task_dir / "scratch.md").exists())
             self.assertEqual(result.scratch_cleanup.created_paths, ("scratch.md",))
             self.assertEqual(result.scratch_cleanup.modified_paths, ("task.md",))
-            self.assertTrue((result.scratch_cleanup.record_dir / "created" / "scratch.md").is_file())
-            self.assertTrue((result.scratch_cleanup.record_dir / "modified" / "task.md").is_file())
+            self.assertTrue(
+                (result.scratch_cleanup.record_dir / "created" / "scratch.md").is_file()
+            )
+            self.assertTrue(
+                (result.scratch_cleanup.record_dir / "modified" / "task.md").is_file()
+            )
             self.assertEqual(
                 metadata["scratch_cleanup"]["policy"],
                 "restore_task_files_outside_answer_after_each_run",
