@@ -1,6 +1,10 @@
-# E07: Termino da Execucao
+# E07: Semantica de Termino
 
-## Diferencas cobertas
+## Diferenca sintetizada
+
+O BDI encerra a execucao com semantica interna de desejo atingido e estado final; Codex encerra o turno; OpenCode encerra o step, exigindo mais apoio da resposta final, artefatos ou status externo para concluir sucesso da tarefa.
+
+## Diferencas originais absorvidas
 
 | # | Diferenca no documento |
 |---:|---|
@@ -10,7 +14,7 @@
 
 ## O que mostra
 
-Mostra como cada harness representa o fim da execucao. No BDI, o termino inclui `DesireStatus.ACHIEVED`, `outcome: achieved`, ciclos, crencas e status dos desejos. No Codex, o fim aparece como resposta final e `turn.completed`. No OpenCode, aparece como resposta final e `step_finish` com `reason: stop`.
+Mostra como cada harness representa o fim da execucao. No BDI, o termino inclui `DesireStatus.ACHIEVED`, `outcome: achieved`, ciclos, crencas e status dos desejos; isso e uma semantica interna do runtime. No Codex, o fim aparece como resposta final e `turn.completed`. No OpenCode, aparece como resposta final e `step_finish` com `reason: stop`.
 
 ## Task
 
@@ -79,4 +83,4 @@ Task result: achieved; cycles=1/30; elapsed_seconds=67
 
 ## Takeaway
 
-BDI termina com semantica de objetivo atingido. Codex termina o turno. OpenCode termina o step com `reason: stop`. Nos dois ultimos, sucesso da tarefa depende mais da resposta final, artefatos ou status externo.
+BDI termina com semantica interna de desejo atingido. Codex termina o turno. OpenCode termina o step com `reason: stop`. Sucesso externo da tarefa ainda depende da resposta final, dos artefatos ou de avaliacao externa.

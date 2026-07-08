@@ -1,6 +1,10 @@
-# E02: Cronologia Operacional e Evidencia Bruta
+# E02: Trilha Operacional e Evidencia Bruta
 
-## Diferencas cobertas
+## Diferenca sintetizada
+
+Codex e OpenCode tornam a trilha operacional bruta mais direta de auditar, enquanto o BDI encapsula a acao dentro do ciclo deliberativo e a resume por estados semanticos.
+
+## Diferencas originais absorvidas
 
 | # | Diferenca no documento |
 |---:|---|
@@ -32,8 +36,12 @@ bdi.agent.run.completed run_index=7
   tool_calls: run_in_task(...)
   assistant: Done - inspected task files and created deliverables.
 
+...
+
 Plan Step 1 successful.
 Plan for desire 'desire_8113beaf' completed all Plan Steps
+
+...
 
 Desire 'desire_8113beaf' status updated to DesireStatus.ACHIEVED
 Desire 'desire_8113beaf' satisfied.
@@ -46,6 +54,8 @@ Reason: task files were inspected and required deliverables were created.
 {"type":"item.completed","item":{"type":"agent_message",
   "text":"I've resolved the candidate pool. I'm creating the answer/ deliverables now..."}}
 
+...
+
 {"type":"item.started","item":{"type":"file_change",
   "changes":[
     {"path":".../answer/access_resolution.md","kind":"add"},
@@ -54,6 +64,8 @@ Reason: task files were inspected and required deliverables were created.
   ],"status":"in_progress"}}
 
 {"type":"item.completed","item":{"type":"file_change","status":"completed"}}
+
+...
 
 {"type":"item.completed","item":{"type":"command_execution",
   "command":"sed -n '1,220p' answer/access_resolution.md",
@@ -68,11 +80,15 @@ Reason: task files were inspected and required deliverables were created.
 
 {"type":"step_finish","part":{"reason":"tool-calls"}}
 
+...
+
 {"type":"tool_use","part":{"tool":"read",
   "input":{"filePath":".../answer/candidate_screen.md"}}}
 
 {"type":"tool_use","part":{"tool":"read",
   "input":{"filePath":".../answer/staffing_assignment.md"}}}
+
+...
 
 {"type":"tool_use","part":{"tool":"todowrite",
   "input":{"todos":[{"status":"completed"},{"status":"completed"},{"status":"completed"}]}}}

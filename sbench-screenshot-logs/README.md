@@ -1,6 +1,6 @@
 # SBench Screenshot Log Snippets
 
-No files in `26-07-07/` were edited for these snippets.
+Comparative snippets used by the masters presentation in `26-07-08/Apresentação.md`.
 
 Selected execution:
 
@@ -10,22 +10,19 @@ Selected execution:
 
 Files:
 
-- `00_matriz_evidencias_comparativas.md`: matrix mapping the 19 differences to comparative screenshot examples.
-- `E01_estado_inicial_vs_transcript.md`: BDI state vs Codex transcript vs OpenCode steps/todos.
-- `E02_cronologia_operacional.md`: operational chronology and raw action evidence.
-- `E03_replanejamento.md`: replanning comparison across BDI/Codex/OpenCode.
-- `E04_plano_runtime_vs_checklist.md`: BDI runtime plan vs Codex narrative vs OpenCode checklist.
-- `E05_controle_de_escopo.md`: scope-control comparison.
-- `E06_sucesso_semantico_vs_operacional.md`: semantic success vs operational success.
-- `E07_termino_da_execucao.md`: terminal outcome comparison.
-- `E08_granularidade_do_custo.md`: cost granularity comparison.
-
-Earlier representative snippets:
-
-- `01_bdi_explicit_state.log`: BDI explicit beliefs, desires, intentions, and active plan.
-- `02_bdi_replanning.log`: BDI plan completed, desire not satisfied, then replanning.
-- `03_codex_operational_transcript.log`: Codex operational event transcript and final turn.
-- `04_opencode_tools_todos.log`: OpenCode typed tools, `todowrite`, step finish, and final stop.
-- `05_bdi_scope_beliefs.log`: BDI scope-control beliefs and final achieved state.
+- `00_catalogo_de_evidencias.md`: catalog mapping synthesized differences to comparative screenshot examples.
+- `E01_estado_e_compromisso_da_execucao.md`: explicit state/commitment vs transcript/checklist.
+- `E02_trilha_operacional_e_evidencia_bruta.md`: operational chronology and raw action evidence.
+- `E03_reparo_incompletude_e_replanejamento.md`: repair, incompleteness, and replanning comparison.
+- `E04_acompanhamento_de_progresso.md`: runtime plan vs narrative vs checklist progress.
+- `E05_retencao_de_contexto_do_prompt.md`: retained prompt/task context comparison.
+- `E06_criterio_de_sucesso_observado.md`: semantic success vs operational success.
+- `E07_semantica_de_termino.md`: terminal outcome semantics.
+- `E08_observabilidade_do_custo.md`: usage/token observability as cost proxy.
 
 Use these as screenshot sources instead of raw logs because raw logs contain long JSON lines and ANSI color codes.
+
+Snippet convention:
+
+- A standalone `...` line means omitted source lines or omitted events between non-contiguous excerpts.
+- Inline `...` inside a string or field means the field content was shortened for readability.

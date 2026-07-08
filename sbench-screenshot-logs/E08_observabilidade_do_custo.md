@@ -1,6 +1,10 @@
-# E08: Granularidade do Custo
+# E08: Observabilidade do Custo
 
-## Diferencas cobertas
+## Diferenca sintetizada
+
+A granularidade de uso observavel, usada aqui como proxy de custo, muda por harness: BDI expõe chamadas internas do ciclo deliberativo, Codex agrega uso no turno, e OpenCode expõe uso por step operacional.
+
+## Diferencas originais absorvidas
 
 | # | Diferenca no documento |
 |---:|---|
@@ -8,7 +12,7 @@
 
 ## O que mostra
 
-Mostra em que nivel cada harness torna custo observavel. No BDI, ha custos em chamadas internas do ciclo deliberativo e um agregado final. No Codex, o custo aparece agregado no `turn.completed`. No OpenCode, o custo aparece por `step_finish`, permitindo ver o custo por etapa operacional.
+Mostra em que nivel cada harness torna uso/tokens observavel. No BDI, ha uso em chamadas internas do ciclo deliberativo e um agregado final. No Codex, o uso aparece agregado no `turn.completed`. No OpenCode, o uso aparece por `step_finish`, permitindo ver o gasto por etapa operacional. Os logs desta amostra nao trazem custo monetario confiavel.
 
 ## Task
 
@@ -29,25 +33,37 @@ bdi.agent.run.completed run_index=2
   purpose: resolve belief name `task_file`
   usage: requests=1, tool_calls=0, total_tokens=347
 
+...
+
 bdi.agent.run.completed run_index=3
   purpose: resolve belief name `answer_folder`
   usage: requests=1, tool_calls=0, total_tokens=345
+
+...
 
 bdi.agent.run.completed run_index=4
   purpose: resolve belief name `filesystem_mcp_server_name`
   usage: requests=1, tool_calls=0, total_tokens=350
 
+...
+
 bdi.agent.run.completed run_index=5
   purpose: resolve belief name `terminal_tool_name`
   usage: requests=1, tool_calls=0, total_tokens=360
+
+...
 
 bdi.agent.run.completed run_index=8
   purpose: evaluate step success
   usage: per-call usage object in trace
 
+...
+
 bdi.agent.run.completed run_index=11
   purpose: assess desire satisfaction
   usage: per-call usage object in trace
+
+...
 
 bdi.run.completed
   requests: 14
@@ -72,11 +88,32 @@ bdi.run.completed
 {"type":"step_finish","part":{"reason":"tool-calls",
   "tokens":{"total":7299,"input":7174,"output":111,"reasoning":14}}}
 
+...
+
 {"type":"step_finish","part":{"reason":"tool-calls",
   "tokens":{"total":7507,"input":760,"output":91,"reasoning":0}}}
 
+...
+
+{"type":"step_finish","part":{"reason":"tool-calls",
+  "tokens":{"total":8108,"input":662,"output":269,"reasoning":9}}}
+
+...
+
 {"type":"step_finish","part":{"reason":"tool-calls",
   "tokens":{"total":11369,"input":2131,"output":1012,"reasoning":546}}}
+
+...
+
+{"type":"step_finish","part":{"reason":"tool-calls",
+  "tokens":{"total":11626,"input":1700,"output":185,"reasoning":13}}}
+
+...
+
+{"type":"step_finish","part":{"reason":"tool-calls",
+  "tokens":{"total":12770,"input":1401,"output":84,"reasoning":21}}}
+
+...
 
 {"type":"step_finish","part":{"reason":"stop",
   "tokens":{"total":12960,"input":598,"output":74,"reasoning":0}}}
@@ -84,4 +121,4 @@ bdi.run.completed
 
 ## Takeaway
 
-BDI permite atribuir custo a partes do ciclo deliberativo. Codex apresenta uso agregado por turno. OpenCode apresenta custo por step operacional.
+BDI permite atribuir uso/tokens a partes do ciclo deliberativo. Codex apresenta uso agregado por turno. OpenCode apresenta uso por step operacional. Custo monetario precisa ser calculado separadamente.

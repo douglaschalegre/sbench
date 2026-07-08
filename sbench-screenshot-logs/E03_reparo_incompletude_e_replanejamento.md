@@ -1,6 +1,10 @@
-# E03: Replanejamento
+# E03: Reparo, Incompletude e Replanejamento
 
-## Diferencas cobertas
+## Diferenca sintetizada
+
+O BDI torna explicita a diferenca entre executar um plano e satisfazer o objetivo, permitindo observar incompletude e replanejamento; Codex e OpenCode deixam esse reparo mais dependente da sequencia operacional.
+
+## Diferencas originais absorvidas
 
 | # | Diferenca no documento |
 |---:|---|
@@ -42,6 +46,8 @@ returning to PENDING for replanning.
 
 Reason: deliverables in answer/ were not created or verified.
 
+...
+
 Cycle 2/30
 Generated 1 high-level intentions.
 Desire 'desire_a35bca05' status updated to DesireStatus.ACTIVE
@@ -57,8 +63,12 @@ Plan active
   "command":"sed -n '1,220p' staged_update/05_facility_update_2026-06-10.md",
   "aggregated_output":"Bay Workshop is closed... Delta Annex has been released..."}}
 
+...
+
 {"type":"item.completed","item":{"type":"agent_message",
   "text":"I've resolved the initial and updated room logic. I'm creating the answer/ packet now..."}}
+
+...
 
 {"type":"item.completed","item":{"type":"file_change",
   "changes":[
@@ -75,12 +85,16 @@ Plan active
   "input":{"filePath":".../staged_update/05_facility_update_2026-06-10.md"},
   "output":"Bay Workshop is closed... Delta Annex has been released..."}}
 
+...
+
 {"type":"tool_use","part":{"tool":"todowrite",
   "input":{"todos":[
     {"content":"Derive initial valid room assignments...","status":"in_progress"},
     {"content":"Apply staged facility update and identify preserved vs replaced assignments","status":"pending"},
     {"content":"Create answer/ deliverables...","status":"pending"}
   ]}}}
+
+...
 
 {"type":"tool_use","part":{"tool":"apply_patch",
   "input":{"patchText":"*** Add File: .../answer/update_response.md\n..."}}}

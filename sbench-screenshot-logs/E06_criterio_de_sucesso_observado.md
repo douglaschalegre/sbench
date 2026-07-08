@@ -1,6 +1,10 @@
-# E06: Sucesso Semantico vs Sucesso Operacional
+# E06: Criterio de Sucesso Observado
 
-## Diferencas cobertas
+## Diferenca sintetizada
+
+O BDI registra sucesso como julgamento semantico interno sobre passo e desejo, enquanto Codex e OpenCode registram principalmente sinais operacionais de sucesso em comandos, ferramentas, arquivos e checklist.
+
+## Diferencas originais absorvidas
 
 | # | Diferenca no documento |
 |---:|---|
@@ -9,7 +13,7 @@
 
 ## O que mostra
 
-Mostra a diferenca entre sucesso semantico e sucesso operacional. No BDI, ha avaliacao explicita sobre se o passo e o desejo foram satisfeitos. No Codex, o sucesso aparece principalmente como comandos com `exit_code: 0`, mudancas de arquivo e verificacoes. No OpenCode, aparece como ferramentas concluidas, steps finalizados e `todos` completos.
+Mostra a diferenca entre julgamento semantico interno e sinais operacionais de sucesso no trace. No BDI, ha avaliacao explicita sobre se o passo e o desejo foram satisfeitos. No Codex, o sucesso aparece principalmente como comandos com `exit_code: 0`, mudancas de arquivo e verificacoes. No OpenCode, aparece como ferramentas concluidas, steps finalizados e `todos` completos. Nenhum desses sinais substitui a validacao externa do benchmark.
 
 ## Task
 
@@ -32,7 +36,11 @@ assistant: {"success": true,
   "reason": "The step reports that it inspected the task files
   and created the required deliverables..."}
 
+...
+
 Plan Step 1 successful.
+
+...
 
 Assess whether the Desire is satisfied after a completed Intention.
 
@@ -48,13 +56,19 @@ Reason: task files were inspected and required deliverables were created.
   "command":"sed -n '1,260p' availability_notes.md",
   "exit_code":0,"status":"completed"}
 
+...
+
 {"type":"command_execution",
   "command":"sed -n '1,220p' output_contract.md",
   "exit_code":0,"status":"completed"}
 
+...
+
 {"type":"file_change",
   "changes":[{"path":".../answer/access_resolution.md","kind":"add"}],
   "status":"completed"}
+
+...
 
 {"type":"command_execution",
   "command":"find answer -maxdepth 1 -type f | sort",
@@ -70,6 +84,8 @@ Reason: task files were inspected and required deliverables were created.
 
 {"type":"step_finish","part":{"reason":"tool-calls"}}
 
+...
+
 {"type":"tool_use","part":{"tool":"todowrite",
   "state":{"status":"completed"},
   "input":{"todos":[
@@ -81,4 +97,4 @@ Reason: task files were inspected and required deliverables were created.
 
 ## Takeaway
 
-BDI registra julgamento semantico sobre passo e desejo. Codex e OpenCode registram sucesso operacional de comandos, ferramentas, arquivos e checklist.
+BDI registra julgamento semantico interno sobre passo e desejo. Codex e OpenCode registram sinais operacionais de sucesso em comandos, ferramentas, arquivos e checklist.

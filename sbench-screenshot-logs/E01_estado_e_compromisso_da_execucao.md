@@ -1,6 +1,10 @@
-# E01: Estado Inicial vs Transcript
+# E01: Estado e Compromisso da Execucao
 
-## Diferencas cobertas
+## Diferenca sintetizada
+
+O BDI representa explicitamente o estado e o compromisso ativo da execucao, enquanto Codex e OpenCode representam esse compromisso de forma operacional, por transcript, mensagens, eventos ou checklist.
+
+## Diferencas originais absorvidas
 
 | # | Diferenca no documento |
 |---:|---|
@@ -36,6 +40,8 @@ Intentions: 0 items
 No current intentions, but active/pending desires exist.
 Generating intentions...
 
+...
+
 Generated 1 high-level intentions.
 Desire 'desire_8113beaf' status updated to DesireStatus.ACTIVE
 Desires: 1 items | Desire 'desire_8113beaf' active
@@ -56,8 +62,12 @@ Intentions: 1 items |
 {"type":"item.completed","item":{"type":"agent_message",
   "text":"I'm reading the task files in this workspace first..."}}
 
+...
+
 {"type":"item.started","item":{"type":"command_execution",
   "command":"/bin/zsh -lc pwd","status":"in_progress"}}
+
+...
 
 {"type":"item.completed","item":{"type":"command_execution",
   "command":"/bin/zsh -lc 'rg --files'",

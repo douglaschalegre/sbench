@@ -1,6 +1,10 @@
-# E04: Plano do Runtime vs Checklist de Trabalho
+# E04: Acompanhamento de Progresso
 
-## Diferencas cobertas
+## Diferenca sintetizada
+
+O acompanhamento de progresso muda conforme o harness: BDI acompanha plano e intencao no runtime, OpenCode acompanha uma checklist operacional, e Codex acompanha progresso por narrativa e eventos.
+
+## Diferencas originais absorvidas
 
 | # | Diferenca no documento |
 |---:|---|
@@ -36,6 +40,8 @@ Intentions: 1 items |
   Plan active
   Plan Step 1/1: Create and verify...
 
+...
+
 Plan Step 1 successful.
 Plan for desire 'desire_a35bca05' completed all Plan Steps
 Intentions: 1 items | ... Plan completed
@@ -47,11 +53,15 @@ Intentions: 1 items | ... Plan completed
 {"type":"agent_message",
   "text":"I've resolved the initial and updated room logic. I'm creating the answer/ packet now..."}
 
+...
+
 {"type":"file_change","changes":[
   {"path":".../answer/initial_room_plan.md","kind":"add"},
   {"path":".../answer/update_response.md","kind":"add"},
   {"path":".../answer/final_room_plan.md","kind":"add"}
 ]}
+
+...
 
 {"type":"agent_message",
   "text":"The review packet is written. I'm doing a quick verification pass..."}
@@ -68,6 +78,8 @@ Intentions: 1 items | ... Plan completed
   {"content":"Create answer/ deliverables with initial, update, and final room plans",
    "status":"pending"}
 ]}}
+
+...
 
 {"tool":"todowrite","input":{"todos":[
   {"content":"Derive initial valid room assignments and budget from planning files",
