@@ -5,6 +5,7 @@ import json
 import re
 import sqlite3
 import sys
+from contextlib import closing
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -176,20 +177,21 @@ def ensure_execution_columns(connection: sqlite3.Connection) -> None:
 
 def import_run_records(repo_root: Path, database_path: Path | str) -> ImportResult:
     repo_root = repo_root.resolve()
-    with sqlite3.connect(database_path) as connection:
-        create_schema(connection)
-        automatic_evaluator = load_automatic_evaluator(repo_root)
-        count = 0
-        warnings = 0
-        for metadata_path in discover_metadata_files(repo_root):
-            context = load_import_context(repo_root, metadata_path)
-            row = build_execution_row(context, automatic_evaluator)
-            upsert_execution(connection, row)
-            replace_items(connection, row["execution_id"], transaction_items(row))
-            replace_warnings(connection, row["execution_id"], context.warnings)
-            count += 1
-            warnings += len(context.warnings)
-        return ImportResult(execution_count=count, warning_count=warnings)
+    with closing(sqlite3.connect(database_path)) as connection:
+        with connection:
+            create_schema(connection)
+            automatic_evaluator = load_automatic_evaluator(repo_root)
+            count = 0
+            warnings = 0
+            for metadata_path in discover_metadata_files(repo_root):
+                context = load_import_context(repo_root, metadata_path)
+                row = build_execution_row(context, automatic_evaluator)
+                upsert_execution(connection, row)
+                replace_items(connection, row["execution_id"], transaction_items(row))
+                replace_warnings(connection, row["execution_id"], context.warnings)
+                count += 1
+                warnings += len(context.warnings)
+            return ImportResult(execution_count=count, warning_count=warnings)
 
 
 def discover_metadata_files(repo_root: Path) -> list[Path]:

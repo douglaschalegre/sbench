@@ -4,6 +4,7 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from sbench import results_importer
@@ -219,15 +220,16 @@ class ResultsImporterTest(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory() as repo:
             database_path = Path(repo) / "results.sqlite"
-            with sqlite3.connect(database_path) as connection:
-                connection.execute(
-                    "CREATE TABLE executions (execution_id TEXT PRIMARY KEY)"
-                )
-                results_importer.create_schema(connection)
-                columns = {
-                    row[1]
-                    for row in connection.execute("PRAGMA table_info(executions)")
-                }
+            with closing(sqlite3.connect(database_path)) as connection:
+                with connection:
+                    connection.execute(
+                        "CREATE TABLE executions (execution_id TEXT PRIMARY KEY)"
+                    )
+                    results_importer.create_schema(connection)
+                    columns = {
+                        row[1]
+                        for row in connection.execute("PRAGMA table_info(executions)")
+                    }
 
         self.assertIn("automatic_evaluation_status", columns)
         self.assertIn("automatic_evaluation_issue_count", columns)
@@ -380,11 +382,12 @@ class ResultsImporterTest(unittest.TestCase):
             )
             results_importer.import_run_records(repo_root, database_path)
             execution = self.rows(database_path, "executions")[0]["execution_id"]
-            with sqlite3.connect(database_path) as connection:
-                connection.execute(
-                    "INSERT INTO execution_items (execution_id, item) VALUES (?, ?)",
-                    (execution, "stale:old"),
-                )
+            with closing(sqlite3.connect(database_path)) as connection:
+                with connection:
+                    connection.execute(
+                        "INSERT INTO execution_items (execution_id, item) VALUES (?, ?)",
+                        (execution, "stale:old"),
+                    )
             results_importer.import_run_records(repo_root, database_path)
             items = self.item_names(database_path)
 
