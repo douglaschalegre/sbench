@@ -132,6 +132,19 @@ class OrchestratorTest(unittest.TestCase):
         self.assertTrue(args.progress_preview)
         self.assertIsNone(args.model)
 
+    def test_parse_args_accepts_voluntas_repo_alias(self) -> None:
+        args = orchestrator.parse_args(
+            [
+                "--dry-run",
+                "--model",
+                "gpt-5.4",
+                "--voluntas-repo",
+                "/tmp/voluntas",
+            ]
+        )
+
+        self.assertEqual(args.bdi_repo, Path("/tmp/voluntas"))
+
     def test_parse_args_accepts_import_results_without_model(self) -> None:
         args = orchestrator.parse_args(
             ["--import-results", "--results-db", "custom.sqlite"]
@@ -457,14 +470,14 @@ class OrchestratorTest(unittest.TestCase):
                 bdi_repo=bdi_repo,
             )
 
-        self.assertEqual(invocation.command[0:3], ("uv", "run", "python"))
-        self.assertEqual(invocation.command[3], str(bdi_repo.resolve() / "toy.py"))
+        self.assertEqual(invocation.command[0:4], ("uv", "run", "python", "-u"))
+        self.assertEqual(invocation.command[4], str(bdi_repo.resolve() / "toy.py"))
         self.assertIn("--sbench-root", invocation.command)
         self.assertIn(str(repo_root), invocation.command)
         self.assertIn("--tasks", invocation.command)
         self.assertIn("vendor_selection", invocation.command)
         self.assertIn("--model", invocation.command)
-        self.assertIn("gpt-5.2", invocation.command)
+        self.assertIn("chatgpt/gpt-5.2", invocation.command)
         self.assertNotIn("openai/gpt-5.2", invocation.command)
         self.assertNotIn("--output-dir", invocation.command)
         self.assertIn("--command-timeout-seconds", invocation.command)
@@ -473,7 +486,9 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(invocation.working_dir, bdi_repo.resolve())
         self.assertEqual(invocation.settings["binary"], "uv")
         self.assertEqual(invocation.settings["bdi_repo"], str(bdi_repo.resolve()))
-        self.assertEqual(invocation.settings["command_model"], "gpt-5.2")
+        self.assertEqual(
+            invocation.settings["command_model"], "chatgpt/gpt-5.2"
+        )
         self.assertEqual(
             invocation.settings["toy_runner"], str(bdi_repo.resolve() / "toy.py")
         )
@@ -630,12 +645,13 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(plan.model_path, "openai__gpt-5.5")
         self.assertIn("openai__gpt-5.5", str(plan.archive_dir))
 
-    def test_command_model_name_normalizes_codex_style_harnesses_only(self) -> None:
+    def test_command_model_name_uses_each_harness_provider_alias(self) -> None:
         self.assertEqual(
             orchestrator.command_model_name("codex", "openai/gpt-5.2"), "gpt-5.2"
         )
         self.assertEqual(
-            orchestrator.command_model_name("bdi", "openai-codex/gpt-5.2"), "gpt-5.2"
+            orchestrator.command_model_name("bdi", "openai-codex/gpt-5.2"),
+            "chatgpt/gpt-5.2",
         )
         self.assertEqual(
             orchestrator.command_model_name("opencode", "openai/gpt-5.2"),

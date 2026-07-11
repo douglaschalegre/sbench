@@ -45,7 +45,11 @@ def select_harnesses(requested_values: Sequence[str] | None) -> list[str]:
 
 
 def command_model_name(harness: str, model: str) -> str:
-    if harness in {"bdi", "codex"}:
+    if harness == "bdi":
+        for prefix in ("openai/", "openai-codex/"):
+            if model.startswith(prefix):
+                return f"chatgpt/{model.removeprefix(prefix)}"
+    if harness == "codex":
         for prefix in ("openai/", "openai-codex/"):
             if model.startswith(prefix):
                 return model.removeprefix(prefix)
@@ -145,6 +149,7 @@ def build_harness_invocation(
                 "uv",
                 "run",
                 "python",
+                "-u",
                 str(toy_runner),
                 "--sbench-root",
                 str(repo_root),
@@ -161,7 +166,7 @@ def build_harness_invocation(
                 "binary": "uv",
                 "command_model": command_model,
                 "command_timeout_seconds": int(timeout_seconds),
-                "delegation": "pydantic-ai-bdi toy runner",
+                "delegation": "Voluntas SBench toy runner",
                 "task_directory_scope": task_dir_arg,
                 "toy_runner": str(toy_runner),
             },

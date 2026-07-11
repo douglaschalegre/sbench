@@ -72,10 +72,32 @@ Preview the Textual progress UI with simulated task updates only:
 uv run sbench --progress-preview
 ```
 
-Run the benchmark through uv so it uses the synced project environment:
+Run the benchmark through uv so it uses the synced project environment. For
+the BDI harness, SBench maps canonical `openai/...` model names to the
+`chatgpt/...` aliases exposed by the local Voluntas LiteLLM proxy:
 
 ```sh
-uv run sbench --run --model openai/gpt-5.4
+uv run sbench --run --model openai/gpt-5.4 --harness bdi
 ```
+
+The Voluntas runner loads `LITELLM_BASE_URL`, `LITELLM_API_KEY`, and
+`LITELLM_MODEL` from its own environment or `.env`. SBench owns these settings
+and the local proxy configuration; start the proxy from this repository with:
+
+```sh
+uv run --no-project --env-file .env litellm --config config.yaml --port 4000
+```
+
+This invokes the globally installed `litellm` executable; `uv` only loads the
+environment file and does not install another LiteLLM copy. The separate
+`litellm-proxy` executable is the management client used for commands such as
+`litellm-proxy login`. On first use, LiteLLM prompts for ChatGPT OAuth
+authentication and stores the result in its local user configuration. The proxy exposes only
+`chatgpt/gpt-5.4` and requires the `LITELLM_MASTER_KEY` from `.env`; replace the
+example key before exposing the proxy beyond localhost. LiteLLM uses the
+`DATABASE_URL` from the same file for persistent login and key management. Its
+`LITELLM_SALT_KEY` encrypts database credentials and must not change after the
+database is initialized. Use `--voluntas-repo` to select a non-default
+checkout; the older `--bdi-repo` spelling remains available for compatibility.
 
 Interactive `--run` executions show a Textual progress UI when stdout is a terminal. Textual is managed by uv through `pyproject.toml` and `uv.lock`.

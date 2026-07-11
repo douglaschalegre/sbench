@@ -149,10 +149,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--run-id", help="Optional run record ID. Defaults to a UTC timestamp.")
     parser.add_argument(
+        "--voluntas-repo",
         "--bdi-repo",
+        dest="bdi_repo",
         type=Path,
         default=default_bdi_repo(),
-        help="Path to the pydantic-ai-bdi repository for BDI harness runs.",
+        help="Path to the Voluntas repository for BDI harness runs.",
     )
     parser.add_argument(
         "--capture-json-events",
