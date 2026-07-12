@@ -388,7 +388,6 @@ def build_run_plans(
     harnesses: Sequence[str],
     model: str,
     timeout_seconds: int,
-    bdi_repo: Path | None = None,
     run_id: str | None = None,
 ) -> list[RunPlan]:
     plans: list[RunPlan] = []
@@ -402,7 +401,6 @@ def build_run_plans(
                 timeout_seconds=timeout_seconds,
                 task_dir=task.path,
                 repo_root=repo_root,
-                bdi_repo=bdi_repo,
             )
             plans.append(
                 RunPlan(

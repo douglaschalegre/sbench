@@ -74,13 +74,13 @@ uv run sbench --progress-preview
 
 Run the benchmark through uv so it uses the synced project environment. For
 the BDI harness, SBench maps canonical `openai/...` model names to the
-`chatgpt/...` aliases exposed by the local Voluntas LiteLLM proxy:
+`chatgpt/...` aliases exposed by the local LiteLLM proxy:
 
 ```sh
 uv run sbench --run --model openai/gpt-5.4 --harness bdi
 ```
 
-The Voluntas runner loads `LITELLM_BASE_URL`, `LITELLM_API_KEY`, and
+The BDI runner loads `LITELLM_BASE_URL`, `LITELLM_API_KEY`, and
 `LITELLM_MODEL` from its own environment or `.env`. SBench owns these settings
 and the local proxy configuration; start the proxy from this repository with:
 
@@ -97,7 +97,22 @@ models configured in `litellm-config.yml` and requires the `LITELLM_MASTER_KEY` 
 example key before exposing the proxy beyond localhost. LiteLLM uses the
 `DATABASE_URL` from the same file for persistent login and key management. Its
 `LITELLM_SALT_KEY` encrypts database credentials and must not change after the
-database is initialized. Use `--voluntas-repo` to select a non-defaults
-checkout; the older `--bdi-repo` spelling remains available for compatibility.
+database is initialized. The BDI orchestrator uses the runner packaged by
+SBench and does not require an external checkout.
+
+Before executing a BDI matrix entry, the orchestrator checks the LiteLLM
+health endpoint at `LITELLM_BASE_URL/health/liveliness`. If the proxy is not
+reachable, the run stops before starting any harness and instructs you to run
+`make litellm`.
+
+The internal BDI runner can also be invoked directly for one task:
+
+```sh
+uv run sbench-bdi \
+  --sbench-root . \
+  --tasks vendor_selection \
+  --model chatgpt/gpt-5.4 \
+  --quiet
+```
 
 Interactive `--run` executions show a Textual progress UI when stdout is a terminal. Textual is managed by uv through `pyproject.toml` and `uv.lock`.

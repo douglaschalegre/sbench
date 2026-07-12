@@ -31,13 +31,10 @@ from ..harnesses import (
     build_harness_invocation as build_harness_invocation,
     command_model_name as command_model_name,
     find_missing_cli_binaries as find_missing_cli_binaries,
-    find_missing_repository_paths as find_missing_repository_paths,
     render_missing_cli_binaries as render_missing_cli_binaries,
-    render_missing_repository_paths as render_missing_repository_paths,
     select_harnesses as select_harnesses,
 )
 from ..paths import (
-    default_bdi_repo as default_bdi_repo,
     default_repo_root as default_repo_root,
     display_path as display_path,
 )

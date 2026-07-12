@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Sequence
 
-from .paths import default_bdi_repo, display_path
+from .paths import display_path
 from .tasks import SelectionError, split_requested_values
 
 
@@ -64,7 +64,6 @@ def build_command_shape(
     timeout_seconds: int,
     task_dir: Path,
     repo_root: Path,
-    bdi_repo: Path | None = None,
 ) -> tuple[str, ...]:
     return build_harness_invocation(
         harness,
@@ -72,7 +71,6 @@ def build_command_shape(
         timeout_seconds=timeout_seconds,
         task_dir=task_dir,
         repo_root=repo_root,
-        bdi_repo=bdi_repo,
     ).command
 
 
@@ -83,7 +81,6 @@ def build_harness_invocation(
     timeout_seconds: int | float,
     task_dir: Path,
     repo_root: Path,
-    bdi_repo: Path | None = None,
 ) -> HarnessInvocation:
     task_dir_arg = display_path(task_dir, repo_root)
     command_model = command_model_name(harness, model)
@@ -149,15 +146,11 @@ def build_harness_invocation(
         )
 
     if harness == "bdi":
-        actual_bdi_repo = (bdi_repo or default_bdi_repo()).resolve()
-        toy_runner = actual_bdi_repo / "toy.py"
         return HarnessInvocation(
             command=(
                 "uv",
                 "run",
-                "python",
-                "-u",
-                str(toy_runner),
+                "sbench-bdi",
                 "--sbench-root",
                 str(repo_root),
                 "--tasks",
@@ -169,16 +162,15 @@ def build_harness_invocation(
                 "--quiet",
             ),
             settings={
-                "bdi_repo": str(actual_bdi_repo),
                 "binary": "uv",
                 "command_model": command_model,
                 "command_timeout_seconds": int(timeout_seconds),
-                "delegation": "Voluntas SBench toy runner",
+                "delegation": "SBench BDI runner",
                 "reasoning_effort": DEFAULT_REASONING_EFFORT,
+                "runner": "sbench-bdi",
                 "task_directory_scope": task_dir_arg,
-                "toy_runner": str(toy_runner),
             },
-            working_dir=actual_bdi_repo,
+            working_dir=repo_root,
         )
 
     raise SelectionError(f"unsupported harness: {harness}")
@@ -202,20 +194,4 @@ def render_missing_cli_binaries(missing: dict[str, str]) -> str:
     lines = ["Missing required CLI binaries:"]
     for harness, binary in sorted(missing.items()):
         lines.append(f"- {harness}: {binary}")
-    return "\n".join(lines) + "\n"
-
-
-def find_missing_repository_paths(harnesses: Sequence[str], *, bdi_repo: Path) -> dict[str, str]:
-    if "bdi" not in harnesses:
-        return {}
-    toy_runner = bdi_repo / "toy.py"
-    if bdi_repo.is_dir() and toy_runner.is_file():
-        return {}
-    return {"bdi": str(bdi_repo)}
-
-
-def render_missing_repository_paths(missing: dict[str, str]) -> str:
-    lines = ["Missing required repository paths:"]
-    for harness, path in sorted(missing.items()):
-        lines.append(f"- {harness}: {path}")
     return "\n".join(lines) + "\n"

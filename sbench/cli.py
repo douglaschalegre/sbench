@@ -10,12 +10,11 @@ from .answers import path_safe_model_name
 from .harnesses import (
     SUPPORTED_HARNESSES,
     find_missing_cli_binaries,
-    find_missing_repository_paths,
     render_missing_cli_binaries,
-    render_missing_repository_paths,
     select_harnesses,
 )
-from .paths import default_bdi_repo, default_repo_root, display_path
+from .litellm import check_litellm_proxy, render_litellm_unavailable
+from .paths import default_repo_root, display_path
 from .progress import (
     BenchmarkRunCancelledError,
     TextualUnavailableError,
@@ -153,14 +152,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--run-id", help="Optional run record ID. Defaults to a UTC timestamp.")
     parser.add_argument(
-        "--voluntas-repo",
-        "--bdi-repo",
-        dest="bdi_repo",
-        type=Path,
-        default=default_bdi_repo(),
-        help="Path to the Voluntas repository for BDI harness runs.",
-    )
-    parser.add_argument(
         "--capture-json-events",
         action="store_true",
         help="Write stdout to events.jsonl when it is valid JSON Lines output.",
@@ -241,7 +232,6 @@ def main(
         harnesses=selected_harnesses,
         model=model,
         timeout_seconds=args.timeout,
-        bdi_repo=args.bdi_repo.resolve(),
         run_id=actual_run_id,
     )
     if args.dry_run:
@@ -255,18 +245,16 @@ def main(
         )
         return 0
 
-    missing_repositories = find_missing_repository_paths(
-        selected_harnesses,
-        bdi_repo=args.bdi_repo.resolve(),
-    )
-    if missing_repositories:
-        error_output.write(render_missing_repository_paths(missing_repositories))
-        return 2
-
     missing = find_missing_cli_binaries(selected_harnesses)
     if missing:
         error_output.write(render_missing_cli_binaries(missing))
         return 2
+
+    if "bdi" in selected_harnesses:
+        litellm_health = check_litellm_proxy(repo_root=repo_root)
+        if not litellm_health.available:
+            error_output.write(render_litellm_unavailable(litellm_health))
+            return 2
 
     if should_show_progress(output):
         try:

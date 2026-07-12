@@ -5,6 +5,7 @@ import json
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 from pathlib import Path
 
@@ -131,19 +132,6 @@ class OrchestratorTest(unittest.TestCase):
 
         self.assertTrue(args.progress_preview)
         self.assertIsNone(args.model)
-
-    def test_parse_args_accepts_voluntas_repo_alias(self) -> None:
-        args = orchestrator.parse_args(
-            [
-                "--dry-run",
-                "--model",
-                "gpt-5.4",
-                "--voluntas-repo",
-                "/tmp/voluntas",
-            ]
-        )
-
-        self.assertEqual(args.bdi_repo, Path("/tmp/voluntas"))
 
     def test_parse_args_accepts_import_results_without_model(self) -> None:
         args = orchestrator.parse_args(
@@ -465,14 +453,9 @@ class OrchestratorTest(unittest.TestCase):
             self.assertEqual(stdout.getvalue(), "")
             self.assertEqual(stderr.getvalue(), "Benchmark run cancelled.\n")
 
-    def test_bdi_invocation_points_to_configured_repo_toy_runner_and_sbench_task(
-        self,
-    ) -> None:
+    def test_bdi_invocation_uses_the_internal_runner_and_task(self) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            bdi_repo = repo_root / "external" / "pydantic-ai-bdi"
-            bdi_repo.mkdir(parents=True)
-            (bdi_repo / "toy.py").write_text("", encoding="utf-8")
             task = orchestrator.select_tasks(
                 orchestrator.discover_tasks(repo_root), ["vendor_selection"]
             )[0]
@@ -483,11 +466,9 @@ class OrchestratorTest(unittest.TestCase):
                 timeout_seconds=600,
                 task_dir=task.path,
                 repo_root=repo_root,
-                bdi_repo=bdi_repo,
             )
 
-        self.assertEqual(invocation.command[0:4], ("uv", "run", "python", "-u"))
-        self.assertEqual(invocation.command[4], str(bdi_repo.resolve() / "toy.py"))
+        self.assertEqual(invocation.command[0:3], ("uv", "run", "sbench-bdi"))
         self.assertIn("--sbench-root", invocation.command)
         self.assertIn(str(repo_root), invocation.command)
         self.assertIn("--tasks", invocation.command)
@@ -499,28 +480,22 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIn("--command-timeout-seconds", invocation.command)
         self.assertIn("600", invocation.command)
         self.assertIn("--quiet", invocation.command)
-        self.assertEqual(invocation.working_dir, bdi_repo.resolve())
+        self.assertEqual(invocation.working_dir, repo_root)
         self.assertEqual(invocation.settings["binary"], "uv")
-        self.assertEqual(invocation.settings["bdi_repo"], str(bdi_repo.resolve()))
         self.assertEqual(invocation.settings["reasoning_effort"], "medium")
         self.assertEqual(
             invocation.settings["command_model"], "chatgpt/gpt-5.2"
         )
-        self.assertEqual(
-            invocation.settings["toy_runner"], str(bdi_repo.resolve() / "toy.py")
-        )
+        self.assertEqual(invocation.settings["runner"], "sbench-bdi")
         self.assertEqual(
             invocation.settings["task_directory_scope"], "tasks/vendor_selection"
         )
 
-    def test_bdi_run_plan_uses_bdi_working_dir_and_canonical_archive_destination(
+    def test_bdi_run_plan_uses_sbench_working_dir_and_canonical_archive_destination(
         self,
     ) -> None:
         with self.make_repo() as repo:
             repo_root = Path(repo)
-            bdi_repo = repo_root / "external" / "pydantic-ai-bdi"
-            bdi_repo.mkdir(parents=True)
-            (bdi_repo / "toy.py").write_text("", encoding="utf-8")
             task = orchestrator.select_tasks(
                 orchestrator.discover_tasks(repo_root), ["vendor_selection"]
             )
@@ -531,64 +506,49 @@ class OrchestratorTest(unittest.TestCase):
                 harnesses=["bdi"],
                 model="gpt-5.2",
                 timeout_seconds=600,
-                bdi_repo=bdi_repo,
                 run_id="bdi-run",
             )
             plan = plans[0]
 
-        self.assertEqual(plan.working_dir, bdi_repo.resolve())
+        self.assertEqual(plan.working_dir, repo_root)
         self.assertEqual(
             plan.archive_dir,
             repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "bdi" / "r1",
         )
         self.assertNotIn("output_dir", plan.settings)
 
-    def test_bdi_missing_repository_path_detection_requires_toy_runner(self) -> None:
-        with self.make_repo() as repo:
-            repo_root = Path(repo)
-            missing = orchestrator.find_missing_repository_paths(
-                ["bdi"],
-                bdi_repo=repo_root / "missing-bdi",
-            )
-            no_toy_repo = repo_root / "bdi-no-toy"
-            no_toy_repo.mkdir()
-            no_toy = orchestrator.find_missing_repository_paths(
-                ["bdi"], bdi_repo=no_toy_repo
-            )
-            valid_repo = repo_root / "valid-bdi"
-            valid_repo.mkdir()
-            (valid_repo / "toy.py").write_text("", encoding="utf-8")
-            valid = orchestrator.find_missing_repository_paths(
-                ["bdi"], bdi_repo=valid_repo
-            )
-
-        self.assertEqual(missing, {"bdi": str(Path(repo) / "missing-bdi")})
-        self.assertEqual(no_toy, {"bdi": str(Path(repo) / "bdi-no-toy")})
-        self.assertEqual(valid, {})
-
-    def test_run_mode_preflight_reports_missing_bdi_repo_before_running(self) -> None:
+    def test_bdi_run_mode_requires_litellm_proxy_before_running(self) -> None:
         with self.make_repo() as repo:
             stdout = io.StringIO()
             stderr = io.StringIO()
-            exit_code = orchestrator.main(
-                [
-                    "--repo-root",
-                    repo,
-                    "--run",
-                    "--model",
-                    "gpt-5.2",
-                    "--harness",
-                    "bdi",
-                    "--bdi-repo",
-                    str(Path(repo) / "missing-bdi"),
-                ],
-                stdout=stdout,
-                stderr=stderr,
+            unavailable = SimpleNamespace(
+                available=False,
+                url="http://localhost:4000/health/liveliness",
+                detail="connection refused",
             )
+            with (
+                mock.patch.object(cli, "find_missing_cli_binaries", return_value={}),
+                mock.patch.object(cli, "check_litellm_proxy", return_value=unavailable),
+                mock.patch.object(cli, "run_matrix") as run_matrix,
+            ):
+                exit_code = orchestrator.main(
+                    [
+                        "--repo-root",
+                        repo,
+                        "--run",
+                        "--model",
+                        "gpt-5.2",
+                        "--harness",
+                        "bdi",
+                    ],
+                    stdout=stdout,
+                    stderr=stderr,
+                )
 
             self.assertEqual(exit_code, 2)
-            self.assertIn("Missing required repository paths", stderr.getvalue())
-            self.assertFalse((Path(repo) / "runs").exists())
+            self.assertIn("LiteLLM proxy is not available", stderr.getvalue())
+            self.assertIn("make litellm", stderr.getvalue())
+            run_matrix.assert_not_called()
 
     def test_archive_plan_selects_r1_when_no_canonical_runs_exist(self) -> None:
         with self.make_repo() as repo:
