@@ -321,6 +321,7 @@ class OrchestratorTest(unittest.TestCase):
         self.assertIn("workspace-write", invocation.command)
         self.assertIn("--config", invocation.command)
         self.assertIn('approval_policy="never"', invocation.command)
+        self.assertIn('model_reasoning_effort="medium"', invocation.command)
         self.assertIn("--ephemeral", invocation.command)
         self.assertIn("--json", invocation.command)
         self.assertNotIn("--add-dir", invocation.command)
@@ -329,6 +330,7 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(invocation.working_dir, repo_root)
         self.assertEqual(invocation.settings["approval_policy"], "never")
         self.assertEqual(invocation.settings["command_model"], "gpt-5.2")
+        self.assertEqual(invocation.settings["reasoning_effort"], "medium")
         self.assertEqual(invocation.settings["sandbox"], "workspace-write")
         self.assertEqual(
             invocation.settings["task_directory_scope"], "tasks/vendor_selection"
@@ -354,6 +356,10 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(invocation.command[0:2], ("opencode", "run"))
         self.assertIn("-m", invocation.command)
         self.assertIn("openai/gpt-5.2", invocation.command)
+        self.assertIn("--variant", invocation.command)
+        self.assertEqual(
+            invocation.command[invocation.command.index("--variant") + 1], "medium"
+        )
         self.assertIn("--dir", invocation.command)
         self.assertEqual(
             invocation.command[invocation.command.index("--dir") + 1],
@@ -369,6 +375,7 @@ class OrchestratorTest(unittest.TestCase):
         self.assertTrue(invocation.settings["auto_approve_permissions"])
         self.assertEqual(invocation.settings["command_model"], "openai/gpt-5.2")
         self.assertEqual(invocation.settings["format"], "json")
+        self.assertEqual(invocation.settings["reasoning_effort"], "medium")
         self.assertEqual(invocation.settings["writable_scope"], "task_directory_only")
         self.assertEqual(
             invocation.settings["task_directory_scope"], "tasks/vendor_selection"
@@ -486,6 +493,7 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(invocation.working_dir, bdi_repo.resolve())
         self.assertEqual(invocation.settings["binary"], "uv")
         self.assertEqual(invocation.settings["bdi_repo"], str(bdi_repo.resolve()))
+        self.assertEqual(invocation.settings["reasoning_effort"], "medium")
         self.assertEqual(
             invocation.settings["command_model"], "chatgpt/gpt-5.2"
         )

@@ -11,6 +11,7 @@ from ..answers import (
     plan_answer_archive as plan_answer_archive,
 )
 from ..cli import (
+    DEFAULT_MODEL as DEFAULT_MODEL,
     DEFAULT_TIMEOUT_SECONDS as DEFAULT_TIMEOUT_SECONDS,
     build_parser as build_parser,
     main as main,
@@ -22,6 +23,7 @@ from ..cli import (
 )
 from ..harnesses import (
     CLI_BINARY_BY_HARNESS as CLI_BINARY_BY_HARNESS,
+    DEFAULT_REASONING_EFFORT as DEFAULT_REASONING_EFFORT,
     STANDARD_TASK_PROMPT as STANDARD_TASK_PROMPT,
     SUPPORTED_HARNESSES as SUPPORTED_HARNESSES,
     HarnessInvocation as HarnessInvocation,

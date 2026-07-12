@@ -11,6 +11,7 @@ from .tasks import SelectionError, split_requested_values
 
 SUPPORTED_HARNESSES = ("bdi", "codex", "opencode")
 CLI_BINARY_BY_HARNESS = {"bdi": "uv", "codex": "codex", "opencode": "opencode"}
+DEFAULT_REASONING_EFFORT = "medium"
 STANDARD_TASK_PROMPT = (
     "You are working in the provided folder. Read task.md and the other local "
     "files, then complete the requested work. Create the requested `answer/` "
@@ -100,6 +101,8 @@ def build_harness_invocation(
                 "workspace-write",
                 "--config",
                 'approval_policy="never"',
+                "--config",
+                f'model_reasoning_effort="{DEFAULT_REASONING_EFFORT}"',
                 "--skip-git-repo-check",
                 "--ephemeral",
                 "--json",
@@ -110,6 +113,7 @@ def build_harness_invocation(
                 "binary": "codex",
                 "command_model": command_model,
                 "json_events": True,
+                "reasoning_effort": DEFAULT_REASONING_EFFORT,
                 "sandbox": "workspace-write",
                 "task_directory_scope": task_dir_arg,
             },
@@ -123,6 +127,8 @@ def build_harness_invocation(
                 "run",
                 "-m",
                 command_model,
+                "--variant",
+                DEFAULT_REASONING_EFFORT,
                 "--dir",
                 task_dir_arg,
                 "--format",
@@ -135,6 +141,7 @@ def build_harness_invocation(
                 "binary": "opencode",
                 "command_model": command_model,
                 "format": "json",
+                "reasoning_effort": DEFAULT_REASONING_EFFORT,
                 "task_directory_scope": task_dir_arg,
                 "writable_scope": "task_directory_only",
             },
@@ -167,6 +174,7 @@ def build_harness_invocation(
                 "command_model": command_model,
                 "command_timeout_seconds": int(timeout_seconds),
                 "delegation": "Voluntas SBench toy runner",
+                "reasoning_effort": DEFAULT_REASONING_EFFORT,
                 "task_directory_scope": task_dir_arg,
                 "toy_runner": str(toy_runner),
             },

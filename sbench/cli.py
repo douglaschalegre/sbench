@@ -35,6 +35,7 @@ from .tasks import SelectionError, Task, discover_tasks, select_tasks
 
 DEFAULT_TIMEOUT_SECONDS = 600
 DEFAULT_RESULTS_DB = "results.sqlite"
+DEFAULT_MODEL = "openai/gpt-5.4"
 
 
 def render_list(tasks: Sequence[Task]) -> str:
@@ -134,7 +135,10 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         help="Harness to include: bdi, codex, or opencode. May be repeated or comma-separated. Defaults to all harnesses.",
     )
-    parser.add_argument("--model", help="Model name to record and pass to harness command planning.")
+    parser.add_argument(
+        "--model",
+        help=f"Model name to record and pass to harness command planning. Defaults to {DEFAULT_MODEL}.",
+    )
     parser.add_argument(
         "--timeout",
         type=positive_int,
@@ -222,8 +226,7 @@ def main(
         output.write(render_import_result(repo_root, database_path, import_result))
         return 0
 
-    if (args.dry_run or args.run) and not args.model:
-        parser.error("--model is required with --dry-run or --run")
+    model = args.model or DEFAULT_MODEL
 
     try:
         selected_tasks = select_tasks(discovered_tasks, args.task)
@@ -236,7 +239,7 @@ def main(
         repo_root,
         tasks=selected_tasks,
         harnesses=selected_harnesses,
-        model=args.model,
+        model=model,
         timeout_seconds=args.timeout,
         bdi_repo=args.bdi_repo.resolve(),
         run_id=actual_run_id,
@@ -246,7 +249,7 @@ def main(
             render_dry_run(
                 repo_root,
                 plans=plans,
-                model=args.model,
+                model=model,
                 timeout_seconds=args.timeout,
             )
         )
@@ -270,7 +273,7 @@ def main(
             matrix_result = run_matrix_with_textual_progress(
                 repo_root,
                 plans,
-                model=args.model,
+                model=model,
                 timeout_seconds=args.timeout,
                 stop_on_first_failure=args.stop_on_first_failure,
                 run_id=actual_run_id,
@@ -281,7 +284,7 @@ def main(
             matrix_result = run_matrix(
                 repo_root,
                 plans,
-                model=args.model,
+                model=model,
                 timeout_seconds=args.timeout,
                 stop_on_first_failure=args.stop_on_first_failure,
                 run_id=actual_run_id,
@@ -294,7 +297,7 @@ def main(
         matrix_result = run_matrix(
             repo_root,
             plans,
-            model=args.model,
+            model=model,
             timeout_seconds=args.timeout,
             stop_on_first_failure=args.stop_on_first_failure,
             run_id=actual_run_id,

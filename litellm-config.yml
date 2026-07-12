@@ -12,20 +12,7 @@ model_list:
       output_cost_per_token_above_272k_tokens: 0.000045
     litellm_params:
       model: chatgpt/gpt-5.6-sol
-
-  - model_name: chatgpt/gpt-5.6-terra
-    model_info:
-      mode: responses
-      input_cost_per_token: 0.0000025
-      cache_read_input_token_cost: 0.00000025
-      cache_creation_input_token_cost: 0.000003125
-      output_cost_per_token: 0.000015
-      input_cost_per_token_above_272k_tokens: 0.000005
-      cache_read_input_token_cost_above_272k_tokens: 0.0000005
-      cache_creation_input_token_cost_above_272k_tokens: 0.00000625
-      output_cost_per_token_above_272k_tokens: 0.0000225
-    litellm_params:
-      model: chatgpt/gpt-5.6-terra
+      reasoning_effort: low
 
   - model_name: chatgpt/gpt-5.6-luna
     model_info:
@@ -40,28 +27,7 @@ model_list:
       output_cost_per_token_above_272k_tokens: 0.000009
     litellm_params:
       model: chatgpt/gpt-5.6-luna
-
-  - model_name: chatgpt/gpt-5.5
-    model_info:
-      mode: responses
-      input_cost_per_token: 0.000005
-      cache_read_input_token_cost: 0.0000005
-      output_cost_per_token: 0.00003
-      input_cost_per_token_above_272k_tokens: 0.00001
-      cache_read_input_token_cost_above_272k_tokens: 0.000001
-      output_cost_per_token_above_272k_tokens: 0.000045
-    litellm_params:
-      model: chatgpt/gpt-5.5
-
-  - model_name: chatgpt/gpt-5.5-pro
-    model_info:
-      mode: responses
-      input_cost_per_token: 0.00003
-      output_cost_per_token: 0.00018
-      input_cost_per_token_above_272k_tokens: 0.00006
-      output_cost_per_token_above_272k_tokens: 0.00027
-    litellm_params:
-      model: chatgpt/gpt-5.5-pro
+      reasoning_effort: xhigh
 
   - model_name: chatgpt/gpt-5.4
     model_info:
@@ -74,6 +40,7 @@ model_list:
       output_cost_per_token_above_272k_tokens: 0.0000225
     litellm_params:
       model: chatgpt/gpt-5.4
+      reasoning_effort: medium
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

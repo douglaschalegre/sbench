@@ -63,7 +63,7 @@ uv run sbench --list
 Preview a planned benchmark matrix without invoking any harness:
 
 ```sh
-uv run sbench --dry-run --model gpt-5.2 --harness codex,opencode --task vendor_selection
+uv run sbench --dry-run --model openai/gpt-5.4 --harness codex,opencode --task vendor_selection
 ```
 
 Preview the Textual progress UI with simulated task updates only:
@@ -77,7 +77,7 @@ the BDI harness, SBench maps canonical `openai/...` model names to the
 `chatgpt/...` aliases exposed by the local Voluntas LiteLLM proxy:
 
 ```sh
-uv run sbench --run --model chatgpt/gpt-5.4 --harness bdi
+uv run sbench --run --model openai/gpt-5.4 --harness bdi
 ```
 
 The Voluntas runner loads `LITELLM_BASE_URL`, `LITELLM_API_KEY`, and
