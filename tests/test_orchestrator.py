@@ -237,6 +237,15 @@ class OrchestratorTest(unittest.TestCase):
             (
                 repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r1"
             ).mkdir(parents=True)
+            (
+                repo_root
+                / "answers"
+                / "vendor_selection"
+                / "gpt-5.2"
+                / "codex"
+                / "r1"
+                / "result.md"
+            ).write_text("existing result", encoding="utf-8")
             output = io.StringIO()
             exit_code = orchestrator.main(
                 [
@@ -609,8 +618,26 @@ class OrchestratorTest(unittest.TestCase):
                 repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r1"
             ).mkdir(parents=True)
             (
+                repo_root
+                / "answers"
+                / "vendor_selection"
+                / "gpt-5.2"
+                / "codex"
+                / "r1"
+                / "result.md"
+            ).write_text("r1", encoding="utf-8")
+            (
                 repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex" / "r2"
             ).mkdir()
+            (
+                repo_root
+                / "answers"
+                / "vendor_selection"
+                / "gpt-5.2"
+                / "codex"
+                / "r2"
+                / "result.md"
+            ).write_text("r2", encoding="utf-8")
             (
                 repo_root
                 / "answers"
@@ -633,6 +660,25 @@ class OrchestratorTest(unittest.TestCase):
             )
 
         self.assertEqual(plan.run_id, "r3")
+
+    def test_archive_plan_reuses_lowest_empty_canonical_run(self) -> None:
+        with self.make_repo() as repo:
+            repo_root = Path(repo)
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
+            archive_parent = (
+                repo_root / "answers" / "vendor_selection" / "gpt-5.2" / "codex"
+            )
+            (archive_parent / "r1" / "empty-nested-directory").mkdir(parents=True)
+            (archive_parent / "r2").mkdir()
+            (archive_parent / "r2" / "result.md").write_text("r2", encoding="utf-8")
+
+            plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
+
+        self.assertEqual(plan.run_id, "r1")
 
     def test_archive_plan_normalizes_model_path_without_losing_display_model(
         self,
@@ -726,6 +772,28 @@ class OrchestratorTest(unittest.TestCase):
             self.assertIsNone(result.incomplete_reason)
             self.assertTrue((plan.archive_dir / "source_resolution.md").is_file())
             self.assertTrue((plan.archive_dir / "nested" / "notes.md").is_file())
+            self.assertEqual(
+                (plan.archive_dir / "source_resolution.md").read_text(encoding="utf-8"),
+                "source",
+            )
+
+    def test_archive_answer_files_reuses_empty_canonical_destination(self) -> None:
+        with self.make_repo() as repo:
+            repo_root = Path(repo)
+            task = orchestrator.select_tasks(
+                orchestrator.discover_tasks(repo_root), ["vendor_selection"]
+            )[0]
+            answer_dir = task.path / "answer"
+            answer_dir.mkdir()
+            (answer_dir / "source_resolution.md").write_text("source", encoding="utf-8")
+            plan = orchestrator.plan_answer_archive(
+                repo_root, task, model="gpt-5.2", harness="codex"
+            )
+            (plan.archive_dir / "empty-nested-directory").mkdir(parents=True)
+
+            result = orchestrator.archive_answer_files(plan)
+
+            self.assertEqual(result.status, "success")
             self.assertEqual(
                 (plan.archive_dir / "source_resolution.md").read_text(encoding="utf-8"),
                 "source",

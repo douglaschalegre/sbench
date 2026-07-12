@@ -41,13 +41,20 @@ def path_safe_model_name(model: str) -> str:
 def next_run_id(repo_root: Path, task_id: str, model_path: str, harness: str) -> str:
     archive_parent = repo_root / "answers" / task_id / model_path / harness
     max_run = 0
+    empty_runs: list[int] = []
     if archive_parent.is_dir():
         for child in archive_parent.iterdir():
             if not child.is_dir():
                 continue
             match = re.fullmatch(r"r(\d+)", child.name)
             if match:
-                max_run = max(max_run, int(match.group(1)))
+                run_number = int(match.group(1))
+                if _contains_files(child):
+                    max_run = max(max_run, run_number)
+                elif run_number > 0:
+                    empty_runs.append(run_number)
+    if empty_runs:
+        return f"r{min(empty_runs)}"
     return f"r{max_run + 1}"
 
 
@@ -85,7 +92,7 @@ def archive_answer_files(plan: AnswerArchivePlan, *, overwrite: bool = False) ->
         )
 
     source_entries = sorted(plan.source_dir.iterdir(), key=lambda path: path.name)
-    if not source_entries:
+    if not source_entries or not _contains_files(plan.source_dir):
         return AnswerArchiveResult(
             status="incomplete",
             archive_dir=plan.archive_dir,
@@ -94,7 +101,9 @@ def archive_answer_files(plan: AnswerArchivePlan, *, overwrite: bool = False) ->
         )
 
     if plan.archive_dir.exists():
-        if not overwrite:
+        if not overwrite and (
+            not plan.archive_dir.is_dir() or _contains_files(plan.archive_dir)
+        ):
             raise ArchiveError(f"answer archive already exists: {plan.archive_dir}")
         if plan.archive_dir.is_dir():
             shutil.rmtree(plan.archive_dir)
@@ -118,3 +127,7 @@ def archive_answer_files(plan: AnswerArchivePlan, *, overwrite: bool = False) ->
         archive_dir=plan.archive_dir,
         archived_paths=tuple(archived_paths),
     )
+
+
+def _contains_files(directory: Path) -> bool:
+    return any(path.is_file() for path in directory.rglob("*"))
