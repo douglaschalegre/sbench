@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #17201b; background: #f3f0e8; font-synthesis: none; text-rendering: optimizeLegibility; }
+* { box-sizing: border-box; }
+html { background: #f3f0e8; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(115,143,98,.35); border: 3px solid transparent; border-radius: 999px; background-clip: padding-box; }
+::selection { background: rgba(217,119,52,.26); }
+
+@media (max-width: 1023px) {
+  body { overflow: auto; }
+  .h-screen { height: auto; min-height: 100vh; }
+  main.grid.lg\:grid-cols-\[minmax\(0\,1\.35fr\)_minmax\(390px\,\.65fr\)\] { display: block; }
+  main.grid.lg\:grid-cols-\[minmax\(0\,1\.35fr\)_minmax\(390px\,\.65fr\)\] > section { height: 58vh; min-height: 480px; }
+  main.grid.lg\:grid-cols-\[minmax\(0\,1\.35fr\)_minmax\(390px\,\.65fr\)\] > aside { height: auto; min-height: 700px; }
+}
