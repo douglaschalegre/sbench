@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "prepare-data": "node scripts/prepare-data.mjs",
+    "server": "node server.mjs",
+    "test:server": "node --test tests/server.test.mjs",
     "dev": "vite",
     "build": "npm run prepare-data && tsc -b && vite build",
     "preview": "vite preview",

@@ -1,6 +1,6 @@
 # SBench — interface do experimento
 
-Frontend independente para conduzir o experimento de auditabilidade em quadrado latino. Os dados ficam apenas no navegador e podem ser exportados em JSON.
+Módulo independente para conduzir o experimento de auditabilidade em quadrado latino. O progresso fica no navegador e sessões concluídas são persistidas em SQLite.
 
 ## Executar
 
@@ -10,20 +10,35 @@ npm run prepare-data
 npm run dev
 ```
 
+Em outro terminal, inicie a API local:
+
+```bash
+npm run server
+```
+
+No desenvolvimento, o Vite encaminha `/api` para `http://127.0.0.1:8765`.
+
 O script `prepare-data` cria um catálogo estático em `public/data` a partir de `../runs`. Essa pasta é gerada e não é versionada.
 
 ## Produção
 
 ```bash
 npm run build
-npm run preview
+npm run server
 ```
 
-O resultado em `dist/` é totalmente estático. Publique a pasta junto com os logs gerados ou execute `prepare-data` antes de cada build.
+O servidor Node entrega `dist/`, recebe sessões concluídas em `POST /api/experiment-sessions` e cria `experiment.sqlite` nesta pasta. É possível alterar o arquivo com `node server.mjs --database caminho/experimento.sqlite`.
 
 ## Privacidade e coleta
 
-- Nenhuma resposta é enviada pela rede.
 - O progresso é salvo em `localStorage` no dispositivo.
-- Ao final, o participante baixa um arquivo JSON para entrega ao pesquisador.
+- Ao final, a sessão é enviada à API e gravada de forma idempotente no SQLite.
+- O JSON pode ser baixado como cópia de segurança se a API estiver indisponível.
 - Identifique participantes com códigos pseudônimos, nunca com nome ou e-mail.
+
+## Schema SQLite
+
+- `experiment_sessions`: metadados e payload JSON integral.
+- `trace_responses`: respostas e métricas principais de cada trace.
+- `evidence_references`: intervalos de linhas selecionados como evidência.
+- `telemetry_events`: sequência completa de interações da interface.

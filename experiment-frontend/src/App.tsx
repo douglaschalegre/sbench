@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, ArrowLeft, ArrowRight, Check, CheckCircle2, ClipboardCopy, Clock3, Download, Eye, FileText, FlaskConical, Highlighter, MousePointer2, RotateCcw, ShieldCheck, X } from 'lucide-react'
+import { Activity, ArrowLeft, ArrowRight, Check, CheckCircle2, ClipboardCopy, Clock3, Download, Eye, FileText, FlaskConical, Highlighter, LoaderCircle, MousePointer2, RefreshCw, RotateCcw, ShieldCheck, X } from 'lucide-react'
 import { Button, FieldLabel, Progress, Scale, Segmented } from './components/ui'
 import { defaultTasks, harnessLabel, latinSquare } from './data'
 import { cn, formatDuration, labelTask } from './lib/utils'
 import type { EvidenceReference, Manifest, SessionState, TelemetryEvent, TraceEntry, TraceResponse } from './types'
 
 const STORAGE_KEY = 'sbench-latin-square-session-v1'
+const API_BASE_URL = import.meta.env.DEV ? 'http://127.0.0.1:8765' : ''
+
+function newSessionId() {
+  return crypto.randomUUID()
+}
 
 function emptyTrace(traceId: string): TraceResponse {
   return { traceId, startedAt: new Date().toISOString(), evidenceInteractions: 0, positionChanges: 0, evidenceReferences: [], telemetry: [], notes: '' }
@@ -46,10 +51,10 @@ function Welcome({ manifest, onStart, restored, onResume, onReset }: { manifest:
   const [taskSet, setTaskSet] = useState<string[]>(defaultTasks)
   const valid = participantCode.trim().length >= 3 && new Set(taskSet).size === 3
 
-  const start = () => onStart({ participantCode: participantCode.trim(), group, repetition, taskSet, startedAt: new Date().toISOString(), currentIndex: 0, traceResponses: {} })
+  const start = () => onStart({ sessionId: newSessionId(), participantCode: participantCode.trim(), group, repetition, taskSet, startedAt: new Date().toISOString(), currentIndex: 0, traceResponses: {} })
 
   return <div className="min-h-screen bg-canvas text-ink">
-    <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10"><Logo /><div className="flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-xs text-black/55"><ShieldCheck size={14} className="text-forest" /> Dados somente neste dispositivo</div></header>
+    <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10"><Logo /><div className="flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-xs text-black/55"><ShieldCheck size={14} className="text-forest" /> Progresso salvo neste dispositivo</div></header>
     <main className="mx-auto grid max-w-7xl gap-14 px-6 pb-16 pt-8 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:pt-16">
       <section className="flex flex-col justify-center">
         <div className="mb-8 inline-flex w-fit items-center gap-2 rounded-full bg-[#e2eadf] px-3 py-1.5 text-xs font-semibold uppercase tracking-[.14em] text-forest"><span className="size-1.5 rounded-full bg-amber" /> Fase 1 · coleta individual</div>
@@ -225,14 +230,27 @@ function Experiment({ manifest, session, setSession, onExit }: { manifest: Manif
 function Completion({ session, manifest, onReset }: { session: SessionState; manifest: Manifest; onReset: () => void }) {
   const sequence = latinSquare[session.group].map((harness, index) => manifest.entries.find((entry) => entry.harness === harness && entry.task === session.taskSet[index] && entry.repetition === session.repetition)).filter(Boolean) as TraceEntry[]
   const payload = { schemaVersion: 2, exportedAt: new Date().toISOString(), experiment: 'sbench-latin-square-q1-q4', session, traces: sequence, derivedMetrics: Object.fromEntries(Object.entries(session.traceResponses).map(([traceId, response]) => [traceId, deriveMetrics(response)])) }
+  const [submission, setSubmission] = useState<'sending' | 'saved' | 'failed'>('sending')
+  const [submissionMessage, setSubmissionMessage] = useState('Salvando no banco de dados…')
+  const submit = async () => {
+    setSubmission('sending'); setSubmissionMessage('Salvando no banco de dados…')
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/experiment-sessions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      if (!response.ok) { const body = await response.json().catch(() => ({})); throw new Error(body.error ?? `HTTP ${response.status}`) }
+      setSubmission('saved'); setSubmissionMessage('Sessão salva no SQLite com sucesso.')
+    } catch (error) {
+      setSubmission('failed'); setSubmissionMessage(`Não foi possível salvar: ${error instanceof Error ? error.message : 'erro desconhecido'}. Seus dados continuam neste navegador.`)
+    }
+  }
+  useEffect(() => { void submit() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const download = () => { const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `sbench-${session.participantCode}-${new Date().toISOString().slice(0, 10)}.json`; anchor.click(); URL.revokeObjectURL(url) }
   const totalSeconds = Object.values(session.traceResponses).reduce((sum, trace) => sum + (trace.completedAt ? (new Date(trace.completedAt).getTime() - new Date(trace.startedAt).getTime()) / 1000 : 0), 0)
-  return <div className="min-h-screen bg-canvas px-6 py-8 text-ink"><header className="mx-auto flex max-w-5xl justify-between"><Logo /><div className="text-sm text-black/45">Participante {session.participantCode}</div></header><main className="mx-auto mt-16 max-w-3xl text-center"><div className="mx-auto grid size-20 place-items-center rounded-full bg-forest text-white shadow-card"><Check size={34} /></div><p className="mt-8 text-xs font-bold uppercase tracking-[.2em] text-amber">Sessão concluída</p><h1 className="mt-3 font-display text-5xl">Obrigado pela sua análise.</h1><p className="mx-auto mt-4 max-w-xl text-black/55">As três avaliações estão salvas neste navegador. Baixe o arquivo abaixo e entregue-o ao pesquisador responsável.</p><div className="mt-10 grid grid-cols-3 overflow-hidden rounded-2xl border border-line bg-paper text-left shadow-card">{[['3', 'traces avaliados'], ['Q1–Q4', 'por trace'], [formatDuration(totalSeconds), 'tempo total']].map(([value, label]) => <div className="border-r border-line p-5 last:border-r-0" key={label}><div className="font-display text-3xl text-forest">{value}</div><div className="mt-1 text-xs text-black/40">{label}</div></div>)}</div><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Button onClick={download}><Download size={17} /> Baixar respostas (.json)</Button><Button variant="outline" onClick={() => navigator.clipboard.writeText(JSON.stringify(payload))}><ClipboardCopy size={16} /> Copiar JSON</Button></div><button onClick={onReset} className="mt-10 text-xs text-black/40 underline underline-offset-4 hover:text-ink">Encerrar e limpar este dispositivo</button></main></div>
+  return <div className="min-h-screen bg-canvas px-6 py-8 text-ink"><header className="mx-auto flex max-w-5xl justify-between"><Logo /><div className="text-sm text-black/45">Participante {session.participantCode}</div></header><main className="mx-auto mt-16 max-w-3xl text-center"><div className="mx-auto grid size-20 place-items-center rounded-full bg-forest text-white shadow-card"><Check size={34} /></div><p className="mt-8 text-xs font-bold uppercase tracking-[.2em] text-amber">Sessão concluída</p><h1 className="mt-3 font-display text-5xl">Obrigado pela sua análise.</h1><p className="mx-auto mt-4 max-w-xl text-black/55">As três avaliações foram concluídas. O envio ao banco acontece automaticamente e o JSON continua disponível como cópia de segurança.</p><div className={cn('mx-auto mt-5 flex max-w-xl items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm', submission === 'saved' ? 'border-[#b9cfb5] bg-[#edf4ea] text-forest' : submission === 'failed' ? 'border-red-200 bg-red-50 text-red-800' : 'border-line bg-paper text-black/55')}>{submission === 'sending' && <LoaderCircle className="animate-spin" size={16} />}{submission === 'saved' && <CheckCircle2 size={16} />}{submission === 'failed' && <X size={16} />}<span>{submissionMessage}</span>{submission === 'failed' && <button onClick={() => void submit()} className="ml-2 inline-flex items-center gap-1 font-semibold underline"><RefreshCw size={13} /> Tentar novamente</button>}</div><div className="mt-8 grid grid-cols-3 overflow-hidden rounded-2xl border border-line bg-paper text-left shadow-card">{[['3', 'traces avaliados'], ['Q1–Q4', 'por trace'], [formatDuration(totalSeconds), 'tempo total']].map(([value, label]) => <div className="border-r border-line p-5 last:border-r-0" key={label}><div className="font-display text-3xl text-forest">{value}</div><div className="mt-1 text-xs text-black/40">{label}</div></div>)}</div><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Button onClick={download}><Download size={17} /> Baixar respostas (.json)</Button><Button variant="outline" onClick={() => navigator.clipboard.writeText(JSON.stringify(payload))}><ClipboardCopy size={16} /> Copiar JSON</Button></div><button onClick={onReset} className="mt-10 text-xs text-black/40 underline underline-offset-4 hover:text-ink">Encerrar e limpar este dispositivo</button></main></div>
 }
 
 export default function App() {
   const [manifest, setManifest] = useState<Manifest | null>(null)
-  const [session, setSessionState] = useState<SessionState | null>(() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') } catch { return null } })
+  const [session, setSessionState] = useState<SessionState | null>(() => { try { const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null'); return stored ? { ...stored, sessionId: stored.sessionId ?? newSessionId() } : null } catch { return null } })
   const [screen, setScreen] = useState<'welcome' | 'experiment' | 'complete'>('welcome')
   useEffect(() => { fetch('/data/manifest.json').then((response) => { if (!response.ok) throw new Error('manifest'); return response.json() }).then(setManifest).catch(() => setManifest({ generatedAt: '', entries: [] })) }, [])
   const setSession = (state: SessionState) => { setSessionState(state); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); if (state.completedAt) setScreen('complete') }

@@ -47,6 +47,7 @@ export type TraceResponse = {
 }
 
 export type SessionState = {
+  sessionId: string
   participantCode: string
   group: 1 | 2 | 3
   repetition: string
