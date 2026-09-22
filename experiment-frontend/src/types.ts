@@ -23,10 +23,10 @@ export type EvidenceReference = {
 }
 
 export type TelemetryEvent = {
-  type: 'scroll' | 'search' | 'search_navigation' | 'wrap_toggle' | 'line_selection' | 'evidence_added' | 'evidence_removed' | 'answer_changed'
+  type: 'scroll' | 'search' | 'search_navigation' | 'wrap_toggle' | 'line_selection' | 'lines_viewed' | 'evidence_added' | 'evidence_removed' | 'answer_changed'
   at: string
   deltaMs: number
-  detail?: Record<string, string | number | boolean>
+  detail?: Record<string, string | number | boolean | number[]>
 }
 
 export type TraceResponse = {

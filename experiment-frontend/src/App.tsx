@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, ArrowLeft, ArrowRight, Check, CheckCircle2, ClipboardCopy, Clock3, Download, Eye, FileText, FlaskConical, Highlighter, LoaderCircle, MousePointer2, RefreshCw, RotateCcw, ShieldCheck, X } from 'lucide-react'
+import { Activity, ArrowLeft, ArrowRight, Check, CheckCircle2, ClipboardCopy, Clock3, Download, FileText, FlaskConical, Highlighter, LoaderCircle, MousePointer2, RefreshCw, RotateCcw, ShieldCheck, X } from 'lucide-react'
 import { Button, FieldLabel, Progress, Scale, Segmented } from './components/ui'
 import { defaultTasks, harnessLabel, latinSquare } from './data'
 import { cn, formatDuration, labelTask } from './lib/utils'
@@ -16,17 +16,21 @@ function emptyTrace(traceId: string): TraceResponse {
   return { traceId, startedAt: new Date().toISOString(), evidenceInteractions: 0, positionChanges: 0, evidenceReferences: [], telemetry: [], notes: '' }
 }
 
+function referencedLines(references: EvidenceReference[]) {
+  return new Set(references.flatMap((reference) => Array.from({ length: reference.endLine - reference.startLine + 1 }, (_, index) => reference.startLine + index)))
+}
+
 function deriveMetrics(trace: TraceResponse) {
-  const selections = trace.telemetry.filter((event) => event.type === 'line_selection')
-  const selectedLines = selections.map((event) => event.detail?.line).filter((line): line is number => typeof line === 'number')
-  const uniqueLines = new Set(selectedLines)
+  const clickSelections = trace.telemetry.filter((event) => event.type === 'line_selection')
+  const selectedLines = referencedLines(trace.evidenceReferences)
+  const viewedLines = new Set(trace.telemetry.filter((event) => event.type === 'lines_viewed').flatMap((event) => Array.isArray(event.detail?.lines) ? event.detail.lines : []))
   const eventCounts = trace.telemetry.reduce<Record<string, number>>((counts, event) => ({ ...counts, [event.type]: (counts[event.type] ?? 0) + 1 }), {})
   const directnessEvent = [...trace.telemetry].reverse().find((event) => event.type === 'answer_changed' && event.detail?.metric === 'M4.1')
   return {
     m1_1_firstEvidenceDeltaMs: trace.evidenceReferences[0]?.deltaMs ?? null,
-    m1_2_lineSelections: selections.length,
-    m1_2_uniqueLines: uniqueLines.size,
-    m1_2_revisits: Math.max(0, selectedLines.length - uniqueLines.size),
+    m1_2_selectedLines: selectedLines.size,
+    m1_2_viewedLines: viewedLines.size,
+    m1_2_selectionInteractions: clickSelections.length,
     m2_1_confidence: trace.confidence ?? null,
     m2_2_cognitiveLoad: trace.difficulty ?? null,
     m3_1_evidenceDeltasMs: trace.evidenceReferences.map((reference) => reference.deltaMs),
@@ -42,6 +46,33 @@ function Logo() {
   return <div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-xl bg-forest text-white"><FlaskConical size={18} /></div><div><div className="text-sm font-bold tracking-tight">SBench</div><div className="text-[10px] uppercase tracking-[.18em] text-black/45">Auditability study</div></div></div>
 }
 
+function Tutorial({ onComplete }: { onComplete: () => void }) {
+  const [selectedLines, setSelectedLines] = useState<number[]>([])
+  const [referenceAdded, setReferenceAdded] = useState(false)
+  const [confidence, setConfidence] = useState<number>()
+  const [directness, setDirectness] = useState<'direct' | 'inferred'>()
+  const complete = referenceAdded && confidence != null && directness != null
+  const example = ['Agente iniciou a análise.', 'Encontrou o requisito no arquivo task.md.', 'Criou answer/relatorio.md conforme solicitado.', 'Execução finalizada com sucesso.']
+  const toggleLine = (line: number) => setSelectedLines((current) => current.includes(line) ? current.filter((item) => item !== line) : [...current, line].sort((a, b) => a - b))
+  const classify = (value: 'direct' | 'inferred') => { setDirectness(value); if (referenceAdded && confidence != null) onComplete() }
+
+  return <section className="flex flex-col justify-center">
+    <div className="mb-5 flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-amber">Tutorial obrigatório</p><h1 className="mt-2 font-display text-4xl leading-tight">Aprenda fazendo</h1></div><div className={cn('rounded-full px-3 py-1.5 text-xs font-semibold', complete ? 'bg-[#dcece5] text-forest' : 'bg-white text-black/45')}>{complete ? 'Concluído' : `${referenceAdded ? confidence ? 2 : 1 : 0}/3 etapas`}</div></div>
+    <p className="mb-5 max-w-xl text-sm leading-relaxed text-black/55">Este exemplo não entra nos resultados. Complete as três ações para liberar sua sessão.</p>
+
+    <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-card">
+      <div className="border-b border-line px-4 py-3"><div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-full bg-forest text-[10px] font-bold text-white">1</span><strong className="text-sm">Selecione as linhas 2 e 3</strong></div><p className="ml-8 mt-1 text-xs text-black/45">Clique em cada linha. Na aplicação, Shift+clique também seleciona intervalos.</p></div>
+      <div className="bg-[#101713] py-3 font-mono text-xs text-[#cbd5cc]">{example.map((line, index) => { const lineNumber = index + 1; const selected = selectedLines.includes(lineNumber); return <button type="button" key={line} onClick={() => !referenceAdded && toggleLine(lineNumber)} className={cn('flex w-full items-center border-l-2 border-transparent px-3 py-1.5 text-left hover:bg-white/5', selected && 'border-amber bg-amber/15', referenceAdded && (lineNumber === 2 || lineNumber === 3) && 'border-[#86b59e] bg-[#86b59e]/10')}><span className={cn('mr-4 w-5 text-right text-white/30', selected && 'font-bold text-amber')}>{lineNumber}</span><span>{line}</span></button> })}</div>
+      <div className="flex items-center gap-3 border-t border-line p-3"><div className="min-w-0 flex-1 text-xs text-black/50">{referenceAdded ? <span className="font-semibold text-forest">✓ Linhas 2–3 adicionadas como evidência</span> : selectedLines.length ? `${selectedLines.length} linha${selectedLines.length > 1 ? 's' : ''} selecionada${selectedLines.length > 1 ? 's' : ''}` : 'Selecione as duas linhas indicadas'}</div><Button className="h-9 px-3" disabled={referenceAdded || !(selectedLines.includes(2) && selectedLines.includes(3) && selectedLines.length === 2)} onClick={() => { setReferenceAdded(true); setSelectedLines([]) }}><Highlighter size={14} /> Adicionar evidência</Button></div>
+    </div>
+
+    <div className={cn('mt-3 rounded-2xl border border-line bg-paper p-4 transition', !referenceAdded && 'pointer-events-none opacity-45')}><div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-full bg-forest text-[10px] font-bold text-white">2</span><strong className="text-sm">Responda uma escala</strong></div><p className="ml-8 mt-1 text-xs text-black/45">Escolha qualquer valor para praticar. No estudo, 1 é o mínimo e 5 é o máximo.</p><div className="ml-8 mt-3 grid grid-cols-5 gap-2">{[1, 2, 3, 4, 5].map((value) => <button type="button" key={value} onClick={() => setConfidence(value)} className={cn('h-9 rounded-lg border border-line text-xs font-semibold', confidence === value && 'border-forest bg-[#e8f0e9] text-forest')}>{value}</button>)}</div></div>
+
+    <div className={cn('mt-3 rounded-2xl border border-line bg-paper p-4 transition', (!referenceAdded || confidence == null) && 'pointer-events-none opacity-45')}><div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-full bg-forest text-[10px] font-bold text-white">3</span><strong className="text-sm">Classifique a evidência</strong></div><p className="ml-8 mt-1 text-xs text-black/45">Indique se a resposta aparece diretamente ou exige combinar partes do trace.</p><div className="ml-8 mt-3 grid grid-cols-2 gap-2"><button type="button" onClick={() => classify('direct')} className={cn('rounded-lg border border-line p-2.5 text-xs font-semibold', directness === 'direct' && 'border-forest bg-[#e8f0e9] text-forest')}>Declarada diretamente</button><button type="button" onClick={() => classify('inferred')} className={cn('rounded-lg border border-line p-2.5 text-xs font-semibold', directness === 'inferred' && 'border-forest bg-[#e8f0e9] text-forest')}>Inferida combinando partes</button></div></div>
+    {complete && <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#dcece5] px-4 py-3 text-sm font-semibold text-forest"><CheckCircle2 size={17} /> Tutorial concluído. Configure e inicie sua sessão.</div>}
+  </section>
+}
+
 function Welcome({ manifest, onStart, restored, onResume, onReset }: { manifest: Manifest; onStart: (state: SessionState) => void; restored: SessionState | null; onResume: () => void; onReset: () => void }) {
   const tasks = [...new Set(manifest.entries.map((entry) => entry.task))]
   const repetitions = [...new Set(manifest.entries.map((entry) => entry.repetition))].sort()
@@ -49,22 +80,15 @@ function Welcome({ manifest, onStart, restored, onResume, onReset }: { manifest:
   const [group, setGroup] = useState<1 | 2 | 3>(1)
   const [repetition, setRepetition] = useState(repetitions.at(-1) ?? 'r3')
   const [taskSet, setTaskSet] = useState<string[]>(defaultTasks)
-  const valid = participantCode.trim().length >= 3 && new Set(taskSet).size === 3
+  const [tutorialComplete, setTutorialComplete] = useState(false)
+  const valid = tutorialComplete && participantCode.trim().length >= 3 && new Set(taskSet).size === 3
 
   const start = () => onStart({ sessionId: newSessionId(), participantCode: participantCode.trim(), group, repetition, taskSet, startedAt: new Date().toISOString(), currentIndex: 0, traceResponses: {} })
 
   return <div className="min-h-screen bg-canvas text-ink">
     <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10"><Logo /><div className="flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-xs text-black/55"><ShieldCheck size={14} className="text-forest" /> Progresso salvo neste dispositivo</div></header>
     <main className="mx-auto grid max-w-7xl gap-14 px-6 pb-16 pt-8 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:pt-16">
-      <section className="flex flex-col justify-center">
-        <div className="mb-8 inline-flex w-fit items-center gap-2 rounded-full bg-[#e2eadf] px-3 py-1.5 text-xs font-semibold uppercase tracking-[.14em] text-forest"><span className="size-1.5 rounded-full bg-amber" /> Fase 1 · coleta individual</div>
-        <h1 className="max-w-2xl font-display text-5xl font-medium leading-[1.02] tracking-[-.035em] sm:text-6xl lg:text-7xl">Leia o trace.<br /><em className="text-forest">Encontre a evidência.</em></h1>
-        <p className="mt-7 max-w-xl text-lg leading-relaxed text-black/60">Você analisará três execuções de agentes. O estudo mede quanto esforço é necessário para entender cada trace — não avalia você.</p>
-        <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
-          {[['3', 'traces'], ['Q1–Q4', 'por trace'], ['≈ 25', 'minutos']].map(([value, label]) => <div key={label} className="border-l border-line pl-4"><div className="font-display text-3xl text-forest">{value}</div><div className="text-xs uppercase tracking-wider text-black/45">{label}</div></div>)}
-        </div>
-        <div className="mt-10 flex max-w-xl gap-3 rounded-2xl border border-line bg-paper/70 p-4 text-sm leading-relaxed text-black/55"><Eye className="mt-0.5 shrink-0 text-amber" size={18} /><p>Leia naturalmente. Quando encontrar evidência relevante, selecione uma ou mais linhas do trace. O sistema registra tempos e interações de forma automática.</p></div>
-      </section>
+      <Tutorial onComplete={() => setTutorialComplete(true)} />
 
       <section className="rounded-[28px] border border-line bg-paper p-6 shadow-card sm:p-8">
         <div className="mb-7"><p className="text-xs font-semibold uppercase tracking-[.18em] text-amber">Configuração da sessão</p><h2 className="mt-2 font-display text-3xl">Antes de começar</h2><p className="mt-2 text-sm text-black/50">Use o código fornecido pelo pesquisador.</p></div>
@@ -74,14 +98,14 @@ function Welcome({ manifest, onStart, restored, onResume, onReset }: { manifest:
           <div><FieldLabel>Grupo do quadrado latino</FieldLabel><Segmented value={String(group)} onValueChange={(value) => setGroup(Number(value) as 1 | 2 | 3)} ariaLabel="Grupo experimental" options={[1, 2, 3].map((n) => ({ value: String(n), label: `Grupo ${n}` }))} /><div className="mt-2 flex items-center gap-2 text-xs text-black/45">Ordem: {latinSquare[group].map((h) => harnessLabel[h]).join(' → ')}</div></div>
           <div><FieldLabel>Réplica</FieldLabel><select value={repetition} onChange={(e) => setRepetition(e.target.value)} className="h-12 w-full rounded-xl border border-line bg-white px-4 text-sm outline-none focus:border-forest">{repetitions.map((r) => <option key={r}>{r}</option>)}</select></div>
           <div><FieldLabel>Conjunto de tarefas</FieldLabel><div className="space-y-2">{[0, 1, 2].map((position) => <div key={position} className="flex items-center gap-3"><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-canvas text-xs font-bold text-forest">{position + 1}</span><select value={taskSet[position]} onChange={(e) => setTaskSet(taskSet.map((task, index) => index === position ? e.target.value : task))} className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-white px-3 text-sm outline-none focus:border-forest">{tasks.map((task) => <option key={task} value={task}>{labelTask(task)}</option>)}</select></div>)}</div>{new Set(taskSet).size !== 3 && <p className="mt-2 text-xs text-red-700">Selecione três tarefas diferentes.</p>}</div>
-          <Button disabled={!valid} onClick={start} className="w-full">Iniciar sessão <ArrowRight size={16} /></Button>
+          <Button disabled={!valid} onClick={start} className="w-full">{tutorialComplete ? 'Iniciar sessão' : 'Complete o tutorial para iniciar'} <ArrowRight size={16} /></Button>
         </div>
       </section>
     </main>
   </div>
 }
 
-function LogViewer({ content, references, onAddReferences, onTelemetry }: { content: string; references: EvidenceReference[]; onAddReferences: (ranges: Array<{ startLine: number; endLine: number }>) => void; onTelemetry: (type: TelemetryEvent['type'], detail?: TelemetryEvent['detail']) => void }) {
+function LogViewer({ content, references, selectedLines, onSelectionChange, onAddReferences, onTelemetry, initialViewedLines }: { content: string; references: EvidenceReference[]; selectedLines: number[]; onSelectionChange: (lines: number[]) => void; onAddReferences: (ranges: Array<{ startLine: number; endLine: number }>) => void; onTelemetry: (type: TelemetryEvent['type'], detail?: TelemetryEvent['detail']) => void; initialViewedLines: number[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const lines = useMemo(() => content.split('\n'), [content])
   const displayLines = useMemo(() => lines.map((line) => {
@@ -99,16 +123,18 @@ function LogViewer({ content, references, onAddReferences, onTelemetry }: { cont
   const [query, setQuery] = useState('')
   const [wrap, setWrap] = useState(true)
   const [anchorLine, setAnchorLine] = useState<number>()
-  const [selectedLines, setSelectedLines] = useState<number[]>([])
   const [matchIndex, setMatchIndex] = useState(0)
+  const viewedLines = useRef(new Set(initialViewedLines))
+  const telemetryRef = useRef(onTelemetry)
+  telemetryRef.current = onTelemetry
   const matches = useMemo(() => query ? lines.flatMap((line, index) => line.toLowerCase().includes(query.toLowerCase()) ? [index] : []) : [], [lines, query])
   const selectLine = (line: number, extend: boolean) => {
     if (extend && anchorLine) {
       const start = Math.min(anchorLine, line)
       const end = Math.max(anchorLine, line)
-      setSelectedLines((current) => [...new Set([...current, ...Array.from({ length: end - start + 1 }, (_, index) => start + index)])].sort((a, b) => a - b))
+      onSelectionChange([...new Set([...selectedLines, ...Array.from({ length: end - start + 1 }, (_, index) => start + index)])].sort((a, b) => a - b))
     } else {
-      setSelectedLines((current) => current.includes(line) ? current.filter((item) => item !== line) : [...current, line].sort((a, b) => a - b))
+      onSelectionChange(selectedLines.includes(line) ? selectedLines.filter((item) => item !== line) : [...selectedLines, line].sort((a, b) => a - b))
       setAnchorLine(line)
     }
     onTelemetry('line_selection', { line, extend })
@@ -120,6 +146,22 @@ function LogViewer({ content, references, onAddReferences, onTelemetry }: { cont
     return ranges
   }, []), [selectedLines])
   const selectionLabel = selectedRanges.map((range) => range.startLine === range.endLine ? `${range.startLine}` : `${range.startLine}–${range.endLine}`).join(', ')
+  useEffect(() => {
+    const root = containerRef.current
+    if (!root) return
+    const observer = new IntersectionObserver((entries) => {
+      const newlyViewed = entries.flatMap((item) => {
+        if (!item.isIntersecting) return []
+        const line = Number((item.target as HTMLElement).dataset.line)
+        if (!line || viewedLines.current.has(line)) return []
+        viewedLines.current.add(line)
+        return [line]
+      })
+      if (newlyViewed.length) telemetryRef.current('lines_viewed', { lines: newlyViewed })
+    }, { root, threshold: 0.15 })
+    root.querySelectorAll('[data-line]').forEach((element) => observer.observe(element))
+    return () => observer.disconnect()
+  }, [content])
   const jump = (direction: number) => {
     if (!matches.length) return
     const next = (matchIndex + direction + matches.length) % matches.length
@@ -137,11 +179,11 @@ function LogViewer({ content, references, onAddReferences, onTelemetry }: { cont
         return <div data-line={lineNumber} key={index} onClick={(event) => selectLine(lineNumber, event.shiftKey)} className={cn('group flex min-w-full cursor-pointer border-l-2 border-transparent px-3 py-0.5 hover:border-amber/40 hover:bg-white/[.035]', matches.includes(index) && 'bg-amber/10', selected && 'border-amber bg-amber/15', referenced && !selected && 'border-[#86b59e] bg-[#86b59e]/10')}><button type="button" aria-label={`Selecionar linha ${lineNumber}`} className={cn('sticky left-0 mr-4 w-10 shrink-0 select-none self-start bg-[#101713] pr-2 text-right text-white/25', selected && 'font-bold text-amber', referenced && 'text-[#9bc8ae]')}>{lineNumber}</button><code className={cn('text-[#cbd5cc]', wrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre')}>{line || ' '}</code></div>
       })}
     </div>
-    {selectedLines.length > 0 && <div className="flex items-center gap-3 border-t border-amber/30 bg-[#1a251f] p-3"><Highlighter size={16} className="shrink-0 text-amber" /><p className="min-w-0 flex-1 text-xs text-white/65">Linhas {selectionLabel} selecionadas <span className="text-white/35">· clique alterna; Shift adiciona intervalo</span></p><Button className="h-9 shrink-0 bg-amber px-3 text-[#281408] hover:bg-[#ec8d45]" onClick={() => { onAddReferences(selectedRanges); setAnchorLine(undefined); setSelectedLines([]) }}>Adicionar referências</Button><button className="text-white/40" onClick={() => { setAnchorLine(undefined); setSelectedLines([]) }}><X size={16} /></button></div>}
+    {selectedLines.length > 0 && <div className="flex items-center gap-3 border-t border-amber/30 bg-[#1a251f] p-3"><Highlighter size={16} className="shrink-0 text-amber" /><p className="min-w-0 flex-1 text-xs text-white/65">Linhas {selectionLabel} selecionadas <span className="text-white/35">· clique alterna; Shift adiciona intervalo</span></p><Button className="h-9 shrink-0 bg-amber px-3 text-[#281408] hover:bg-[#ec8d45]" onClick={() => { onAddReferences(selectedRanges); setAnchorLine(undefined); onSelectionChange([]) }}>Adicionar referências</Button><button className="text-white/40" onClick={() => { setAnchorLine(undefined); onSelectionChange([]) }}><X size={16} /></button></div>}
   </div>
 }
 
-function Questionnaire({ trace, onUpdate, onRemoveReference, onComplete, canComplete }: { trace: TraceResponse; onUpdate: (patch: Partial<TraceResponse>, metric?: string) => void; onRemoveReference: (id: string) => void; onComplete: () => void; canComplete: boolean }) {
+function Questionnaire({ trace, selectedLineCount, onUpdate, onRemoveReference, onComplete, canComplete }: { trace: TraceResponse; selectedLineCount: number; onUpdate: (patch: Partial<TraceResponse>, metric?: string) => void; onRemoveReference: (id: string) => void; onComplete: () => void; canComplete: boolean }) {
   const answered = [trace.evidenceReferences.length > 0, trace.confidence, trace.difficulty, trace.ease, trace.directness].filter(Boolean).length
   const firstEvidenceDelta = trace.evidenceReferences[0]?.deltaMs
   const metrics = deriveMetrics(trace)
@@ -150,7 +192,7 @@ function Questionnaire({ trace, onUpdate, onRemoveReference, onComplete, canComp
     <div className="flex-1 overflow-y-auto p-4 sm:p-5">
       <div className="mb-4 rounded-xl bg-[#edf1ea] p-3 text-xs leading-relaxed text-black/55"><strong className="text-forest">Como responder:</strong> clique em uma linha do trace; use Shift+clique para selecionar um intervalo e adicione a referência. A ferramenta registra tempos e interações automaticamente.</div>
       <div className="space-y-4">
-        <section className="rounded-2xl border border-line bg-white p-4"><div className="flex items-start gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-forest text-xs font-bold text-white">Q1</span><div><h3 className="text-sm font-bold">Esforço para auditar</h3><p className="mt-1 text-xs leading-relaxed text-black/50">Aponte a primeira evidência de reconhecimento do desafio. M1.1 e M1.2 são medidos automaticamente.</p></div></div><div className="mt-4"><FieldLabel>Referências de evidência</FieldLabel>{trace.evidenceReferences.length ? <div className="flex flex-wrap gap-2">{trace.evidenceReferences.map((reference) => <div key={reference.id} className="flex items-center gap-2 rounded-lg border border-[#b9cfb5] bg-[#edf4ea] px-3 py-2 text-xs font-semibold text-forest"><span>{reference.startLine === reference.endLine ? `Linha ${reference.startLine}` : `Linhas ${reference.startLine}–${reference.endLine}`}</span><button onClick={() => onRemoveReference(reference.id)} aria-label="Remover referência"><X size={13} /></button></div>)}</div> : <div className="rounded-xl border border-dashed border-line bg-[#faf9f5] p-4 text-center text-xs text-black/45"><MousePointer2 className="mx-auto mb-2 text-amber" size={18} />Selecione linhas no trace à esquerda.</div>}</div><div className="mt-3 grid grid-cols-2 gap-2 text-[11px]"><div className="rounded-lg bg-canvas p-2.5"><span className="block text-black/40">M1.1 · primeira evidência</span><strong>{firstEvidenceDelta != null ? `${(firstEvidenceDelta / 1000).toFixed(1)} s` : 'aguardando'}</strong></div><div className="rounded-lg bg-canvas p-2.5"><span className="block text-black/40">M1.2 · consulta/revisita</span><strong>{metrics.m1_2_lineSelections} seleções · {metrics.m1_2_revisits} revisitas</strong></div></div></section>
+        <section className="rounded-2xl border border-line bg-white p-4"><div className="flex items-start gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-forest text-xs font-bold text-white">Q1</span><div><h3 className="text-sm font-bold">Esforço para auditar</h3><p className="mt-1 text-xs leading-relaxed text-black/50">Aponte a primeira evidência de reconhecimento do desafio. M1.1 e M1.2 são medidos automaticamente.</p></div></div><div className="mt-4"><FieldLabel>Referências de evidência</FieldLabel>{trace.evidenceReferences.length ? <div className="flex flex-wrap gap-2">{trace.evidenceReferences.map((reference) => <div key={reference.id} className="flex items-center gap-2 rounded-lg border border-[#b9cfb5] bg-[#edf4ea] px-3 py-2 text-xs font-semibold text-forest"><span>{reference.startLine === reference.endLine ? `Linha ${reference.startLine}` : `Linhas ${reference.startLine}–${reference.endLine}`}</span><button onClick={() => onRemoveReference(reference.id)} aria-label="Remover referência"><X size={13} /></button></div>)}</div> : <div className="rounded-xl border border-dashed border-line bg-[#faf9f5] p-4 text-center text-xs text-black/45"><MousePointer2 className="mx-auto mb-2 text-amber" size={18} />Selecione linhas no trace à esquerda.</div>}</div><div className="mt-3 grid grid-cols-2 gap-2 text-[11px]"><div className="rounded-lg bg-canvas p-2.5"><span className="block text-black/40">M1.1 · primeira evidência</span><strong>{firstEvidenceDelta != null ? `${(firstEvidenceDelta / 1000).toFixed(1)} s` : 'aguardando'}</strong></div><div className="rounded-lg bg-canvas p-2.5"><span className="block text-black/40">M1.2 · linhas selecionadas/lidas</span><strong>{selectedLineCount} selecionadas · {metrics.m1_2_viewedLines} lidas</strong></div></div></section>
 
         <section className="rounded-2xl border border-line bg-white p-4"><div className="mb-4 flex items-start gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-forest text-xs font-bold text-white">Q2</span><div><h3 className="text-sm font-bold">Confiança subjetiva</h3><p className="mt-1 text-xs text-black/50">Avalie sua confiança e a carga cognitiva percebida.</p></div></div><div className="space-y-5"><div><FieldLabel>M2.1 · Confiança na resposta</FieldLabel><Scale value={trace.confidence} onChange={(confidence) => onUpdate({ confidence }, 'M2.1')} low="Nada confiante" high="Muito confiante" /></div><div><FieldLabel>M2.2 · Carga cognitiva percebida</FieldLabel><Scale value={trace.difficulty} onChange={(difficulty) => onUpdate({ difficulty }, 'M2.2')} low="Muito baixa" high="Muito alta" /></div></div></section>
 
@@ -170,6 +212,7 @@ function Experiment({ manifest, session, setSession, onExit }: { manifest: Manif
   const [content, setContent] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [selectedLines, setSelectedLines] = useState<number[]>([])
   const lastNavigationAt = useRef(0)
   const storedTrace = session.traceResponses[entry.id]
   const trace: TraceResponse = {
@@ -178,39 +221,48 @@ function Experiment({ manifest, session, setSession, onExit }: { manifest: Manif
     evidenceReferences: storedTrace?.evidenceReferences ?? [],
     telemetry: storedTrace?.telemetry ?? [],
   }
+  const traceRef = useRef(trace)
+  traceRef.current = trace
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    setSelectedLines([])
     if (!storedTrace?.evidenceReferences || !storedTrace?.telemetry) setSession({ ...session, traceResponses: { ...session.traceResponses, [entry.id]: trace } })
     setLoading(true); fetch(entry.url).then((response) => response.text()).then(setContent).finally(() => setLoading(false))
   }, [entry.id]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const timer = window.setInterval(() => setElapsed(Math.floor((Date.now() - new Date(trace.startedAt).getTime()) / 1000)), 1000); return () => clearInterval(timer) }, [trace.startedAt])
 
-  const updateTrace = (next: TraceResponse) => setSession({ ...session, traceResponses: { ...session.traceResponses, [entry.id]: next } })
+  const updateTrace = (next: TraceResponse) => { traceRef.current = next; setSession({ ...session, traceResponses: { ...session.traceResponses, [entry.id]: next } }) }
   const eventAt = () => ({ at: new Date().toISOString(), deltaMs: Date.now() - new Date(trace.startedAt).getTime() })
   const recordTelemetry = (type: TelemetryEvent['type'], detail?: TelemetryEvent['detail']) => {
     const now = Date.now()
     if (type === 'scroll' && now - lastNavigationAt.current < 750) return
     if (type === 'scroll') lastNavigationAt.current = now
+    const current = traceRef.current
     const event: TelemetryEvent = { type, ...eventAt(), detail }
-    updateTrace({ ...trace, telemetry: [...trace.telemetry, event], positionChanges: trace.positionChanges + (type === 'scroll' || type === 'search_navigation' ? 1 : 0) })
+    updateTrace({ ...current, telemetry: [...current.telemetry, event], positionChanges: current.positionChanges + (type === 'scroll' || type === 'search_navigation' ? 1 : 0) })
   }
   const addReferences = (ranges: Array<{ startLine: number; endLine: number }>) => {
+    const current = traceRef.current
     const timing = eventAt()
     const additions: EvidenceReference[] = ranges.map(({ startLine, endLine }, index) => ({ id: `${startLine}-${endLine}-${Date.now()}-${index}`, startLine, endLine, addedAt: timing.at, deltaMs: timing.deltaMs }))
     const event: TelemetryEvent = { type: 'evidence_added', ...timing, detail: { ranges: ranges.length, selectedLines: ranges.reduce((total, range) => total + range.endLine - range.startLine + 1, 0) } }
-    updateTrace({ ...trace, firstEvidenceAt: trace.firstEvidenceAt ?? timing.at, evidenceInteractions: trace.evidenceInteractions + ranges.length, evidenceReferences: [...trace.evidenceReferences, ...additions], telemetry: [...trace.telemetry, event] })
+    updateTrace({ ...current, firstEvidenceAt: current.firstEvidenceAt ?? timing.at, evidenceInteractions: current.evidenceInteractions + ranges.length, evidenceReferences: [...current.evidenceReferences, ...additions], telemetry: [...current.telemetry, event] })
   }
   const removeReference = (id: string) => {
-    const reference = trace.evidenceReferences.find((item) => item.id === id)
+    const current = traceRef.current
+    const reference = current.evidenceReferences.find((item) => item.id === id)
     const event: TelemetryEvent = { type: 'evidence_removed', ...eventAt(), detail: reference ? { startLine: reference.startLine, endLine: reference.endLine } : undefined }
-    updateTrace({ ...trace, evidenceReferences: trace.evidenceReferences.filter((item) => item.id !== id), telemetry: [...trace.telemetry, event] })
+    updateTrace({ ...current, evidenceReferences: current.evidenceReferences.filter((item) => item.id !== id), telemetry: [...current.telemetry, event] })
   }
   const updateResponse = (patch: Partial<TraceResponse>, metric?: string) => {
+    const current = traceRef.current
     const event: TelemetryEvent | null = metric ? { type: 'answer_changed', ...eventAt(), detail: { metric } } : null
-    updateTrace({ ...trace, ...patch, telemetry: event ? [...trace.telemetry, event] : trace.telemetry })
+    updateTrace({ ...current, ...patch, telemetry: event ? [...current.telemetry, event] : current.telemetry })
   }
   const answered = trace.evidenceReferences.length > 0 && trace.confidence && trace.difficulty && trace.ease && trace.directness
+  const selectedLineCount = new Set([...referencedLines(trace.evidenceReferences), ...selectedLines]).size
+  const initiallyViewedLines = trace.telemetry.filter((event) => event.type === 'lines_viewed').flatMap((event) => Array.isArray(event.detail?.lines) ? event.detail.lines : [])
   const completeTrace = () => {
     const now = new Date().toISOString(); const nextResponses = { ...session.traceResponses, [entry.id]: { ...trace, readingCompletedAt: trace.readingCompletedAt ?? now, completedAt: now } }
     setSession({ ...session, traceResponses: nextResponses, currentIndex: session.currentIndex + 1, completedAt: session.currentIndex === sequence.length - 1 ? now : undefined })
@@ -221,15 +273,15 @@ function Experiment({ manifest, session, setSession, onExit }: { manifest: Manif
     <header className="flex h-[72px] shrink-0 items-center gap-5 border-b border-line bg-paper px-4 sm:px-6"><button onClick={onExit} aria-label="Voltar ao início" className="rounded-lg p-2 hover:bg-black/5"><ArrowLeft size={18} /></button><Logo /><div className="hidden h-7 w-px bg-line sm:block" /><div className="min-w-0 flex-1"><div className="flex items-center gap-2 text-xs text-black/45"><span>Sessão {session.participantCode}</span><span>·</span><span>Trace {session.currentIndex + 1} de 3</span></div><Progress value={(session.currentIndex / 3) * 100} className="mt-2 max-w-sm" /></div><div className="hidden items-center gap-2 rounded-xl border border-line px-3 py-2 font-mono text-sm text-black/55 sm:flex"><Clock3 size={15} /> {formatDuration(elapsed)}</div></header>
     <div className="flex shrink-0 items-center gap-3 border-b border-line bg-[#f7f5ef] px-4 py-2.5 sm:px-6"><span className={cn('rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-[.14em]', entry.harness === 'bdi' ? 'bg-[#e9e2f5] text-[#624b83]' : entry.harness === 'codex' ? 'bg-[#dcece5] text-forest' : 'bg-[#f8e5d8] text-[#97552b]')}>{harnessLabel[entry.harness]}</span><span className="truncate text-sm font-semibold">{labelTask(entry.task)}</span><span className="hidden text-xs text-black/35 sm:inline">· {entry.repetition} · {entry.model}</span><span className="ml-auto text-xs text-black/35">{content.split('\n').length.toLocaleString('pt-BR')} linhas</span></div>
     <main className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1.35fr)_minmax(390px,.65fr)]">
-      <section className="min-h-0 border-r border-line">{loading ? <div className="grid h-full place-items-center bg-[#101713] text-sm text-white/45">Carregando trace…</div> : <LogViewer content={content} references={trace.evidenceReferences} onAddReferences={addReferences} onTelemetry={recordTelemetry} />}</section>
-      <aside className="min-h-0"><Questionnaire trace={trace} onUpdate={updateResponse} onRemoveReference={removeReference} onComplete={completeTrace} canComplete={Boolean(answered)} /></aside>
+      <section className="min-h-0 border-r border-line">{loading ? <div className="grid h-full place-items-center bg-[#101713] text-sm text-white/45">Carregando trace…</div> : <LogViewer key={entry.id} content={content} references={trace.evidenceReferences} selectedLines={selectedLines} onSelectionChange={setSelectedLines} onAddReferences={addReferences} onTelemetry={recordTelemetry} initialViewedLines={initiallyViewedLines} />}</section>
+      <aside className="min-h-0"><Questionnaire trace={trace} selectedLineCount={selectedLineCount} onUpdate={updateResponse} onRemoveReference={removeReference} onComplete={completeTrace} canComplete={Boolean(answered)} /></aside>
     </main>
   </div>
 }
 
 function Completion({ session, manifest, onReset }: { session: SessionState; manifest: Manifest; onReset: () => void }) {
   const sequence = latinSquare[session.group].map((harness, index) => manifest.entries.find((entry) => entry.harness === harness && entry.task === session.taskSet[index] && entry.repetition === session.repetition)).filter(Boolean) as TraceEntry[]
-  const payload = { schemaVersion: 2, exportedAt: new Date().toISOString(), experiment: 'sbench-latin-square-q1-q4', session, traces: sequence, derivedMetrics: Object.fromEntries(Object.entries(session.traceResponses).map(([traceId, response]) => [traceId, deriveMetrics(response)])) }
+  const payload = { schemaVersion: 3, exportedAt: new Date().toISOString(), experiment: 'sbench-latin-square-q1-q4', session, traces: sequence, derivedMetrics: Object.fromEntries(Object.entries(session.traceResponses).map(([traceId, response]) => [traceId, deriveMetrics(response)])) }
   const [submission, setSubmission] = useState<'sending' | 'saved' | 'failed'>('sending')
   const [submissionMessage, setSubmissionMessage] = useState('Salvando no banco de dados…')
   const submit = async () => {
