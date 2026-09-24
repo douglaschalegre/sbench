@@ -11,7 +11,7 @@ dependencies = [
     "pytest-cov>=7.0.0",
     "python-dotenv>=1.2.2",
     "textual>=1.0.0",
-    "voluntas>=0.1.1",
+    "voluntas>=0.1.3",
 ]
 
 [project.scripts]
