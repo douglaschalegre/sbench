@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 import time
 from collections.abc import Callable
@@ -22,9 +21,6 @@ from .harnesses import build_harness_invocation
 from .paths import display_path
 from .scratch import ScratchCleanupResult, capture_task_snapshot, restore_task_snapshot
 from .tasks import Task
-
-
-ANSI_COLOR_RE = re.compile(r"\x1b\[[0-9;:]*m")
 
 
 @dataclass(frozen=True)
@@ -132,10 +128,6 @@ def execute_run_plan(
         stderr_text = _normalize_process_output(error.stderr)
     except FileNotFoundError as error:
         stderr_text = f"missing executable: {error.filename}\n"
-
-    if plan.harness == "bdi":
-        stdout_text = ANSI_COLOR_RE.sub("", stdout_text)
-        stderr_text = ANSI_COLOR_RE.sub("", stderr_text)
 
     end = datetime.now(timezone.utc)
     elapsed_seconds = round(time.monotonic() - start_monotonic, 3)
@@ -351,8 +343,6 @@ def run_result_to_dict(result: RunExecutionResult, repo_root: Path) -> dict[str,
         "track": result.track,
         "working_dir": display_path(result.working_dir, repo_root),
     }
-
-
 def matrix_result_to_dict(
     matrix_result: MatrixRunResult,
     repo_root: Path,

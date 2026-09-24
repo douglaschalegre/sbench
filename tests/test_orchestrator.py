@@ -962,27 +962,6 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(result.incomplete_reason, "empty answer directory")
 
-    def test_bdi_logs_remove_terminal_color_codes(self) -> None:
-        command = (
-            sys.executable,
-            "-c",
-            "import sys; print('\\x1b[96mcolored\\x1b[0m'); "
-            "sys.stderr.write('\\x1b[31merror\\x1b[0m\\n')",
-        )
-        with self.make_repo() as repo:
-            repo_root = Path(repo)
-            plan = self.make_plan(repo_root, harness="bdi", command=command)
-            result = orchestrator.run_matrix(
-                repo_root,
-                [plan],
-                model="gpt-5.2",
-                timeout_seconds=5,
-                run_id="colored-bdi-run",
-            ).results[0]
-
-            self.assertEqual(result.stdout_log_path.read_text(encoding="utf-8"), "colored\n")
-            self.assertEqual(result.stderr_log_path.read_text(encoding="utf-8"), "error\n")
-
     def test_run_matrix_records_nonzero_exit_as_failure(self) -> None:
         command = (
             sys.executable,
