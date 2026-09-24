@@ -9,7 +9,7 @@ const schema = `
 PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS experiment_sessions (
   session_id TEXT PRIMARY KEY, participant_code TEXT NOT NULL,
-  group_number INTEGER NOT NULL CHECK (group_number BETWEEN 1 AND 3),
+  group_number INTEGER NOT NULL CHECK (group_number BETWEEN 1 AND 7),
   repetition TEXT NOT NULL, task_set_json TEXT NOT NULL, started_at TEXT NOT NULL,
   completed_at TEXT NOT NULL, exported_at TEXT NOT NULL, received_at TEXT NOT NULL,
   experiment TEXT NOT NULL, schema_version INTEGER NOT NULL, payload_json TEXT NOT NULL
@@ -47,6 +47,22 @@ function required(object, key, type) {
 
 export function openDatabase(path) {
   const database = new DatabaseSync(path)
+  const existing = database.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'experiment_sessions'").get()
+  if (existing?.sql?.includes('group_number BETWEEN 1 AND 3')) {
+    database.exec('PRAGMA foreign_keys = OFF; BEGIN IMMEDIATE;')
+    try {
+      database.exec(existing.sql.replace('experiment_sessions', 'experiment_sessions_new').replace('group_number BETWEEN 1 AND 3', 'group_number BETWEEN 1 AND 7'))
+      database.exec('INSERT INTO experiment_sessions_new SELECT * FROM experiment_sessions')
+      database.exec('DROP TABLE experiment_sessions')
+      database.exec('ALTER TABLE experiment_sessions_new RENAME TO experiment_sessions')
+      database.exec('COMMIT')
+    } catch (error) {
+      database.exec('ROLLBACK')
+      throw error
+    } finally {
+      database.exec('PRAGMA foreign_keys = ON')
+    }
+  }
   database.exec(schema)
   return database
 }
@@ -56,8 +72,10 @@ export function saveSession(database, payload) {
   const sessionId = required(session, 'sessionId', 'string')
   required(session, 'participantCode', 'string')
   required(session, 'completedAt', 'string')
-  if (!Array.isArray(payload.traces) || Object.keys(session.traceResponses ?? {}).length !== 3 || payload.traces.length !== 3) {
-    throw new Error('a sessão concluída deve conter exatamente três traces')
+  if (!Number.isInteger(session.group) || session.group < 1 || session.group > 7) throw new Error('grupo inválido')
+  const taskCount = session.taskSet?.length
+  if (!Array.isArray(session.taskSet) || ![3, 7].includes(taskCount) || (taskCount === 3 && session.group > 3) || new Set(session.taskSet).size !== taskCount || !Array.isArray(payload.traces) || Object.keys(session.traceResponses ?? {}).length !== taskCount || payload.traces.length !== taskCount || session.currentIndex !== taskCount) {
+    throw new Error('a sessão concluída deve conter três ou sete tarefas e o mesmo número de traces')
   }
   const entries = new Map(payload.traces.map((entry) => [entry.id, entry]))
   const upsertSession = database.prepare(`INSERT INTO experiment_sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -77,6 +95,7 @@ export function saveSession(database, payload) {
       const traceId = entry.id
       const response = session.traceResponses[traceId]
       if (!response?.completedAt || !entries.has(traceId)) throw new Error(`resposta ausente ou incompleta para o trace ${traceId}`)
+      if (!response.evidenceReferences?.length && !response.noReferencesFound) throw new Error(`referência ou resposta "Não encontrei referências" obrigatória para o trace ${traceId}`)
       insertTrace.run(sessionId, traceId, sequenceIndex, entry.runId ?? null, entry.task, entry.harness, entry.repetition, entry.model ?? null, entry.status ?? null, response.startedAt, response.readingCompletedAt ?? null, response.completedAt, response.firstEvidenceAt ?? null, response.confidence ?? null, response.difficulty ?? null, response.ease ?? null, response.directness ?? null, response.notes ?? '', response.evidenceInteractions ?? 0, response.positionChanges ?? 0, JSON.stringify(payload.derivedMetrics?.[traceId] ?? {}))
       response.evidenceReferences?.forEach((reference) => insertReference.run(reference.id, sessionId, traceId, reference.startLine, reference.endLine, reference.addedAt, reference.deltaMs))
       response.telemetry?.forEach((event, index) => insertEvent.run(sessionId, traceId, index, event.type, event.at, event.deltaMs, event.detail == null ? null : JSON.stringify(event.detail)))

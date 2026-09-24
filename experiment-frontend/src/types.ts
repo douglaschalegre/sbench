@@ -1,3 +1,5 @@
+import type { GroupNumber } from './data'
+
 export type Harness = 'bdi' | 'codex' | 'opencode'
 
 export type TraceEntry = {
@@ -38,6 +40,7 @@ export type TraceResponse = {
   evidenceInteractions: number
   positionChanges: number
   evidenceReferences: EvidenceReference[]
+  noReferencesFound?: boolean
   telemetry: TelemetryEvent[]
   confidence?: number
   difficulty?: number
@@ -49,7 +52,7 @@ export type TraceResponse = {
 export type SessionState = {
   sessionId: string
   participantCode: string
-  group: 1 | 2 | 3
+  group: GroupNumber
   repetition: string
   taskSet: string[]
   startedAt: string

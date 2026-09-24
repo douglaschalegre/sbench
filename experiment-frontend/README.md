@@ -1,6 +1,6 @@
 # SBench — interface do experimento
 
-Módulo independente para conduzir o experimento de auditabilidade em quadrado latino. O progresso fica no navegador e sessões concluídas são persistidas em SQLite.
+Módulo independente para conduzir o experimento de auditabilidade. Cada um dos sete grupos avalia as sete atividades; a ordem dos frameworks segue a rotação BDI → Codex → OpenCode, com deslocamento conforme o grupo (os grupos 4–7 repetem o ciclo). O progresso fica no navegador e sessões concluídas são persistidas em SQLite.
 
 ## Executar
 
