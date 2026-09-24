@@ -51,7 +51,6 @@ def create_agent(
         ],
         intentions=[],
         verbose=config.verbose,
-        enable_human_in_the_loop=False,
         usage_tracker=usage_tracker,
         emit_run_events_to_stdout=True,
         stream_model_requests=True,
