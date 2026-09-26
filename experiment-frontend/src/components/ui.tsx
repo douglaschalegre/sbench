@@ -24,7 +24,7 @@ export function Progress({ value, className }: { value: number; className?: stri
 
 export function Segmented({ value, onValueChange, options, ariaLabel }: { value?: string; onValueChange: (value: string) => void; options: { value: string; label: string }[]; ariaLabel: string }) {
   return <RadioGroupPrimitive.Root value={value} onValueChange={onValueChange} aria-label={ariaLabel} className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-    {options.map((option) => <label key={option.value} className={cn('cursor-pointer rounded-xl border px-3 py-2.5 text-center text-sm font-medium transition', value === option.value ? 'border-forest bg-forest text-white' : 'border-line bg-white hover:border-moss')}>
+    {options.map((option) => <label key={option.value} className={cn('flex min-h-12 cursor-pointer items-center justify-center whitespace-nowrap rounded-xl border px-2 py-2 text-center text-sm font-semibold transition', value === option.value ? 'border-forest bg-forest text-white' : 'border-line bg-white hover:border-moss')}>
       <RadioGroupPrimitive.Item value={option.value} className="sr-only" />{option.label}
     </label>)}
   </RadioGroupPrimitive.Root>
