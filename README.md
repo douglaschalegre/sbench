@@ -42,6 +42,12 @@ For strict smoke comparison runs, follow `protocol/strict_fair_run_protocol.md` 
 
 ## Benchmark Orchestrator
 
+All three harnesses receive the same initial task instruction, defined in
+`sbench/prompts.py`. Codex and OpenCode receive it as their command-line prompt;
+BDI receives it as its initial desire. Task-specific requirements remain in each
+task's `task.md`. Framework-internal instructions are separate from this shared
+SBench instruction.
+
 Install project dependencies with uv:
 
 ```sh

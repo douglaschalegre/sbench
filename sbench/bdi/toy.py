@@ -13,6 +13,7 @@ from pydantic_ai.mcp import MCPServerStdio  # noqa: F401
 from runners.bdi import SUCCESS_OUTCOMES, drive_bdi_cycles
 from voluntas import BDI, BDIUsageTracker
 
+from ..prompts import STANDARD_TASK_PROMPT
 from .config import RunConfig, RunnerConfigError, get_task_path, parse_config
 from .litellm_proxy import create_litellm_model
 from .tools import run_command
@@ -39,16 +40,7 @@ def create_agent(
 ) -> BDI:
     agent = BDI(
         model,
-        desires=[
-            (
-                f"Complete the SBench task in {task_path}. "
-                "Inspect task.md and any non-hidden local task files. "
-                "Do not read hidden SBench evaluation files. "
-                "Create all requested deliverables in the answer/ folder. "
-                "Use the filesystem MCP server and run_in_task terminal tool as needed. "
-                "Before stopping, verify answer/ contains the requested files."
-            )
-        ],
+        desires=[STANDARD_TASK_PROMPT],
         intentions=[],
         verbose=config.verbose,
         usage_tracker=usage_tracker,

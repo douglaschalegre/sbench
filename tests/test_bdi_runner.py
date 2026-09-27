@@ -10,6 +10,10 @@ import pytest
 from sbench.bdi import config as bdi_config
 from sbench.bdi import tools as bdi_tools
 from sbench.bdi import toy
+from sbench.harnesses import build_harness_invocation
+from sbench.prompts import STANDARD_TASK_PROMPT
+
+
 def make_sbench_root(tmp_path: Path, task_id: str = "task-a") -> Path:
     sbench_root = tmp_path / "sbench"
     task_path = sbench_root / "tasks" / task_id
@@ -145,7 +149,16 @@ def test_create_agent_scopes_run_tool_and_usage_tracker(
     assert captured["kwargs"]["emit_run_events_to_stdout"] is True
     assert captured["kwargs"]["stream_model_requests"] is True
     assert captured["kwargs"]["mcp_servers"] == []
-    assert "Do not read hidden SBench evaluation files" in captured["kwargs"]["desires"][0]
+    assert captured["kwargs"]["desires"] == [STANDARD_TASK_PROMPT]
+    for harness in ("codex", "opencode"):
+        invocation = build_harness_invocation(
+            harness,
+            model="gpt-test",
+            timeout_seconds=9,
+            task_dir=task_path,
+            repo_root=tmp_path,
+        )
+        assert invocation.command[-1] == captured["kwargs"]["desires"][0]
     assert result == "ran"
     assert captured["run_command"] == {
         "task_path": task_path,

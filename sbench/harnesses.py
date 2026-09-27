@@ -6,17 +6,13 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from .paths import display_path
+from .prompts import STANDARD_TASK_PROMPT
 from .tasks import SelectionError, split_requested_values
 
 
 SUPPORTED_HARNESSES = ("bdi", "codex", "opencode")
 CLI_BINARY_BY_HARNESS = {"bdi": "uv", "codex": "codex", "opencode": "opencode"}
 DEFAULT_REASONING_EFFORT = "medium"
-STANDARD_TASK_PROMPT = (
-    "You are working in the provided folder. Read task.md and the other local "
-    "files, then complete the requested work. Create the requested `answer/` "
-    "folder and put all requested deliverables there."
-)
 
 
 @dataclass(frozen=True)
