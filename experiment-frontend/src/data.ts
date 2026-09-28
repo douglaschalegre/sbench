@@ -9,4 +9,4 @@ export const latinSquare: Record<GroupNumber, Harness[]> = Object.fromEntries(
 ) as Record<GroupNumber, Harness[]>
 
 export const harnessLabel: Record<Harness, string> = { bdi: 'BDI', codex: 'Codex', opencode: 'OpenCode' }
-export const defaultTasks = ['incident_staffing_plan', 'travel_reimbursement_audit', 'vendor_selection']
+export const defaultTasks = ['incident_staffing_plan', 'community_workshop_replan', 'shelter_restock_scope']

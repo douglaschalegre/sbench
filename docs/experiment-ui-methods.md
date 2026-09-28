@@ -20,7 +20,7 @@ Trace identifiers combine the run, task, framework, and repetition in the availa
 
 ### 2.2 Session configuration and framework order
 
-The researcher enters a participant code, selects one of three Latin-square rows, selects a run identified by its ID and model, selects a repetition available in that run, and specifies three distinct tasks in order. The code is converted to uppercase and must contain at least three non-whitespace characters. The default task sequence is Incident Staffing Plan, Travel Reimbursement Audit, and Vendor Selection. The newest lexicographically sorted run is selected by default; its last lexicographically sorted repetition is the default repetition. These choices are configurable before starting.
+The researcher enters a participant code, selects one of three Latin-square rows, selects a run identified by its ID and model, selects a repetition available in that run, and specifies three distinct tasks in order. The code is converted to uppercase and must contain at least three non-whitespace characters. The default task sequence is Incident Staffing Plan, Community Workshop Replan, and Shelter Restock Scope. The newest lexicographically sorted run is selected by default; its last lexicographically sorted repetition is the default repetition. These choices are configurable before starting.
 
 | Assigned row | Trace 1 | Trace 2 | Trace 3 |
 | --- | --- | --- | --- |
