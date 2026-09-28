@@ -1,0 +1,56 @@
+{
+  "archive_path": "answers/shelter_restock_scope/openai__gpt-6-luna/bdi/r1",
+  "archived_paths": [
+    "answers/shelter_restock_scope/openai__gpt-6-luna/bdi/r1/core_purchase_list.md",
+    "answers/shelter_restock_scope/openai__gpt-6-luna/bdi/r1/final_restock_note.md",
+    "answers/shelter_restock_scope/openai__gpt-6-luna/bdi/r1/scope_control.md"
+  ],
+  "command": [
+    "uv",
+    "run",
+    "sbench-bdi",
+    "--sbench-root",
+    "/Users/douglas/code/masters/sbench",
+    "--tasks",
+    "shelter_restock_scope",
+    "--model",
+    "chatgpt/gpt-6-luna",
+    "--command-timeout-seconds",
+    "600",
+    "--quiet"
+  ],
+  "elapsed_seconds": 49.748,
+  "end_time": "2026-09-28T03:10:02Z",
+  "exit_code": 0,
+  "harness": "bdi",
+  "incomplete_reason": null,
+  "json_event_log_path": null,
+  "metadata_path": "runs/20260928T025849Z/entries/shelter_restock_scope/bdi/r1/metadata.json",
+  "model": "openai/gpt-6-luna",
+  "model_path": "openai__gpt-6-luna",
+  "scratch_cleanup": {
+    "created_paths": [],
+    "deleted_paths": [],
+    "modified_paths": [],
+    "policy": "restore_task_files_outside_answer_after_each_run",
+    "record_dir": "runs/20260928T025849Z/entries/shelter_restock_scope/bdi/r1/scratch"
+  },
+  "settings": {
+    "binary": "uv",
+    "command_model": "chatgpt/gpt-6-luna",
+    "command_timeout_seconds": 600,
+    "delegation": "SBench BDI runner",
+    "reasoning_effort": "medium",
+    "runner": "sbench-bdi",
+    "task_directory_scope": "tasks/shelter_restock_scope"
+  },
+  "start_time": "2026-09-28T03:09:12Z",
+  "status": "success",
+  "stderr_log_path": "runs/20260928T025849Z/entries/shelter_restock_scope/bdi/r1/stderr.log",
+  "stdout_log_path": "runs/20260928T025849Z/entries/shelter_restock_scope/bdi/r1/stdout.log",
+  "task_id": "shelter_restock_scope",
+  "timed_out": false,
+  "timeout_seconds": 600,
+  "track": "distractor_goal",
+  "working_dir": "."
+}

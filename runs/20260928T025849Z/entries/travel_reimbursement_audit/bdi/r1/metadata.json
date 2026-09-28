@@ -1,0 +1,56 @@
+{
+  "archive_path": "answers/travel_reimbursement_audit/openai__gpt-6-luna/bdi/r1",
+  "archived_paths": [
+    "answers/travel_reimbursement_audit/openai__gpt-6-luna/bdi/r1/expense_decisions.md",
+    "answers/travel_reimbursement_audit/openai__gpt-6-luna/bdi/r1/policy_application.md",
+    "answers/travel_reimbursement_audit/openai__gpt-6-luna/bdi/r1/reimbursement_summary.md"
+  ],
+  "command": [
+    "uv",
+    "run",
+    "sbench-bdi",
+    "--sbench-root",
+    "/Users/douglas/code/masters/sbench",
+    "--tasks",
+    "travel_reimbursement_audit",
+    "--model",
+    "chatgpt/gpt-6-luna",
+    "--command-timeout-seconds",
+    "600",
+    "--quiet"
+  ],
+  "elapsed_seconds": 50.971,
+  "end_time": "2026-09-28T03:12:38Z",
+  "exit_code": 0,
+  "harness": "bdi",
+  "incomplete_reason": null,
+  "json_event_log_path": null,
+  "metadata_path": "runs/20260928T025849Z/entries/travel_reimbursement_audit/bdi/r1/metadata.json",
+  "model": "openai/gpt-6-luna",
+  "model_path": "openai__gpt-6-luna",
+  "scratch_cleanup": {
+    "created_paths": [],
+    "deleted_paths": [],
+    "modified_paths": [],
+    "policy": "restore_task_files_outside_answer_after_each_run",
+    "record_dir": "runs/20260928T025849Z/entries/travel_reimbursement_audit/bdi/r1/scratch"
+  },
+  "settings": {
+    "binary": "uv",
+    "command_model": "chatgpt/gpt-6-luna",
+    "command_timeout_seconds": 600,
+    "delegation": "SBench BDI runner",
+    "reasoning_effort": "medium",
+    "runner": "sbench-bdi",
+    "task_directory_scope": "tasks/travel_reimbursement_audit"
+  },
+  "start_time": "2026-09-28T03:11:47Z",
+  "status": "success",
+  "stderr_log_path": "runs/20260928T025849Z/entries/travel_reimbursement_audit/bdi/r1/stderr.log",
+  "stdout_log_path": "runs/20260928T025849Z/entries/travel_reimbursement_audit/bdi/r1/stdout.log",
+  "task_id": "travel_reimbursement_audit",
+  "timed_out": false,
+  "timeout_seconds": 600,
+  "track": "smoke",
+  "working_dir": "."
+}
