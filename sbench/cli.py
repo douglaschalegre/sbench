@@ -34,7 +34,7 @@ from .tasks import SelectionError, Task, discover_tasks, select_tasks
 
 DEFAULT_TIMEOUT_SECONDS = 600
 DEFAULT_RESULTS_DB = "results.sqlite"
-DEFAULT_MODEL = "openai/gpt-5.4"
+DEFAULT_MODEL = "openai/gpt-6-luna"
 
 
 def render_list(tasks: Sequence[Task]) -> str:

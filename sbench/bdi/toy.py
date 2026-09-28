@@ -10,8 +10,7 @@ import time
 from dotenv import load_dotenv
 from pydantic_ai.mcp import MCPServerStdio  # noqa: F401
 
-from runners.bdi import SUCCESS_OUTCOMES, drive_bdi_cycles
-from voluntas import BDI, BDIUsageTracker
+from voluntas import BDI, BDIUsageTracker, DesireStatus
 
 from ..prompts import STANDARD_TASK_PROMPT
 from .config import RunConfig, RunnerConfigError, get_task_path, parse_config
@@ -26,6 +25,7 @@ CYCLE_SLEEP_SECONDS = 2.0
 EXIT_SUCCESS = 0
 EXIT_TASK_FAILURE = 1
 EXIT_CONFIG_ERROR = 2
+SUCCESS_OUTCOMES = frozenset({"achieved"})
 
 
 def create_model(config: RunConfig):
@@ -44,7 +44,6 @@ def create_agent(
         intentions=[],
         verbose=config.verbose,
         usage_tracker=usage_tracker,
-        emit_run_events_to_stdout=True,
         stream_model_requests=True,
         mcp_servers=[
             # MCPServerStdio(
@@ -92,16 +91,21 @@ async def run_task(model: object, task_path: Path, config: RunConfig) -> str:
             usage_tracker=usage_tracker,
         )
         async with agent.run_mcp_servers():
-            summary = await drive_bdi_cycles(
-                agent,
-                max_cycles=MAX_CYCLES,
-                sleep_seconds=CYCLE_SLEEP_SECONDS,
-                progress_callback=lambda event: print(
-                    f"Cycle {event.cycle}/{event.max_cycles}"
-                ),
-            )
-            cycles_run = summary.cycles_run
-            outcome = summary.outcome
+            for cycle in range(1, MAX_CYCLES + 1):
+                print(f"Cycle {cycle}/{MAX_CYCLES}")
+                status = await agent.bdi_cycle()
+                cycles_run = cycle
+                if status in {"terminal", "stopped"}:
+                    desire_statuses = [desire.status for desire in agent.desires]
+                    outcome = (
+                        "achieved"
+                        if desire_statuses
+                        and all(status == DesireStatus.ACHIEVED for status in desire_statuses)
+                        else "failed"
+                    )
+                    break
+                if cycle < MAX_CYCLES:
+                    await asyncio.sleep(CYCLE_SLEEP_SECONDS)
     except Exception as exc:
         outcome = "error"
         print(f"[ERROR] Task {task_slug} failed: {exc}")

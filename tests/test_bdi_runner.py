@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from voluntas import DesireStatus
 
 from sbench.bdi import config as bdi_config
 from sbench.bdi import tools as bdi_tools
@@ -146,7 +147,6 @@ def test_create_agent_scopes_run_tool_and_usage_tracker(
     assert captured["args"] == ("model",)
     assert captured["kwargs"]["verbose"] is False
     assert captured["kwargs"]["usage_tracker"] is usage_tracker
-    assert captured["kwargs"]["emit_run_events_to_stdout"] is True
     assert captured["kwargs"]["stream_model_requests"] is True
     assert captured["kwargs"]["mcp_servers"] == []
     assert captured["kwargs"]["desires"] == [STANDARD_TASK_PROMPT]
@@ -194,7 +194,7 @@ def test_run_task_emits_usage_metadata(
             self.beliefs = SimpleNamespace(beliefs={"task": "done"})
             self.desires = [
                 SimpleNamespace(
-                    id="desire_1", status=SimpleNamespace(value="achieved")
+                    id="desire_1", status=DesireStatus.ACHIEVED
                 )
             ]
             self.active_intention = None

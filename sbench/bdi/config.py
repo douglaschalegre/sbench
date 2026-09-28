@@ -9,7 +9,7 @@ from pathlib import Path
 from ..paths import default_repo_root
 
 
-MODEL_NAME = "gpt-5.4"
+MODEL_NAME = "gpt-6-luna"
 SBENCH_ROOT = default_repo_root()
 COMMAND_TIMEOUT_SECONDS = 180
 VERBOSE = True

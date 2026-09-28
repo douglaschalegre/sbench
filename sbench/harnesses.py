@@ -12,7 +12,7 @@ from .tasks import SelectionError, split_requested_values
 
 SUPPORTED_HARNESSES = ("bdi", "codex", "opencode")
 CLI_BINARY_BY_HARNESS = {"bdi": "uv", "codex": "codex", "opencode": "opencode"}
-DEFAULT_REASONING_EFFORT = "medium"
+DEFAULT_REASONING_EFFORT = "low"
 
 
 @dataclass(frozen=True)
