@@ -68,7 +68,7 @@ The questionnaire contains four numbered sections but five required response com
 
 | Section and field | Original Portuguese wording | English translation and response |
 | --- | --- | --- |
-| 1. Esforço para auditar | Aponte para a primeira linha do log que deixa claro para você em qual atividade o agente está trabalhando e qual o objetivo dele. | Point to the first log line that makes clear to you which activity the agent is working on and what its objective is. Participants add one or more line references, or choose `Não encontrei referências`, meaning “I did not find references.” |
+| 1. Esforço para auditar | Aponte para as linhas do log que deixam claro para você em qual atividade o agente está trabalhando e qual o objetivo dele. | Select the log lines that make clear which activity the agent is working on and what its objective is, or choose `Não encontrei referências`, meaning “I did not find references.” |
 | 2. Confiança subjetiva, confidence | O quão confiante você ficou da sua resposta? | How confident were you in your answer? Integer scale from 1, `Nada confiante`, not at all confident, to 5, `Muito confiante`, very confident. |
 | 2. Confiança subjetiva, cognitive effort | Qual a sua percepção de esforço cognitivo para encontrar o resultado? | What is your perception of the cognitive effort required to find the result? Integer scale from 1, `Muito baixa`, very low, to 5, `Muito alta`, very high. |
 | 3. Localização da evidência | Qual a sua percepção do quão fácil foi encontrar essa informação? | How easy did you find it to locate this information? Integer scale from 1, `Muito difícil`, very difficult, to 5, `Muito fácil`, very easy. |
