@@ -83,17 +83,21 @@ function Tutorial({ enabled, onComplete, onStart }: { enabled: boolean; onComple
 }
 
 function Welcome({ manifest, onStart, restored, onResume, onReset }: { manifest: Manifest; onStart: (state: SessionState) => void; restored: SessionState | null; onResume: () => void; onReset: () => void }) {
-  const tasks = [...new Set(manifest.entries.map((entry) => entry.task))]
-  const repetitions = [...new Set(manifest.entries.map((entry) => entry.repetition))].sort()
+  const runs = [...new Set(manifest.entries.map((entry) => entry.runId))].sort().reverse()
+  const [runId, setRunId] = useState(runs[0] ?? '')
+  const runEntries = manifest.entries.filter((entry) => entry.runId === runId)
+  const tasks = [...new Set(runEntries.map((entry) => entry.task))]
+  const repetitions = [...new Set(runEntries.map((entry) => entry.repetition))].sort()
   const [participantCode, setParticipantCode] = useState('')
   const [group, setGroup] = useState<GroupNumber>(1)
   const [repetition, setRepetition] = useState(repetitions.at(-1) ?? 'r3')
   const [taskSet, setTaskSet] = useState<string[]>(defaultTasks)
   const [, setTutorialComplete] = useState(false)
   const [configurationComplete, setConfigurationComplete] = useState(false)
-  const configurationValid = participantCode.trim().length >= 3 && taskSet.length === 3 && new Set(taskSet).size === 3
+  const sequenceAvailable = latinSquare[group].every((harness, index) => runEntries.some((entry) => entry.harness === harness && entry.task === taskSet[index] && entry.repetition === repetition))
+  const configurationValid = participantCode.trim().length >= 3 && taskSet.length === 3 && new Set(taskSet).size === 3 && sequenceAvailable
 
-  const start = () => onStart({ sessionId: newSessionId(), participantCode: participantCode.trim(), group, repetition, taskSet, startedAt: new Date().toISOString(), currentIndex: 0, traceResponses: {} })
+  const start = () => onStart({ sessionId: newSessionId(), participantCode: participantCode.trim(), group, runId, repetition, taskSet, startedAt: new Date().toISOString(), currentIndex: 0, traceResponses: {} })
 
   return <div className="min-h-screen bg-canvas text-ink">
     <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10"><Logo /><div className="flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-xs text-black/55"><ShieldCheck size={14} className="text-forest" /> Progresso salvo neste dispositivo</div></header>
@@ -106,8 +110,10 @@ function Welcome({ manifest, onStart, restored, onResume, onReset }: { manifest:
         <div className="space-y-6">
           <div><FieldLabel>Código do participante</FieldLabel><input value={participantCode} onChange={(e) => setParticipantCode(e.target.value.toUpperCase())} placeholder="Ex.: P-014" className="h-12 w-full rounded-xl border border-line bg-white px-4 text-sm uppercase tracking-wider outline-none transition placeholder:normal-case placeholder:tracking-normal focus:border-forest focus:ring-2 focus:ring-forest/10" /></div>
           <div><FieldLabel>Participante no quadrado latino</FieldLabel><Segmented value={String(group)} onValueChange={(value) => setGroup(Number(value) as GroupNumber)} ariaLabel="Participante experimental" options={groupNumbers.map((n) => ({ value: String(n), label: `Participante ${n}` }))} /><div className="mt-2 flex items-center gap-2 text-xs text-black/45">Cada participante fará três traces em uma ordem diferente.</div></div>
+          <div><FieldLabel>Execução e modelo</FieldLabel><select value={runId} onChange={(e) => { const nextRun = e.target.value; const nextEntries = manifest.entries.filter((entry) => entry.runId === nextRun); const nextRepetitions = [...new Set(nextEntries.map((entry) => entry.repetition))].sort(); setRunId(nextRun); setRepetition(nextRepetitions.includes(repetition) ? repetition : nextRepetitions.at(-1) ?? '') }} className="h-12 w-full rounded-xl border border-line bg-white px-4 text-sm outline-none focus:border-forest">{runs.map((id) => { const models = [...new Set(manifest.entries.filter((entry) => entry.runId === id).map((entry) => entry.model))]; return <option key={id} value={id}>{id} · {models.join(', ')}</option> })}</select></div>
           <div><FieldLabel>Réplica</FieldLabel><select value={repetition} onChange={(e) => setRepetition(e.target.value)} className="h-12 w-full rounded-xl border border-line bg-white px-4 text-sm outline-none focus:border-forest">{repetitions.map((r) => <option key={r}>{r}</option>)}</select></div>
           <div><FieldLabel>Conjunto de tarefas</FieldLabel><div className="space-y-2">{taskSet.map((_, position) => <div key={position} className="flex items-center gap-3"><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-canvas text-xs font-bold text-forest">{position + 1}</span><select value={taskSet[position]} onChange={(e) => setTaskSet(taskSet.map((task, index) => index === position ? e.target.value : task))} className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-white px-3 text-sm outline-none focus:border-forest">{tasks.map((task) => <option key={task} value={task}>{labelTask(task)}</option>)}</select></div>)}</div>{new Set(taskSet).size !== taskSet.length && <p className="mt-2 text-xs text-red-700">Selecione três tarefas diferentes.</p>}</div>
+          {!sequenceAvailable && <p className="text-xs text-red-700">Esta execução não contém os três traces necessários para a configuração selecionada.</p>}
           <Button disabled={!configurationValid} onClick={() => { setConfigurationComplete(true); setTutorialComplete(false) }} className="w-full h-14 text-base">Configuração finalizada <ArrowRight size={16} /></Button>
         </div>
       </section>
@@ -214,7 +220,7 @@ function Questionnaire({ trace, onUpdate, onNoReferences, onRemoveReference, onC
 }
 
 function Experiment({ manifest, session, setSession, onExit }: { manifest: Manifest; session: SessionState; setSession: (state: SessionState) => void; onExit: () => void }) {
-  const sequence = latinSquare[session.group].map((harness, index) => manifest.entries.find((entry) => entry.harness === harness && entry.task === session.taskSet[index] && entry.repetition === session.repetition)).filter(Boolean) as TraceEntry[]
+  const sequence = latinSquare[session.group].map((harness, index) => manifest.entries.find((entry) => (!session.runId || entry.runId === session.runId) && entry.harness === harness && entry.task === session.taskSet[index] && entry.repetition === session.repetition)).filter(Boolean) as TraceEntry[]
   const entry = sequence[session.currentIndex]
   const [content, setContent] = useState('')
   const [elapsed, setElapsed] = useState(0)
@@ -286,7 +292,7 @@ function Experiment({ manifest, session, setSession, onExit }: { manifest: Manif
 }
 
 function Completion({ session, manifest, onReset }: { session: SessionState; manifest: Manifest; onReset: () => void }) {
-  const sequence = latinSquare[session.group].map((harness, index) => manifest.entries.find((entry) => entry.harness === harness && entry.task === session.taskSet[index] && entry.repetition === session.repetition)).filter(Boolean) as TraceEntry[]
+  const sequence = latinSquare[session.group].map((harness, index) => manifest.entries.find((entry) => (!session.runId || entry.runId === session.runId) && entry.harness === harness && entry.task === session.taskSet[index] && entry.repetition === session.repetition)).filter(Boolean) as TraceEntry[]
   const payload = { schemaVersion: 4, exportedAt: new Date().toISOString(), experiment: 'sbench-latin-square-q1-q4', session, traces: sequence, derivedMetrics: Object.fromEntries(Object.entries(session.traceResponses).map(([traceId, response]) => [traceId, deriveMetrics(response)])) }
   const [submission, setSubmission] = useState<'sending' | 'saved' | 'failed'>('sending')
   const [submissionMessage, setSubmissionMessage] = useState('Salvando no banco de dados…')

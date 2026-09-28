@@ -53,6 +53,7 @@ export type SessionState = {
   sessionId: string
   participantCode: string
   group: GroupNumber
+  runId?: string
   repetition: string
   taskSet: string[]
   startedAt: string

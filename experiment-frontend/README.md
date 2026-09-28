@@ -2,6 +2,8 @@
 
 Módulo independente para conduzir o experimento de auditabilidade. São três participantes e três traces por participante; a ordem dos frameworks segue o quadrado latino BDI → Codex → OpenCode. O progresso fica no navegador e sessões concluídas são persistidas em SQLite.
 
+Na configuração da sessão, o pesquisador seleciona a execução identificada pelo ID e pelo modelo, além da réplica. Os três traces são escolhidos dentro da mesma execução; uma configuração sem os três traces necessários não pode ser iniciada. Execute `npm run prepare-data` novamente após gerar logs novos para atualizar o catálogo.
+
 ## Executar
 
 ```bash
