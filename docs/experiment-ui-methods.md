@@ -10,17 +10,17 @@ The unit of response is one participant's assessment of one trace. A session con
 
 ## 2. Trace preparation and assignment
 
-### 2.1 Source material and preprocessing
+### 2.1 Source material and catalog
 
-A preparation script recursively discovers files named `stdout.log` under the repository's `runs` directory. For each trace, it reads the adjacent `metadata.json`, obtains the corresponding task statement from `tasks/<task>/task.md`, and copies a processed log into `experiment-frontend/public/data/logs`. A generated manifest provides the trace identifier, run identifier, task, framework, repetition, URL, agent execution duration in seconds, execution status, and model.
+The interface reads `experiment-frontend/public/data/manifest.json` and fetches the log URL listed for each trace. Each manifest entry provides a trace identifier, run identifier, task, framework, repetition, URL, agent execution duration in seconds, execution status, and model. The application requires the catalog and its referenced log files to be available before a session begins. It does not generate or preprocess them when it starts.
 
-Preprocessing removes exact occurrences of the full task statement and its JSON-escaped representation, replacing them with `[texto literal do enunciado removido para o experimento]`, meaning that the literal task statement was removed for the experiment. It also removes ANSI color sequences matched by the script. These operations do not remove every paraphrase or partial quotation of the task statement, nor do they constitute general anonymization. The task title remains visible in the interface. The participant therefore judges the available execution record with some task context still present.
+The viewer presents the log content served at the manifest URL. Any redaction or other changes to that content must be documented from the actual files supplied for the study. The task title remains visible in the interface.
 
-Trace identifiers combine the run, task, framework, and repetition. Manifest entries are sorted lexicographically by identifier. For each session position, the application selects the first manifest entry matching its assigned framework, configured task, and repetition. Run identifier and model are not additional selection criteria. If several runs match that combination, selection follows manifest order rather than random sampling. Reproducing the study therefore requires retaining the exact manifest and processed trace files used during collection.
+Trace identifiers combine the run, task, framework, and repetition in the available catalog. For each session position, the application selects the first manifest entry matching the selected run, assigned framework, configured task, and repetition. The model appears with the run in the researcher's configuration control. Reproducing the study requires retaining the exact catalog and log files used during collection.
 
 ### 2.2 Session configuration and framework order
 
-The researcher enters a participant code, selects one of three Latin-square rows, selects a repetition, and specifies three distinct tasks in order. The code is converted to uppercase and must contain at least three non-whitespace characters. The default task sequence is Incident Staffing Plan, Travel Reimbursement Audit, and Vendor Selection. The default repetition is the last element of the lexicographically sorted repetition list in the manifest. These defaults are configurable before starting.
+The researcher enters a participant code, selects one of three Latin-square rows, selects a run identified by its ID and model, selects a repetition available in that run, and specifies three distinct tasks in order. The code is converted to uppercase and must contain at least three non-whitespace characters. The default task sequence is Incident Staffing Plan, Travel Reimbursement Audit, and Vendor Selection. The newest lexicographically sorted run is selected by default; its last lexicographically sorted repetition is the default repetition. These choices are configurable before starting.
 
 | Assigned row | Trace 1 | Trace 2 | Trace 3 |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@ The researcher enters a participant code, selects one of three Latin-square rows
 
 Tasks follow their configured positions while frameworks rotate across positions. With the same ordered task set across all three rows, each framework occurs once at each position and once with each task across a complete square. Each participant sees three different tasks, rather than the same task under all frameworks. The cyclic square balances framework position across the three rows; it does not balance every possible directed framework transition.
 
-The UI labels the rows as participants 1, 2, and 3. These are assignment categories, not a database-enforced limit of three people. Multiple sessions can use the same row. Assignment to rows is manual; the application does not randomize participants or enforce equal row counts. It also does not verify at configuration time that all three requested task/framework/repetition combinations exist. The study configuration must use a complete catalog.
+The UI labels the rows as participants 1, 2, and 3. These are assignment categories, not a database-enforced limit of three people. Multiple sessions can use the same row. Assignment to rows is manual; the application does not randomize participants or enforce equal row counts. It verifies at configuration time that the selected run contains all three requested task/framework/repetition combinations.
 
 ## 3. Participant procedure and visual presentation
 
@@ -199,6 +199,5 @@ The following repository files ground this description. They are implementation 
 | `experiment-frontend/src/data.ts` | Latin-square orders and default task set. |
 | `experiment-frontend/src/components/ui.tsx` | Five-point scales, progress indicators, and shared controls. |
 | `experiment-frontend/src/index.css` and `tailwind.config.js` | Typography, colors, and responsive presentation. |
-| `experiment-frontend/scripts/prepare-data.mjs` | Trace discovery, exact task-statement removal, ANSI sequence removal, metadata extraction, and manifest ordering. |
 | `experiment-frontend/server.mjs` | Submission endpoint, validation, transaction behavior, relational schema, and static serving. |
 | `experiment-frontend/README.md` | Execution instructions and pseudonymous participant-code guidance. |

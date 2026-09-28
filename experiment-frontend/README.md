@@ -2,13 +2,12 @@
 
 Módulo independente para conduzir o experimento de auditabilidade. São três participantes e três traces por participante; a ordem dos frameworks segue o quadrado latino BDI → Codex → OpenCode. O progresso fica no navegador e sessões concluídas são persistidas em SQLite.
 
-Na configuração da sessão, o pesquisador seleciona a execução identificada pelo ID e pelo modelo, além da réplica. Os três traces são escolhidos dentro da mesma execução; uma configuração sem os três traces necessários não pode ser iniciada. Execute `npm run prepare-data` novamente após gerar logs novos para atualizar o catálogo.
+Na configuração da sessão, o pesquisador seleciona a execução identificada pelo ID e pelo modelo, além da réplica. Os três traces são escolhidos dentro da mesma execução; uma configuração sem os três traces necessários não pode ser iniciada.
 
 ## Executar
 
 ```bash
 corepack npm install
-npm run prepare-data
 npm run dev
 ```
 
@@ -20,7 +19,7 @@ npm run server
 
 No desenvolvimento, o Vite encaminha `/api` para `http://127.0.0.1:8765`.
 
-O script `prepare-data` cria um catálogo estático em `public/data` a partir de `../runs`. Essa pasta é gerada e não é versionada.
+Antes de iniciar a interface, disponibilize `public/data/manifest.json` e os arquivos de log nos caminhos indicados pelo catálogo. A pasta `public/data` não é versionada. Após alterar o catálogo ou os logs, recarregue a página.
 
 ## Produção
 

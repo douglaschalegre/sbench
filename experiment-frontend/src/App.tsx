@@ -1599,11 +1599,7 @@ export default function App() {
             Catálogo de traces não encontrado
           </h1>
           <p className="mt-2 text-sm text-black/50">
-            Execute{" "}
-            <code className="rounded bg-white px-2 py-1">
-              npm run prepare-data
-            </code>{" "}
-            nesta pasta e recarregue.
+            Disponibilize o catálogo em <code className="rounded bg-white px-2 py-1">public/data/manifest.json</code> e os logs indicados nele, depois recarregue.
           </p>
         </div>
       </div>
