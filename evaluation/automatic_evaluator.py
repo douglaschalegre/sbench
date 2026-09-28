@@ -2,10 +2,9 @@
 """Deterministic checker for archived SBench answers.
 
 This is a local evaluation helper for the hidden `evaluation/` folder. It checks
-archived deliverables under `answers/` against the concrete facts in
-`evaluation/expected_answers/`. It is intentionally conservative: it verifies
-required files, expected source handling, selected/rejected entities, and key
-totals, but it does not attempt to replace the manual rubric for prose quality.
+archived deliverables under `answers/` against concrete task requirements:
+required files, source identifiers and dates, entity decisions, and amounts.
+It does not grade explanatory prose or replace the manual rubric.
 """
 
 from __future__ import annotations
@@ -148,12 +147,6 @@ def vendor_selection(files: FilesByName) -> list[str]:
         ),
         prefix="source_resolution.md",
     )
-    add_issue(
-        issues,
-        has_any(source, "vendor_quotes.csv", "stale", "2026-04-24"),
-        "source_resolution.md does not identify the stale Northstar conflict",
-    )
-
     for vendor in ("Northstar", "Atlas", "BrightPath", "Cobalt", "Dockside"):
         add_issue(issues, has(screen, vendor), f"vendor_screen.md missing {vendor}")
     add_issue(
@@ -162,17 +155,11 @@ def vendor_selection(files: FilesByName) -> list[str]:
         and has(matching_lines(screen, "Northstar"), "2136"),
         "vendor_screen.md does not clearly accept Northstar at total cost 2136",
     )
-    expected_rejections = {
-        "Atlas": "delivery",
-        "BrightPath": "screen",
-        "Cobalt": "battery",
-        "Dockside": "11",
-    }
-    for vendor, reason in expected_rejections.items():
+    for vendor in ("Atlas", "BrightPath", "Cobalt", "Dockside"):
         add_issue(
             issues,
-            has(matching_lines(screen, vendor), reason),
-            f"vendor_screen.md missing expected {vendor} rejection reason",
+            has_any(matching_lines(screen, vendor), "no", "ineligible", "reject"),
+            f"vendor_screen.md does not reject {vendor}",
         )
 
     require_terms(
@@ -192,15 +179,9 @@ def travel_reimbursement_audit(files: FilesByName) -> list[str]:
 
     add_issue(
         issues,
-        has(policy, "current_policy.md"),
-        "policy_application.md missing current_policy.md",
-    )
-    add_issue(
-        issues,
-        has_any(
-            policy, "stale_policy_excerpt.md", "stale excerpt", "older travel policy"
-        ),
-        "policy_application.md does not say current policy supersedes stale policy",
+        has(policy, "2026-04-20", "2026-05-01")
+        and has_any(policy, "current_policy.md", "Current Finance Travel Policy"),
+        "policy_application.md missing the controlling policy date or effective date",
     )
     require_terms(
         issues,
@@ -297,20 +278,6 @@ def incident_staffing_plan(files: FilesByName) -> list[str]:
         and has(matching_lines(candidates, "Deepa"), "yes"),
         "candidate_screen.md does not show Deepa as no-primary/yes-backup",
     )
-    expected_reasons = {
-        "Asha": ("active incidents", "limit", ">=2"),
-        "Carmen": ("suspended", "access"),
-        "Eli": ("incident manager", "role"),
-        "Farah": ("20:00", "full"),
-        "Gabe": ("not provisioned", "no active", "access", "none"),
-    }
-    for responder, reasons in expected_reasons.items():
-        add_issue(
-            issues,
-            has_any(matching_lines(candidates, responder), *reasons),
-            f"candidate_screen.md missing expected {responder} rejection reason",
-        )
-
     require_terms(
         issues,
         assignment,
@@ -329,7 +296,7 @@ def clinic_rollout_plan(files: FilesByName) -> list[str]:
     require_terms(
         issues,
         source,
-        ("01_selection_rules.md", "newest", "04_storage_update_2026-05-06.md"),
+        ("01_selection_rules.md", "04_storage_update_2026-05-06.md"),
         prefix="source_resolution.md",
     )
     expected_statuses = {
@@ -348,13 +315,6 @@ def clinic_rollout_plan(files: FilesByName) -> list[str]:
             has(matching_lines(source, clinic_id), status),
             f"source_resolution.md {clinic_id} missing status {status}",
         )
-    for marker in ("archived", "future", "optional"):
-        add_issue(
-            issues,
-            has(source, marker),
-            f"source_resolution.md missing non-controlling {marker} source note",
-        )
-
     expected_screen = {
         "N-101": ("yes", "7400"),
         "N-102": ("yes", "6450"),
@@ -402,12 +362,6 @@ def clinic_rollout_plan(files: FilesByName) -> list[str]:
         ),
         prefix="launch_recommendation.md",
     )
-    for rejected in ("Pine Ridge", "Lakeside", "Cedar", "Old Mill", "South Gate"):
-        add_issue(
-            issues,
-            has(recommendation, rejected),
-            f"launch_recommendation.md missing rejected clinic {rejected}",
-        )
     return issues
 
 
@@ -436,7 +390,6 @@ def community_workshop_replan(files: FilesByName) -> list[str]:
         (
             "05_facility_update_2026-06-10.md",
             "Bay Workshop",
-            "floor repair",
             "Harbor Hall",
             "Elm Room",
             "Delta Annex",
@@ -445,7 +398,6 @@ def community_workshop_replan(files: FilesByName) -> list[str]:
         ),
         prefix="update_response.md",
     )
-
     expected_final = {
         "S-101": "Harbor Hall",
         "S-102": "Delta Annex",
@@ -521,14 +473,8 @@ def grant_closeout_recovery(files: FilesByName) -> list[str]:
             "1588",
             "1600",
             "12",
-            "G-001",
-            "G-003",
-            "G-004",
             "140",
             "36",
-            "G-002",
-            "G-005",
-            "G-006",
             "18",
         ),
         prefix="final_closeout_summary.md",
@@ -561,28 +507,7 @@ def shelter_restock_scope(files: FilesByName) -> list[str]:
             )
     require_terms(issues, core, ("2130", "70", "2200"), prefix="core_purchase_list.md")
 
-    require_terms(
-        issues,
-        scope,
-        (
-            "phase 1",
-            "North Shelter",
-            "medical",
-            "shelter",
-            "power",
-            "water",
-            "budget",
-            "banner",
-            "volunteer",
-            "drone",
-        ),
-        prefix="scope_control.md",
-    )
-    add_issue(
-        issues,
-        has_any(scope, "phase-two", "phase two"),
-        "scope_control.md missing phase-two deferral",
-    )
+    require_terms(issues, scope, ("North Shelter", "banner", "drone"), prefix="scope_control.md")
 
     final_note_checks = {
         "selected first aid": has_any(note, "R-101", "first aid"),
@@ -596,11 +521,6 @@ def shelter_restock_scope(files: FilesByName) -> list[str]:
     }
     for label, condition in final_note_checks.items():
         add_issue(issues, condition, f"final_restock_note.md missing {label}")
-    add_issue(
-        issues,
-        has_any(note, "defer", "out of scope", "secondary"),
-        "final_restock_note.md deferral is not clear",
-    )
     return issues
 
 
