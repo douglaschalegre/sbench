@@ -310,3 +310,21 @@ test('Vercel entrypoint initializes an empty database before serving concurrent 
     rmSync(directory, { recursive: true, force: true })
   }
 })
+
+
+test('configured origin with a trailing slash accepts browser origins and still rejects other sites', async () => {
+  const { base, server, invite } = await setup({ appOrigin: 'https://experiment.example/', adminPassword: 'test-only-password' })
+  const login = (origin, path, value) => fetch(base + path, {
+    method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify(value),
+  })
+  try {
+    const admin = await login('https://experiment.example', '/api/admin/login', { password: 'test-only-password' })
+    assert.equal(admin.status, 200)
+    assert.match(admin.headers.get('set-cookie'), /Secure/)
+    assert.equal((await login('https://experiment.example', '/api/access', { code: invite.code })).status, 200)
+    for (const origin of ['https://evil.example', 'https://experiment.example.evil.example', 'http://experiment.example']) {
+      assert.equal((await login(origin, '/api/admin/login', { password: 'test-only-password' })).status, 403)
+      assert.equal((await login(origin, '/api/access', { code: invite.code })).status, 403)
+    }
+  } finally { await new Promise((resolve) => server.close(resolve)) }
+})

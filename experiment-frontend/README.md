@@ -19,7 +19,7 @@ Preencha `.env` com as credenciais do Turso e a origem da aplicação:
 | --- | --- |
 | `TURSO_DATABASE_URL` | URL `libsql://...` fornecida pelo Turso |
 | `TURSO_AUTH_TOKEN` | Token com permissão de leitura e escrita |
-| `APP_ORIGIN` | Origem HTTPS do frontend, sem barra final ou caminho |
+| `APP_ORIGIN` | Origem HTTPS do frontend, como `https://sbench.vercel.app`. A API normaliza a barra final. |
 | `ADMIN_PASSWORD` | Senha de administrador para `/setup` |
 
 Nenhuma dessas variáveis usa o prefixo `VITE_`. O frontend chama `/api` na mesma origem. A API usa um cookie `HttpOnly`, com um token aleatório cujo hash fica no banco, e não precisa de `SESSION_SECRET`.

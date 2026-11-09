@@ -32,23 +32,24 @@ async function body(request) {
 
 export function createApiHandler({ database, appOrigin = process.env.APP_ORIGIN, adminPassword = process.env.ADMIN_PASSWORD }) {
   if (process.env.VERCEL && (!appOrigin || new URL(appOrigin).protocol !== 'https:')) throw new Error('Configure APP_ORIGIN com a origem HTTPS do experimento.')
+  const allowedOrigin = new URL(appOrigin ?? 'http://127.0.0.1:4173').origin
   return async (request, response) => {
     response.setHeader('Cache-Control', 'private, no-store')
     response.setHeader('X-Content-Type-Options', 'nosniff')
     const pathname = new URL(request.url, 'http://localhost').pathname
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.origin && request.headers.origin !== (appOrigin ?? 'http://127.0.0.1:4173')) return sendJson(response, 403, { error: 'Origem não permitida.' })
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.origin && request.headers.origin !== allowedOrigin) return sendJson(response, 403, { error: 'Origem não permitida.' })
     try {
       if (request.method === 'GET' && pathname === '/api/health') return sendJson(response, 200, { status: 'ok' })
       if (request.method === 'POST' && pathname === '/api/access') {
         const result = await login(database, (await body(request))?.code)
         if (!result) return sendJson(response, 401, { error: 'Código inválido ou expirado.' })
-        const secure = appOrigin?.startsWith('https://') ? '; Secure' : ''
+        const secure = allowedOrigin.startsWith('https://') ? '; Secure' : ''
         response.setHeader('Set-Cookie', `sbench_access=${result.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${Math.floor((Date.parse(result.expiresAt) - Date.now()) / 1000)}${secure}`)
         return sendJson(response, 200, { session: assignedSession(result.invitation) })
       }
       if (pathname.startsWith('/api/admin/')) {
         if (!adminPassword) return sendJson(response, 503, { error: 'Acesso administrativo indisponível. Configure ADMIN_PASSWORD no servidor.' })
-        const secure = appOrigin?.startsWith('https://') ? '; Secure' : ''
+        const secure = allowedOrigin.startsWith('https://') ? '; Secure' : ''
         if (pathname === '/api/admin/login' && request.method === 'POST') {
           const result = await adminLogin(database, (await body(request))?.password, adminPassword)
           if (!result) return sendJson(response, 401, { error: 'Senha inválida.' })
