@@ -1,0 +1,63 @@
+{
+  "sources": {
+    "codex": {
+      "path": "runs/20260615T221949Z/entries/community_workshop_replan/codex/r3/stdout.log",
+      "sha256": "65655419955c92f87b52d0b18fd7e203634ce042e137cc4c5b00d9aa91e8176b"
+    },
+    "opencode": {
+      "path": "runs/20260615T221949Z/entries/community_workshop_replan/opencode/r3/stdout.log",
+      "sha256": "1ed33fb1ab4bfc7e4453ff142a12dc9240263d86dfb462d8db1077a36f659972"
+    },
+    "bdi": {
+      "path": "runs/20260615T221949Z/entries/community_workshop_replan/bdi/r3/stdout.log",
+      "sha256": "1dfe1bbbaa6abf15966e64597ce8881b58f4f117eb1e18b7a54528fd147fd8bf"
+    }
+  },
+  "selection": [
+    {
+      "harness": "codex",
+      "line": 38
+    },
+    {
+      "harness": "codex",
+      "line": 42
+    },
+    {
+      "harness": "opencode",
+      "line": 31
+    },
+    {
+      "harness": "opencode",
+      "line": 35
+    },
+    {
+      "harness": "bdi",
+      "lines": [
+        22,
+        28
+      ]
+    },
+    {
+      "harness": "bdi",
+      "lines": [
+        37,
+        37
+      ]
+    },
+    {
+      "harness": "bdi",
+      "lines": [
+        43,
+        46
+      ]
+    },
+    {
+      "harness": "bdi",
+      "lines": [
+        55,
+        57
+      ]
+    }
+  ],
+  "formatting": "JSON pretty-printed. Codex line 38 and OpenCode events retain selected original fields and hierarchy. Codex line 42 is complete. BDI excerpts are literal contiguous ranges separated by blank lines. No labels or editorial text rendered."
+}

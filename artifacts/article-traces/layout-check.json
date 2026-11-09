@@ -1,0 +1,22 @@
+[
+  {
+    "name": "01-codex-log.html",
+    "desktopOverflow": false,
+    "mobileOverflow": false
+  },
+  {
+    "name": "02-opencode-log.html",
+    "desktopOverflow": false,
+    "mobileOverflow": false
+  },
+  {
+    "name": "03-bdi-log.html",
+    "desktopOverflow": false,
+    "mobileOverflow": false
+  },
+  {
+    "name": "04-bdi-log-dark.html",
+    "desktopOverflow": false,
+    "mobileOverflow": false
+  }
+]

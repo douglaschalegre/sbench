@@ -1,0 +1,20 @@
+{
+  "type": "item.completed",
+  "item": {
+    "type": "command_execution",
+    "command": "/bin/zsh -lc 'ls -R answer'",
+    "aggregated_output": "final_room_plan.md\ninitial_room_plan.md\nupdate_response.md\n",
+    "exit_code": 0,
+    "status": "completed"
+  }
+}
+
+{
+  "type": "turn.completed",
+  "usage": {
+    "input_tokens": 119074,
+    "cached_input_tokens": 97792,
+    "output_tokens": 2685,
+    "reasoning_output_tokens": 312
+  }
+}
