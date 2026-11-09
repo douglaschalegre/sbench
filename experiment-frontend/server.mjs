@@ -1,166 +1,148 @@
-import { DatabaseSync } from 'node:sqlite'
 import { createServer } from 'node:http'
-import { readFileSync, statSync } from 'node:fs'
-import { extname, join, normalize, resolve } from 'node:path'
+import { readFile } from 'node:fs/promises'
+import { extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { openDatabase, migrate, saveSession } from './database.mjs'
+import { assignedSession, authenticate, createInvitation, hash, login, validateAssignment } from './access.mjs'
+import { adminLogin, adminToken, authenticateAdmin, listInvitations, updateInvitation, deleteInvitation, rotateInvitationCode, revokeInvitation } from './admin.mjs'
+export { openDatabase, migrate, saveSession } from './database.mjs'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
-const schema = `
-PRAGMA foreign_keys = ON;
-CREATE TABLE IF NOT EXISTS experiment_sessions (
-  session_id TEXT PRIMARY KEY, participant_code TEXT NOT NULL,
-  group_number INTEGER NOT NULL CHECK (group_number BETWEEN 1 AND 3),
-  repetition TEXT NOT NULL, task_set_json TEXT NOT NULL, started_at TEXT NOT NULL,
-  completed_at TEXT NOT NULL, exported_at TEXT NOT NULL, received_at TEXT NOT NULL,
-  experiment TEXT NOT NULL, schema_version INTEGER NOT NULL, payload_json TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS trace_responses (
-  session_id TEXT NOT NULL REFERENCES experiment_sessions(session_id) ON DELETE CASCADE,
-  trace_id TEXT NOT NULL, sequence_index INTEGER NOT NULL, run_id TEXT, task TEXT NOT NULL,
-  harness TEXT NOT NULL, repetition TEXT NOT NULL, model TEXT, status TEXT,
-  started_at TEXT NOT NULL, reading_completed_at TEXT, completed_at TEXT NOT NULL,
-  first_evidence_at TEXT, confidence INTEGER, cognitive_load INTEGER, ease INTEGER,
-  directness TEXT, notes TEXT NOT NULL DEFAULT '', evidence_interactions INTEGER NOT NULL DEFAULT 0,
-  position_changes INTEGER NOT NULL DEFAULT 0, derived_metrics_json TEXT NOT NULL,
-  PRIMARY KEY (session_id, trace_id)
-);
-CREATE TABLE IF NOT EXISTS evidence_references (
-  reference_id TEXT NOT NULL, session_id TEXT NOT NULL, trace_id TEXT NOT NULL,
-  start_line INTEGER NOT NULL, end_line INTEGER NOT NULL, added_at TEXT NOT NULL, delta_ms INTEGER NOT NULL,
-  PRIMARY KEY (session_id, trace_id, reference_id),
-  FOREIGN KEY (session_id, trace_id) REFERENCES trace_responses(session_id, trace_id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS telemetry_events (
-  session_id TEXT NOT NULL, trace_id TEXT NOT NULL, event_index INTEGER NOT NULL,
-  event_type TEXT NOT NULL, occurred_at TEXT NOT NULL, delta_ms INTEGER NOT NULL, detail_json TEXT,
-  PRIMARY KEY (session_id, trace_id, event_index),
-  FOREIGN KEY (session_id, trace_id) REFERENCES trace_responses(session_id, trace_id) ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS idx_sessions_participant ON experiment_sessions(participant_code);
-CREATE INDEX IF NOT EXISTS idx_telemetry_type ON telemetry_events(event_type);`
 
-function required(object, key, type) {
-  const value = object?.[key]
-  if (typeof value !== type || (type === 'string' && !value.trim())) throw new Error(`campo obrigatório inválido: ${key}`)
-  return value
+function sendJson(response, status, value) {
+  response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' })
+  response.end(JSON.stringify(value))
 }
 
-export function openDatabase(path) {
-  const database = new DatabaseSync(path)
-  const existing = database.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'experiment_sessions'").get()
-  if (existing?.sql?.includes('group_number BETWEEN 1 AND 7')) {
-    database.exec('PRAGMA foreign_keys = OFF; BEGIN IMMEDIATE;')
+async function body(request) {
+  // Below Vercel's request limit; oversized exports remain downloadable in the UI.
+  if (request.body !== undefined) {
+    if (Buffer.byteLength(JSON.stringify(request.body)) > 4_000_000) throw new Error('Payload excede 4 MB.')
+    return typeof request.body === 'string' ? JSON.parse(request.body) : request.body
+  }
+  let size = 0
+  const chunks = []
+  for await (const chunk of request) {
+    size += chunk.length
+    if (size > 4_000_000) throw new Error('Payload excede 4 MB.')
+    chunks.push(chunk)
+  }
+  return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+}
+
+export function createApiHandler({ database, appOrigin = process.env.APP_ORIGIN, adminPassword = process.env.ADMIN_PASSWORD }) {
+  if (process.env.VERCEL && (!appOrigin || new URL(appOrigin).protocol !== 'https:')) throw new Error('Configure APP_ORIGIN com a origem HTTPS do experimento.')
+  return async (request, response) => {
+    response.setHeader('Cache-Control', 'private, no-store')
+    response.setHeader('X-Content-Type-Options', 'nosniff')
+    const pathname = new URL(request.url, 'http://localhost').pathname
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.origin && request.headers.origin !== (appOrigin ?? 'http://127.0.0.1:4173')) return sendJson(response, 403, { error: 'Origem não permitida.' })
     try {
-      database.exec(existing.sql.replace('experiment_sessions', 'experiment_sessions_new').replace('group_number BETWEEN 1 AND 7', 'group_number BETWEEN 1 AND 3'))
-      database.exec('INSERT INTO experiment_sessions_new SELECT * FROM experiment_sessions')
-      database.exec('DROP TABLE experiment_sessions')
-      database.exec('ALTER TABLE experiment_sessions_new RENAME TO experiment_sessions')
-      database.exec('COMMIT')
-    } catch (error) {
-      database.exec('ROLLBACK')
-      throw error
-    } finally {
-      database.exec('PRAGMA foreign_keys = ON')
-    }
-  }
-  database.exec(schema)
-  return database
-}
-
-export function saveSession(database, payload) {
-  const session = required(payload, 'session', 'object')
-  const sessionId = required(session, 'sessionId', 'string')
-  required(session, 'participantCode', 'string')
-  required(session, 'completedAt', 'string')
-  if (!Number.isInteger(session.group) || session.group < 1 || session.group > 3) throw new Error('participante inválido')
-  const taskCount = session.taskSet?.length
-  if (!Array.isArray(session.taskSet) || taskCount !== 3 || new Set(session.taskSet).size !== taskCount || !Array.isArray(payload.traces) || Object.keys(session.traceResponses ?? {}).length !== taskCount || payload.traces.length !== taskCount || session.currentIndex !== taskCount) {
-    throw new Error('a sessão concluída deve conter três tarefas e três traces')
-  }
-  const entries = new Map(payload.traces.map((entry) => [entry.id, entry]))
-  const upsertSession = database.prepare(`INSERT INTO experiment_sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(session_id) DO UPDATE SET participant_code=excluded.participant_code,
-    group_number=excluded.group_number, repetition=excluded.repetition, task_set_json=excluded.task_set_json,
-    started_at=excluded.started_at, completed_at=excluded.completed_at, exported_at=excluded.exported_at,
-    received_at=excluded.received_at, experiment=excluded.experiment, schema_version=excluded.schema_version,
-    payload_json=excluded.payload_json`)
-  const insertTrace = database.prepare('INSERT INTO trace_responses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-  const insertReference = database.prepare('INSERT INTO evidence_references VALUES (?, ?, ?, ?, ?, ?, ?)')
-  const insertEvent = database.prepare('INSERT INTO telemetry_events VALUES (?, ?, ?, ?, ?, ?, ?)')
-  database.exec('BEGIN IMMEDIATE')
-  try {
-    upsertSession.run(sessionId, session.participantCode, session.group, session.repetition, JSON.stringify(session.taskSet), session.startedAt, session.completedAt, payload.exportedAt, new Date().toISOString(), payload.experiment, payload.schemaVersion, JSON.stringify(payload))
-    database.prepare('DELETE FROM trace_responses WHERE session_id = ?').run(sessionId)
-    payload.traces.forEach((entry, sequenceIndex) => {
-      const traceId = entry.id
-      const response = session.traceResponses[traceId]
-      if (!response?.completedAt || !entries.has(traceId)) throw new Error(`resposta ausente ou incompleta para o trace ${traceId}`)
-      if (!response.evidenceReferences?.length && !response.noReferencesFound) throw new Error(`referência ou resposta "Não encontrei referências" obrigatória para o trace ${traceId}`)
-      insertTrace.run(sessionId, traceId, sequenceIndex, entry.runId ?? null, entry.task, entry.harness, entry.repetition, entry.model ?? null, entry.status ?? null, response.startedAt, response.readingCompletedAt ?? null, response.completedAt, response.firstEvidenceAt ?? null, response.confidence ?? null, response.difficulty ?? null, response.ease ?? null, response.directness ?? null, response.notes ?? '', response.evidenceInteractions ?? 0, response.positionChanges ?? 0, JSON.stringify(payload.derivedMetrics?.[traceId] ?? {}))
-      response.evidenceReferences?.forEach((reference) => insertReference.run(reference.id, sessionId, traceId, reference.startLine, reference.endLine, reference.addedAt, reference.deltaMs))
-      response.telemetry?.forEach((event, index) => insertEvent.run(sessionId, traceId, index, event.type, event.at, event.deltaMs, event.detail == null ? null : JSON.stringify(event.detail)))
-    })
-    database.exec('COMMIT')
-    return sessionId
-  } catch (error) {
-    database.exec('ROLLBACK')
-    throw error
-  }
-}
-
-const mimeTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.log': 'text/plain; charset=utf-8', '.svg': 'image/svg+xml' }
-
-export function createExperimentServer({ database, staticDirectory }) {
-  return createServer((request, response) => {
-    if (request.method === 'OPTIONS' && request.url?.startsWith('/api/')) {
-      response.writeHead(204, { 'Access-Control-Allow-Origin': 'http://127.0.0.1:4173', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' })
-      response.end()
-      return
-    }
-    if (request.method === 'GET' && request.url === '/api/health') return sendJson(response, 200, { status: 'ok' })
-    if (request.method === 'POST' && request.url === '/api/experiment-sessions') {
-      let body = ''
-      request.on('data', (chunk) => { body += chunk; if (body.length > 10_000_000) request.destroy() })
-      request.on('end', () => {
-        try {
-          const sessionId = saveSession(database, JSON.parse(body))
-          sendJson(response, 201, { sessionId, saved: true })
-        } catch (error) {
-          sendJson(response, 400, { error: error instanceof Error ? error.message : 'payload inválido' })
+      if (request.method === 'GET' && pathname === '/api/health') return sendJson(response, 200, { status: 'ok' })
+      if (request.method === 'POST' && pathname === '/api/access') {
+        const result = await login(database, (await body(request))?.code)
+        if (!result) return sendJson(response, 401, { error: 'Código inválido ou expirado.' })
+        const secure = appOrigin?.startsWith('https://') ? '; Secure' : ''
+        response.setHeader('Set-Cookie', `sbench_access=${result.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${Math.floor((Date.parse(result.expiresAt) - Date.now()) / 1000)}${secure}`)
+        return sendJson(response, 200, { session: assignedSession(result.invitation) })
+      }
+      if (pathname.startsWith('/api/admin/')) {
+        if (!adminPassword) return sendJson(response, 503, { error: 'Acesso administrativo indisponível. Configure ADMIN_PASSWORD no servidor.' })
+        const secure = appOrigin?.startsWith('https://') ? '; Secure' : ''
+        if (pathname === '/api/admin/login' && request.method === 'POST') {
+          const result = await adminLogin(database, (await body(request))?.password, adminPassword)
+          if (!result) return sendJson(response, 401, { error: 'Senha inválida.' })
+          response.setHeader('Set-Cookie', `sbench_admin=${result.token}; HttpOnly; SameSite=Strict; Path=/api/admin; Max-Age=28800${secure}`)
+          return sendJson(response, 200, { authenticated: true })
         }
-      })
-      return
+        if (!await authenticateAdmin(database, request.headers.cookie, adminPassword)) return sendJson(response, 401, { error: 'Entre como administrador para continuar.' })
+        if (pathname === '/api/admin/session' && request.method === 'GET') return sendJson(response, 200, { authenticated: true })
+        if (pathname === '/api/admin/logout' && request.method === 'POST') {
+          await database.execute({ sql: 'DELETE FROM admin_sessions WHERE token_hash = ?', args: [hash(adminToken(request.headers.cookie))] })
+          response.setHeader('Set-Cookie', `sbench_admin=; HttpOnly; SameSite=Strict; Path=/api/admin; Max-Age=0${secure}`)
+          return sendJson(response, 200, { authenticated: false })
+        }
+        if (pathname === '/api/admin/catalog' && request.method === 'GET') {
+          const { rows } = await database.execute('SELECT metadata_json FROM trace_catalog')
+          return sendJson(response, 200, { entries: rows.map((row) => JSON.parse(row.metadata_json)) })
+        }
+        if (pathname === '/api/admin/invitations' && request.method === 'GET') return sendJson(response, 200, { invitations: await listInvitations(database) })
+        if (pathname === '/api/admin/invitations' && request.method === 'POST') return sendJson(response, 201, await createInvitation(database, await body(request)))
+        const match = pathname.match(/^\/api\/admin\/invitations\/([^/]+)(?:\/(revoke|rotate-code))?$/)
+        if (match) {
+          const id = decodeURIComponent(match[1])
+          if (!match[2] && request.method === 'PATCH') return sendJson(response, 200, await updateInvitation(database, id, await body(request)))
+          if (!match[2] && request.method === 'DELETE') return sendJson(response, 200, await deleteInvitation(database, id))
+          if (match[2] === 'revoke' && request.method === 'POST') return sendJson(response, 200, await revokeInvitation(database, id))
+          if (match[2] === 'rotate-code' && request.method === 'POST') return sendJson(response, 200, await rotateInvitationCode(database, id))
+        }
+        return sendJson(response, 404, { error: 'not found' })
+      }
+      const invitation = await authenticate(database, request.headers.cookie)
+      if (!invitation) return sendJson(response, 401, { error: 'Informe seu código de acesso para continuar.' })
+      if (request.method === 'POST' && pathname === '/api/logout') {
+        const token = request.headers.cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith('sbench_access='))?.slice(14)
+        await database.execute({ sql: 'DELETE FROM access_sessions WHERE token_hash = ?', args: [hash(token)] })
+        response.setHeader('Set-Cookie', 'sbench_access=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0')
+        return sendJson(response, 200, { saved: true })
+      }
+      if (request.method === 'GET' && pathname === '/api/access') {
+        const { rows } = await database.execute({ sql: 'SELECT payload_json FROM experiment_sessions WHERE session_id = ?', args: [invitation.session_id] })
+        return sendJson(response, 200, { session: assignedSession(invitation), completedSession: rows[0] ? JSON.parse(rows[0].payload_json).session : null })
+      }
+      const traces = JSON.parse(invitation.traces_json)
+      if (request.method === 'GET' && pathname === '/api/manifest') return sendJson(response, 200, { generatedAt: invitation.created_at, entries: traces.map((entry) => ({ ...entry, url: `/api/traces/${encodeURIComponent(entry.id)}` })) })
+      if (request.method === 'GET' && pathname.startsWith('/api/traces/')) {
+        const id = decodeURIComponent(pathname.slice('/api/traces/'.length))
+        if (!traces.some((entry) => entry.id === id)) return sendJson(response, 403, { error: 'Trace não atribuído a este participante.' })
+        const { rows } = await database.execute({ sql: 'SELECT content FROM trace_catalog WHERE trace_id = ?', args: [id] })
+        if (!rows[0]) return sendJson(response, 404, { error: 'Trace não encontrado.' })
+        response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' })
+        return response.end(rows[0].content)
+      }
+      if (request.method === 'POST' && pathname === '/api/experiment-sessions') {
+        const payload = await body(request)
+        validateAssignment(invitation, payload)
+        const sessionId = await saveSession(database, payload)
+        return sendJson(response, 201, { sessionId, saved: true })
+      }
+      return sendJson(response, 404, { error: 'not found' })
+    } catch (error) {
+      if (error?.status) return sendJson(response, error.status, { error: error.message })
+      if (error instanceof SyntaxError || error?.code?.startsWith('SQLITE_CONSTRAINT') || !error?.code) return sendJson(response, 400, { error: error instanceof Error ? error.message : 'Payload inválido.' })
+      console.error('Experiment API failure:', error.code)
+      return sendJson(response, 503, { error: 'Não foi possível acessar o banco. Tente novamente.' })
     }
+  }
+}
+
+const mimeTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' }
+export function createExperimentServer({ database, staticDirectory, appOrigin, adminPassword }) {
+  const api = createApiHandler({ database, appOrigin, adminPassword })
+  return createServer(async (request, response) => {
+    if (request.url?.startsWith('/api/')) return api(request, response)
     if (request.method !== 'GET') return sendJson(response, 404, { error: 'not found' })
-    const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname)
-    const relative = normalize(pathname).replace(/^[/\\]+/, '') || 'index.html'
-    let file = resolve(join(staticDirectory, relative))
-    if (!file.startsWith(resolve(staticDirectory))) return sendJson(response, 403, { error: 'forbidden' })
-    try { if (statSync(file).isDirectory()) file = join(file, 'index.html') } catch { file = join(staticDirectory, 'index.html') }
     try {
-      const content = readFileSync(file)
-      response.writeHead(200, { 'Content-Type': mimeTypes[extname(file)] ?? 'application/octet-stream', 'Content-Length': content.length })
+      const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname)
+      // Private source files and the former public catalog are never served.
+      if (pathname.startsWith('/data/') || pathname === '/data') return sendJson(response, 404, { error: 'not found' })
+      const file = resolve(staticDirectory, '.' + (['/', '/setup', '/setup/'].includes(pathname) ? '/index.html' : pathname))
+      if (!file.startsWith(resolve(staticDirectory) + sep)) return sendJson(response, 403, { error: 'forbidden' })
+      const content = await readFile(file)
+      response.writeHead(200, { 'Content-Type': mimeTypes[extname(file)] ?? 'application/octet-stream' })
       response.end(content)
     } catch { sendJson(response, 404, { error: 'not found' }) }
   })
-}
-
-function sendJson(response, status, value) {
-  const body = Buffer.from(JSON.stringify(value))
-  response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': body.length, 'Access-Control-Allow-Origin': 'http://127.0.0.1:4173' })
-  response.end(body)
 }
 
 function option(name, fallback) {
   const index = process.argv.indexOf(name)
   return index < 0 ? fallback : process.argv[index + 1]
 }
-
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(option('--port', '8765'))
   const host = option('--host', '127.0.0.1')
-  const databasePath = resolve(option('--database', join(root, 'experiment.sqlite')))
-  const staticDirectory = resolve(option('--static', join(root, 'dist')))
-  const database = openDatabase(databasePath)
-  createExperimentServer({ database, staticDirectory }).listen(port, host, () => console.log(`Experiment server: http://${host}:${port} (database: ${databasePath})`))
+  const database = await openDatabase(option('--database', undefined))
+  await migrate(database)
+  createExperimentServer({ database, staticDirectory: resolve(option('--static', resolve(root, 'dist'))) }).listen(port, host, () => console.log(`Experiment server: http://${host}:${port}`))
 }

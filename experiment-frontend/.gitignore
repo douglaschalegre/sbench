@@ -4,3 +4,9 @@ dist
 .corepack
 *.tsbuildinfo
 public/data
+
+.env*
+!.env.example
+*.sqlite
+*.sqlite-*
+invitation.local.json

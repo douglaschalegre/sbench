@@ -1,0 +1,8 @@
+{
+  "participantCode": "P-001",
+  "group": 1,
+  "runId": "20260614T221008Z",
+  "repetition": "r1",
+  "taskSet": ["incident_staffing_plan", "community_workshop_replan", "shelter_restock_scope"],
+  "expiresAt": "2027-01-01T00:00:00Z"
+}

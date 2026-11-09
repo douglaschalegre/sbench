@@ -13,8 +13,6 @@ import {
   LoaderCircle,
   MousePointer2,
   RefreshCw,
-  RotateCcw,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import {
@@ -22,10 +20,8 @@ import {
   FieldLabel,
   Progress,
   Scale,
-  Segmented,
 } from "./components/ui";
-import { defaultTasks, groupNumbers, latinSquare } from "./data";
-import type { GroupNumber } from "./data";
+import { latinSquare } from "./data";
 import { cn, formatDuration, labelTask } from "./lib/utils";
 import type {
   EvidenceReference,
@@ -37,10 +33,6 @@ import type {
 } from "./types";
 
 const STORAGE_KEY = "sbench-latin-square-session-v2";
-
-function newSessionId() {
-  return crypto.randomUUID();
-}
 
 function emptyTrace(traceId: string): TraceResponse {
   return {
@@ -172,15 +164,7 @@ function EvidenceSelectionBar({
   );
 }
 
-function Tutorial({
-  enabled,
-  onComplete,
-  onStart,
-}: {
-  enabled: boolean;
-  onComplete: () => void;
-  onStart: () => void;
-}) {
+function Tutorial({ onStart }: { onStart: () => void }) {
   const [selectedLines, setSelectedLines] = useState<number[]>([]);
   const [referenceAdded, setReferenceAdded] = useState(false);
   const [confidence, setConfidence] = useState<number>();
@@ -204,18 +188,9 @@ function Tutorial({
         ? current.filter((item) => item !== line)
         : [...current, line].sort((a, b) => a - b),
     );
-  const classify = (value: "direct" | "inferred") => {
-    setDirectness(value);
-    if (referenceAdded && confidence != null) onComplete();
-  };
 
   return (
-    <section
-      className={cn(
-        "order-2 flex flex-col justify-center transition",
-        !enabled && "pointer-events-none opacity-45",
-      )}
-    >
+    <section className="order-2 flex flex-col justify-center">
       <div className="mb-7">
         <p className="text-xs font-bold uppercase tracking-[.18em] text-amber">
           Tutorial obrigatório
@@ -349,7 +324,7 @@ function Tutorial({
         <div className="ml-8 mt-3 grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => classify("direct")}
+            onClick={() => setDirectness("direct")}
             className={cn(
               "rounded-lg border border-line p-2.5 text-xs font-semibold",
               directness === "direct" &&
@@ -360,7 +335,7 @@ function Tutorial({
           </button>
           <button
             type="button"
-            onClick={() => classify("inferred")}
+            onClick={() => setDirectness("inferred")}
             className={cn(
               "rounded-lg border border-line p-2.5 text-xs font-semibold",
               directness === "inferred" &&
@@ -390,235 +365,30 @@ function Tutorial({
   );
 }
 
-function Welcome({
-  manifest,
-  onStart,
-  restored,
-  onResume,
-  onReset,
-}: {
-  manifest: Manifest;
-  onStart: (state: SessionState) => void;
+function Welcome({ assigned, restored, onStart, onResume, onLogout }: {
+  assigned: SessionState;
   restored: SessionState | null;
+  onStart: (state: SessionState) => void;
   onResume: () => void;
-  onReset: () => void;
+  onLogout: () => void;
 }) {
-  const runs = [...new Set(manifest.entries.map((entry) => entry.runId))]
-    .sort()
-    .reverse();
-  const [runId, setRunId] = useState(runs[0] ?? "");
-  const runEntries = manifest.entries.filter((entry) => entry.runId === runId);
-  const tasks = [...new Set(runEntries.map((entry) => entry.task))];
-  const repetitions = [
-    ...new Set(runEntries.map((entry) => entry.repetition)),
-  ].sort();
-  const [participantCode, setParticipantCode] = useState("");
-  const [group, setGroup] = useState<GroupNumber>(1);
-  const [repetition, setRepetition] = useState(repetitions.at(-1) ?? "r3");
-  const [taskSet, setTaskSet] = useState<string[]>(defaultTasks);
-  const [, setTutorialComplete] = useState(false);
-  const [configurationComplete, setConfigurationComplete] = useState(false);
-  const sequenceAvailable = latinSquare[group].every((harness, index) =>
-    runEntries.some(
-      (entry) =>
-        entry.harness === harness &&
-        entry.task === taskSet[index] &&
-        entry.repetition === repetition,
-    ),
-  );
-  const configurationValid =
-    participantCode.trim().length >= 3 &&
-    taskSet.length === 3 &&
-    new Set(taskSet).size === 3 &&
-    sequenceAvailable;
-
-  const start = () =>
-    onStart({
-      sessionId: newSessionId(),
-      participantCode: participantCode.trim(),
-      group,
-      runId,
-      repetition,
-      taskSet,
-      startedAt: new Date().toISOString(),
-      currentIndex: 0,
-      traceResponses: {},
-    });
-
   return (
     <div className="min-h-screen bg-canvas text-ink">
       <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
         <Logo />
-        <div className="flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-xs text-black/55">
-          <ShieldCheck size={14} className="text-forest" /> Progresso salvo
-          neste dispositivo
-        </div>
+        <Button variant="ghost" onClick={onLogout}>Sair</Button>
       </header>
-      <main className="mx-auto grid h-[calc(100vh-96px)] max-w-7xl gap-8 overflow-y-auto px-6 py-4 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:py-6">
-        <Tutorial
-          enabled={configurationComplete}
-          onComplete={() => setTutorialComplete(true)}
-          onStart={start}
-        />
-
-        <section className="order-1 rounded-[28px] border border-line bg-paper p-6 shadow-card sm:p-8">
-          <div className="mb-7">
-            <p className="text-xs font-semibold uppercase tracking-[.18em] text-amber">
-              Configuração da sessão
-            </p>
-            <h2 className="mt-2 font-display text-3xl">Antes de começar</h2>
-            <p className="mt-2 text-sm text-black/50">
-              O pesquisador deve preencher e confirmar esta configuração.
-            </p>
-          </div>
-          {restored && (
-            <div className="mb-6 rounded-2xl border border-[#b9cfb5] bg-[#edf4ea] p-4">
-              <div className="flex items-center gap-2 font-semibold text-forest">
-                <CheckCircle2 size={17} /> Sessão em andamento
-              </div>
-              <p className="mt-1 text-sm text-black/55">
-                Participante {restored.participantCode} · trace{" "}
-                {restored.currentIndex + 1} de {restored.taskSet.length}
-              </p>
-              <div className="mt-3 flex gap-2">
-                <Button className="h-9" onClick={onResume}>
-                  Continuar
-                </Button>
-                <Button className="h-9" variant="ghost" onClick={onReset}>
-                  <RotateCcw size={14} /> Descartar
-                </Button>
-              </div>
-            </div>
-          )}
-          <div className="space-y-6">
-            <div>
-              <FieldLabel>Código do participante</FieldLabel>
-              <input
-                value={participantCode}
-                onChange={(e) =>
-                  setParticipantCode(e.target.value.toUpperCase())
-                }
-                placeholder="Ex.: P-014"
-                className="h-12 w-full rounded-xl border border-line bg-white px-4 text-sm uppercase tracking-wider outline-none transition placeholder:normal-case placeholder:tracking-normal focus:border-forest focus:ring-2 focus:ring-forest/10"
-              />
-            </div>
-            <div>
-              <FieldLabel>Participante no quadrado latino</FieldLabel>
-              <Segmented
-                value={String(group)}
-                onValueChange={(value) =>
-                  setGroup(Number(value) as GroupNumber)
-                }
-                ariaLabel="Participante experimental"
-                options={groupNumbers.map((n) => ({
-                  value: String(n),
-                  label: `Participante ${n}`,
-                }))}
-              />
-              <div className="mt-2 flex items-center gap-2 text-xs text-black/45">
-                Cada participante fará três traces em uma ordem diferente.
-              </div>
-            </div>
-            <div>
-              <FieldLabel>Execução e modelo</FieldLabel>
-              <select
-                value={runId}
-                onChange={(e) => {
-                  const nextRun = e.target.value;
-                  const nextEntries = manifest.entries.filter(
-                    (entry) => entry.runId === nextRun,
-                  );
-                  const nextRepetitions = [
-                    ...new Set(nextEntries.map((entry) => entry.repetition)),
-                  ].sort();
-                  setRunId(nextRun);
-                  setRepetition(
-                    nextRepetitions.includes(repetition)
-                      ? repetition
-                      : (nextRepetitions.at(-1) ?? ""),
-                  );
-                }}
-                className="h-12 w-full rounded-xl border border-line bg-white px-4 text-sm outline-none focus:border-forest"
-              >
-                {runs.map((id) => {
-                  const models = [
-                    ...new Set(
-                      manifest.entries
-                        .filter((entry) => entry.runId === id)
-                        .map((entry) => entry.model),
-                    ),
-                  ];
-                  return (
-                    <option key={id} value={id}>
-                      {id} · {models.join(", ")}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-            <div>
-              <FieldLabel>Réplica</FieldLabel>
-              <select
-                value={repetition}
-                onChange={(e) => setRepetition(e.target.value)}
-                className="h-12 w-full rounded-xl border border-line bg-white px-4 text-sm outline-none focus:border-forest"
-              >
-                {repetitions.map((r) => (
-                  <option key={r}>{r}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <FieldLabel>Conjunto de tarefas</FieldLabel>
-              <div className="space-y-2">
-                {taskSet.map((_, position) => (
-                  <div key={position} className="flex items-center gap-3">
-                    <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-canvas text-xs font-bold text-forest">
-                      {position + 1}
-                    </span>
-                    <select
-                      value={taskSet[position]}
-                      onChange={(e) =>
-                        setTaskSet(
-                          taskSet.map((task, index) =>
-                            index === position ? e.target.value : task,
-                          ),
-                        )
-                      }
-                      className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-white px-3 text-sm outline-none focus:border-forest"
-                    >
-                      {tasks.map((task) => (
-                        <option key={task} value={task}>
-                          {labelTask(task)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-              {new Set(taskSet).size !== taskSet.length && (
-                <p className="mt-2 text-xs text-red-700">
-                  Selecione três tarefas diferentes.
-                </p>
-              )}
-            </div>
-            {!sequenceAvailable && (
-              <p className="text-xs text-red-700">
-                Esta execução não contém os três traces necessários para a
-                configuração selecionada.
-              </p>
-            )}
-            <Button
-              disabled={!configurationValid}
-              onClick={() => {
-                setConfigurationComplete(true);
-                setTutorialComplete(false);
-              }}
-              className="w-full h-14 text-base"
-            >
-              Configuração finalizada <ArrowRight size={16} />
-            </Button>
-          </div>
+      <main className="mx-auto grid max-w-7xl gap-8 px-6 py-4 lg:grid-cols-[1.05fr_.95fr] lg:px-10">
+        <Tutorial onStart={() => restored ? onResume() : onStart(assigned)} />
+        <section className="rounded-[28px] border border-line bg-paper p-8 shadow-card">
+          <p className="text-xs font-semibold uppercase tracking-[.18em] text-amber">Sua participação</p>
+          <h2 className="mt-2 font-display text-3xl">Tudo pronto para começar</h2>
+          <p className="mt-4 text-sm text-black/60">Participante {assigned.participantCode}. Sua sessão foi configurada pelo pesquisador. Siga o tutorial antes de começar.</p>
+          {restored && <div className="mt-6 rounded-2xl border border-line p-4">
+            <p className="mb-3 text-sm">{restored.completedAt ? "Esta participação já foi concluída." : "Há progresso salvo neste dispositivo."}</p>
+            <Button onClick={onResume}>{restored.completedAt ? "Ver conclusão" : "Continuar sessão"}</Button>
+          </div>}
+          <p className="mt-6 text-xs text-black/50">O progresso em andamento fica salvo neste navegador. As respostas são enviadas ao concluir a participação.</p>
         </section>
       </main>
     </div>
@@ -1432,7 +1202,7 @@ function Completion({
         throw new Error(body.error ?? `HTTP ${response.status}`);
       }
       setSubmission("saved");
-      setSubmissionMessage("Sessão salva no SQLite com sucesso.");
+      setSubmissionMessage("Sessão salva com sucesso.");
     } catch (error) {
       setSubmission("failed");
       setSubmissionMessage(
@@ -1550,23 +1320,24 @@ function Completion({
   );
 }
 
-export default function App() {
+function App({ assigned, completedSession, onLogout }: { assigned: SessionState; completedSession: SessionState | null; onLogout: () => void }) {
+  const storageKey = `${STORAGE_KEY}:${assigned.sessionId}`;
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [session, setSessionState] = useState<SessionState | null>(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
-      return stored
-        ? { ...stored, sessionId: stored.sessionId ?? newSessionId() }
-        : null;
+      const stored = JSON.parse(localStorage.getItem(storageKey) ?? "null");
+      return completedSession ?? (stored?.sessionId === assigned.sessionId
+        ? { ...stored, ...assigned, currentIndex: stored.currentIndex, traceResponses: stored.traceResponses, completedAt: stored.completedAt }
+        : null);
     } catch {
-      return null;
+      return completedSession;
     }
   });
   const [screen, setScreen] = useState<"welcome" | "experiment" | "complete">(
     "welcome",
   );
   useEffect(() => {
-    fetch("/data/manifest.json")
+    fetch("/api/manifest")
       .then((response) => {
         if (!response.ok) throw new Error("manifest");
         return response.json();
@@ -1576,13 +1347,12 @@ export default function App() {
   }, []);
   const setSession = (state: SessionState) => {
     setSessionState(state);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(storageKey, JSON.stringify(state));
     if (state.completedAt) setScreen("complete");
   };
   const reset = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setSessionState(null);
-    setScreen("welcome");
+    localStorage.removeItem(storageKey);
+    onLogout();
   };
   if (!manifest)
     return (
@@ -1599,7 +1369,7 @@ export default function App() {
             Catálogo de traces não encontrado
           </h1>
           <p className="mt-2 text-sm text-black/50">
-            Disponibilize o catálogo em <code className="rounded bg-white px-2 py-1">public/data/manifest.json</code> e os logs indicados nele, depois recarregue.
+            Não foi possível carregar seus traces. Verifique seu acesso e tente recarregar a página.
           </p>
         </div>
       </div>
@@ -1622,16 +1392,68 @@ export default function App() {
   }
   return (
     <Welcome
-      manifest={manifest}
+      assigned={assigned}
+      onLogout={onLogout}
       restored={session}
       onResume={() =>
         setScreen(session?.completedAt ? "complete" : "experiment")
       }
-      onReset={reset}
       onStart={(state) => {
         setSession(state);
         setScreen("experiment");
       }}
     />
   );
+}
+
+
+export default function AccessGate() {
+  const [access, setAccess] = useState<{ session: SessionState; completedSession: SessionState | null } | null>(null);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    fetch("/api/access")
+      .then(async (response) => {
+        if (response.ok) setAccess(await response.json());
+        else if (response.status !== 401) setError("Não foi possível verificar seu acesso. Tente novamente.");
+      })
+      .catch(() => setError("Não foi possível conectar. Tente novamente."))
+      .finally(() => setLoading(false));
+  }, []);
+  const enter = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Não foi possível entrar.");
+      const restored = await fetch("/api/access");
+      if (!restored.ok) throw new Error("Não foi possível carregar sua sessão. Tente novamente.");
+      setAccess(await restored.json());
+      setCode("");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível entrar.");
+    } finally { setLoading(false); }
+  };
+  const logout = async () => {
+    try {
+      const response = await fetch("/api/logout", { method: "POST" });
+      if (!response.ok && response.status !== 401) throw new Error();
+      setAccess(null);
+    } catch { window.alert("Não foi possível sair. Tente novamente."); }
+  };
+  if (access) return <App key={access.session.sessionId} assigned={access.session} completedSession={access.completedSession} onLogout={logout} />;
+  return <main className="grid min-h-screen place-items-center bg-canvas p-6 text-ink">
+    <form onSubmit={enter} className="w-full max-w-md rounded-[28px] border border-line bg-paper p-8 shadow-card">
+      <Logo />
+      <h1 className="mt-8 font-display text-3xl">Acessar o experimento</h1>
+      <p className="mt-3 text-sm text-black/60">Informe o código enviado pelo pesquisador. Sua participação já estará configurada.</p>
+      <label className="mt-6 block text-sm font-semibold" htmlFor="access-code">Código de acesso</label>
+      <input id="access-code" type="password" autoComplete="off" required value={code} onChange={(event) => setCode(event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-line bg-white px-4" />
+      {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
+      <Button type="submit" disabled={loading || !code.trim()} className="mt-6 w-full">{loading ? "Verificando acesso…" : "Entrar"}</Button>
+    </form>
+  </main>;
 }
