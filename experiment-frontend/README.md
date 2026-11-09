@@ -96,7 +96,7 @@ Uma nova tentativa experimental deve receber um novo convite.
 4. Execute a migração e a importação usando o mesmo banco antes de distribuir os convites.
 5. Faça o deploy. Abra a URL, entre com um convite e confira a participação atribuída.
 
-As rotas de `api/[...path].js` rodam como Vercel Functions. Catálogo, logs e envio de respostas exigem autenticação; a tela de entrada e os arquivos de interface são públicos. Respostas autenticadas usam `Cache-Control: private, no-store`.
+As rotas de `api/index.js` rodam como Vercel Functions. Catálogo, logs e envio de respostas exigem autenticação; a tela de entrada e os arquivos de interface são públicos. Respostas autenticadas usam `Cache-Control: private, no-store`.
 
 Para Preview, use um banco separado e configure `APP_ORIGIN` para a origem HTTPS daquele deployment. A API rejeita POSTs de outras origens.
 

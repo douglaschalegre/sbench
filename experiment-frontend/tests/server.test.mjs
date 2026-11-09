@@ -288,14 +288,17 @@ test('Vercel entrypoint initializes an empty database before serving concurrent 
   process.env.TURSO_DATABASE_URL = `file:${path}`
   process.env.ADMIN_PASSWORD = password
   process.env.APP_ORIGIN = 'https://experiment.example'
-  const { default: api } = await import('../api/[...path].js')
+  const { default: api } = await import('../api/index.js')
   const server = createServer(api)
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
   try {
     const base = `http://127.0.0.1:${server.address().port}`
-    const responses = await Promise.all([fetch(base + '/api/health'), fetch(base + '/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) })])
+    const responses = await Promise.all([fetch(base + '/api/health'), fetch(base + '/api?route=admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) })])
     assert.equal(responses[0].status, 200)
     assert.equal(responses[1].status, 200)
+    const cookie = responses[1].headers.get('set-cookie').split(';')[0]
+    assert.equal((await fetch(base + '/api?route=admin/session', { headers: { cookie } })).status, 200)
+    assert.equal((await fetch(base + '/api?route=admin/invitations', { headers: { cookie } })).status, 200)
     const database = await openDatabase(path)
     assert.equal((await database.execute('SELECT COUNT(*) count FROM admin_sessions')).rows[0].count, 1)
     database.close()
